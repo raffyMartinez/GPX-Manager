@@ -16,7 +16,7 @@ namespace GPXManager.entities
     public class DeviceGPXViewModel
     {
 
-        private bool _success;
+        private bool _editSuccess;
         private int _count;
         public ObservableCollection<DeviceGPX> DeviceGPXCollection { get; set; }
         private DeviceGPXRepository DeviceWaypointGPXes{ get; set; }
@@ -45,6 +45,10 @@ namespace GPXManager.entities
             }
         }
 
+        public List<GPXFile>GetDeviceGPX(GPS gps, GPXFileType gpxType, DateTime monthYear)
+        {
+            return ArchivedGPXFiles[gps].Where(t => t.GPXFileType == gpxType && t.MonthYear == monthYear).ToList();  
+        }
         public string GPXBackupFolder { get; private set; }
         public int BackupGPXToDrive()
         {
@@ -119,8 +123,9 @@ namespace GPXManager.entities
         }
 
         /// <summary>
-        /// assume that the first folder is an LGU folder and subfolders will contain numbered folder names
-        /// the number will point to a specific GPS so folder names need not be precise as long as is is numbered
+        /// assume that the first folder is named after an LGU and subfolders will contain numbered folder names.
+        /// The number will point to a specific GPS so folder names need not be precise. The number will be concatenated to
+        /// a string that referes to an LGU so CON 11 which then points to a GPS already stored in the database
         /// </summary>
         /// <param name="folder"></param>
         /// <param name="in_gps"></param>
@@ -129,7 +134,7 @@ namespace GPXManager.entities
         /// <param name=""></param>
         /// <returns></returns>
 
-        public int ImportGPXByLGUFolder(string folder, string gpsNameStart, GPS in_gps = null,  bool? first=false )
+        public int ImportGPXByLGUFolder(string folder, GPS in_gps = null,  bool? first=false )
         {
             if ((bool)first)
             {
@@ -145,8 +150,13 @@ namespace GPXManager.entities
                     if (file.Extension.ToLower() == ".gpx")
                     {
                         var folderName = Path.GetFileName(folder);
-
-                        gps = Entities.GPSViewModel.GetGPSByName(folderName);
+                        if(ImportGPSData.GPSNameStart.Length>0)
+                        {
+                             gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                        }
+                        else {
+                            gps = Entities.GPSViewModel.GetGPSByName(folderName);
+                        }
 
                         if (gps != null)
                         {
@@ -209,6 +219,31 @@ namespace GPXManager.entities
             }
             return _count;
         }
+
+        public string GetNumericPartOfFolderName(string folderName)
+        {
+            string numericPart="";
+            for(int x=0; x<folderName.Length;x++)
+            {
+                if(folderName[x]>='0' && folderName[x]<='9')
+                {
+                    numericPart += folderName[x];
+                }
+            }
+            if(numericPart.Length>0)
+            {
+                int n = int.Parse(numericPart);
+                if (n >= ImportGPSData.StartGPSNumbering && n < ImportGPSData.EndGPSNumbering)
+                {
+                    return n.ToString();
+                }
+                else
+                {
+                    return "";
+                }
+            }
+            return numericPart;
+        }
         public int ImportGPX(string folder, GPS in_gps = null, bool first=false)
         {
             if(first)
@@ -225,8 +260,14 @@ namespace GPXManager.entities
                     if(file.Extension.ToLower()==".gpx")
                     {
                         var folderName = Path.GetFileName(folder);
-
-                        gps = Entities.GPSViewModel.GetGPSByName(folderName);
+                        if (ImportGPSData.GPSNameStart.Length > 0)
+                        {
+                            gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                        }
+                        else
+                        {
+                            gps = Entities.GPSViewModel.GetGPSByName(folderName);
+                        }
 
                         if (gps!=null)
                         {
@@ -448,7 +489,7 @@ namespace GPXManager.entities
         public DeviceGPX CurrentEntity { get; set; }
         private void DeviceWptGPXCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            _success = false;
+            _editSuccess = false;
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
@@ -458,7 +499,7 @@ namespace GPXManager.entities
                         if (DeviceWaypointGPXes.Add(newWPTGPX))
                         {
                             CurrentEntity = newWPTGPX;
-                            _success = true;
+                            _editSuccess = true;
                         }
                     }
                     break;
@@ -471,7 +512,7 @@ namespace GPXManager.entities
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<DeviceGPX> tempList = e.NewItems.OfType<DeviceGPX>().ToList();
-                        _success =  DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        _editSuccess =  DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
                     }
                     break;
             }
@@ -492,7 +533,17 @@ namespace GPXManager.entities
             if (gpx == null)
                 throw new ArgumentNullException("Error: The argument is Null");
             DeviceGPXCollection.Add(gpx);
-            AddToDictionary(gpx.GPS, Entities.GPXFileViewModel.GetFile(gpx.GPS, gpx.Filename));
+            if (_editSuccess)
+            {
+                GPXFile gpxFile = Entities.GPXFileViewModel.GetFile(gpx.GPS, gpx.Filename);
+                if(gpxFile==null)
+                {
+                    gpxFile = new GPXFile(gpx.Filename) { GPS = gpx.GPS,XML = gpx.GPX };
+                    Entities.GPXFileViewModel.Add(gpxFile);
+                }
+
+                AddToDictionary(gpx.GPS, gpxFile);
+            }
             return DeviceGPXCollection.Count > oldCount;
         }
 
@@ -511,7 +562,7 @@ namespace GPXManager.entities
                 }
                 index++;
             }
-            return _success;
+            return _editSuccess;
         }
 
         private string AddGPSSourceToGPX(string gpx, GPS gps)

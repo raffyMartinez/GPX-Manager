@@ -133,6 +133,10 @@ namespace GPXManager.entities
                 int count = 1;
                 foreach (var trk in tracks)
                 {
+                    if(trk.Statistics==null)
+                    {
+                        return;
+                    }
                     TrackPointsCount += trk.Waypoints.Count;
                     TrackLength += trk.Statistics.Length;
                     TimeInMotion += trk.Statistics.TimeInMotion;
@@ -218,6 +222,10 @@ namespace GPXManager.entities
             }
             else
             {
+                if(wptDateStart==null)
+                {
+                    return;
+                }
                 DateRangeStart = (DateTime)wptDateStart;
             }
 

@@ -43,7 +43,7 @@ namespace GPXManager.entities
                     ((int)EndGPSNumbering) >= 0 &&
                     GPSNameStart.Length>0)
                 {
-                    ImportCount = Entities.DeviceGPXViewModel.ImportGPXByLGUFolder(vfbd.SelectedPath, GPSNameStart);
+                    ImportCount = Entities.DeviceGPXViewModel.ImportGPXByLGUFolder(vfbd.SelectedPath);
                 }
                 else
                 {

@@ -41,6 +41,7 @@ namespace GPXManager
         private bool _gpsPropertyChanged;
         private string _changedPropertyName;
         private TreeViewItem _gpsTreeViewItem;
+        private DateTime _archiveMonthYear;
         private DateTime _tripMonthYear;
         private bool _usbGPSPresent;
         private bool _inDeviceNode;
@@ -92,13 +93,40 @@ namespace GPXManager
                     break;
 
                 case "treeArchive":
-                    if (((TreeViewItem)treeArchive.SelectedItem).Tag.ToString() == "root")
+                    string tag = ((TreeViewItem)treeArchive.SelectedItem).Tag.ToString();
+                    if(DateTime.TryParse(tag, out DateTime v))
+                    {
+                        _archiveMonthYear = v;
+                       if(MapWindowForm.Instance!=null)
+                        {
+                            m = new MenuItem { Header = "Show GPS month data in map", Name = "menuMapGPSMonthData" };
+                            m.Click += OnMenuClick;
+                            cm.Items.Add(m);
+
+                            m = new MenuItem { Header = "Show GPS monthly track data in map", Name = "menuMapGPSMonthTrackData" };
+                            m.Click += OnMenuClick;
+                            cm.Items.Add(m);
+
+                            m = new MenuItem { Header = "Show GPS monthly waypoint data in map", Name = "menuMapGPSMonthWaypopintData" };
+                            m.Click += OnMenuClick;
+                            cm.Items.Add(m);
+                        }
+                       else
+                        {
+                            return;
+                        }
+                    }
+                    else if (tag == "root")
                     {
                         m = new MenuItem { Header = "Import GPS", Name = "menuImportGPS" };
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
                         m = new MenuItem { Header = "Import GPX", Name = "menuImportGPX" };
+                        m.Click += OnMenuClick;
+                        cm.Items.Add(m);
+
+                        m = new MenuItem { Header = "Import GPX by LGU", Name = "menuImportGPXByLGU" };
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
@@ -121,6 +149,16 @@ namespace GPXManager
                         m = new MenuItem { Header = "Collapse all", Name = "menuCollapseAll" };
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
+
+                        if (MapWindowForm.Instance != null)
+                        
+                        {
+                            cm.Items.Add(new Separator());
+
+                            m = new MenuItem { Header = "Show track and waypoint on map", Name = "menuShowAllGPXOnMap" };
+                            m.Click += OnMenuClick;
+                            cm.Items.Add(m);
+                        }
                     }
                     else
                     {
@@ -538,6 +576,37 @@ namespace GPXManager
             }
         }
 
+        private void ShowSelectedMonthGPXDataOnMap(string whatToShow)
+        {
+            var gpxFiles = new List<GPXFile>();
+            switch(whatToShow)
+            {
+                case "track_wpt":
+                    ShowSelectedMonthGPXDataOnMap(whatToShow: "track");
+                    ShowSelectedMonthGPXDataOnMap(whatToShow: "wpt");
+                    break;
+                case "track":
+                    gpxFiles = Entities.DeviceGPXViewModel.GetDeviceGPX(_gps, GPXFileType.Track, _archiveMonthYear);
+                    break;
+                case "wpt":
+                    gpxFiles = Entities.DeviceGPXViewModel.GetDeviceGPX(_gps, GPXFileType.Waypoint, _archiveMonthYear);
+                    break;
+            }
+
+            int h = -1;
+            List<int> handles = new List<int>();
+            foreach (var item in gpxFiles)
+            {
+                MapWindowManager.MapGPX(item, out h, out handles);
+                item.ShapeIndexes = handles;
+                item.ShownInMap = true;
+            }
+            if (h >= 0)
+            {
+                MapWindowManager.MapControl.Redraw();
+            }
+        }
+
         private void ShowGPXOnMap(bool showInMap = true)
         {
             int h = -1;
@@ -750,7 +819,7 @@ namespace GPXManager
             }
         }
 
-        private void ImportGPX()
+        public void ImportGPX()
         {
             string msg = "Import successful";
             if (ImportGPSData.ImportGPX())
@@ -802,6 +871,22 @@ namespace GPXManager
             string menuName = ((MenuItem)sender).Name;
             switch (menuName)
             {
+                case "menuShowAllGPXOnMap":
+                    break;
+                case "menuMapGPSMonthWaypopintData":
+                    ShowSelectedMonthGPXDataOnMap(whatToShow: "wpt");
+                    break;
+                case "menuMapGPSMonthTrackData":
+                    ShowSelectedMonthGPXDataOnMap(whatToShow: "track");
+                    break;
+                case "menuMapGPSMonthData":
+                    ShowSelectedMonthGPXDataOnMap(whatToShow: "track_wpt");
+                    break;
+                case "menuImportGPXByLGU":
+                    ImportGPXByLGUFolderWindow iw = new ImportGPXByLGUFolderWindow();
+                    iw.ParentForm = this;
+                    iw.ShowDialog();
+                    break;
                 case "menuGPXCenterInMap":
                     break;
 

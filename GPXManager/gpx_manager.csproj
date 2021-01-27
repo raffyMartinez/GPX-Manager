@@ -200,6 +200,9 @@
     <Compile Include="views\GPXFIlePropertiesWindow.xaml.cs">
       <DependentUpon>GPXFIlePropertiesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\ImportGPXByLGUFolderWindow.xaml.cs">
+      <DependentUpon>ImportGPXByLGUFolderWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\MapWindowForm.IconInfo.cs">
       <DependentUpon>MapWindowForm.xaml</DependentUpon>
     </Compile>
@@ -208,6 +211,9 @@
     </Compile>
     <Compile Include="views\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\ShowAllGPSDataInArchiveWindow.xaml.cs">
+      <DependentUpon>ShowAllGPSDataInArchiveWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="entities\mapping\Views\AOIWindow.xaml">
       <SubType>Designer</SubType>
@@ -284,11 +290,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\ImportGPXByLGUFolderWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\MapWindowForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\ShowAllGPSDataInArchiveWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -37,6 +37,7 @@ namespace GPXManager.views
     {
         private static MapWindowForm _instance;
 
+        public static MapWindowForm Instance { get { return _instance; } }
         public AxMapWinGIS.AxMap MapControl { get; set; }
         public MapWindowForm()
         {
