@@ -1,0 +1,27 @@
+﻿<Window x:Class="GPXManager.views.EditTripWaypointsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="EditTripWaypointsWindow" Height="450" Width="470.4">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="1" Grid.Row="1">
+            <Button Content="Ok" x:Name="buttonOK" Click="OnButtonClick" Width="75" Height="30" Margin="0 10 0 10"/>
+            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Width="75" Height="30" Margin="0 10 0 10"/>
+        </StackPanel>
+        <Label Content="This is a label" x:Name="labelTitle"/>
+        <xctk:PropertyGrid x:Name="PropertyGrid" ShowSearchBox="False" ShowSortOptions="False" Grid.Row="1"
+                               AutoGenerateProperties="False" ShowSummary="true" Margin="10" PropertyValueChanged="OnPropertyValueChanged"/>
+    </Grid>
+</Window>

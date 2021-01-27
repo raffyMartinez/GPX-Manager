@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30517.126
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gpx_manager", "GPXManager\gpx_manager.csproj", "{1E583629-6E02-4551-965B-E058C04FFCC1}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup GPX Manager", "Setup GPX Manager\Setup GPX Manager.vdproj", "{1D5895F8-4464-4FFF-8007-45CC77E5CCC8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E583629-6E02-4551-965B-E058C04FFCC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E583629-6E02-4551-965B-E058C04FFCC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E583629-6E02-4551-965B-E058C04FFCC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E583629-6E02-4551-965B-E058C04FFCC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D5895F8-4464-4FFF-8007-45CC77E5CCC8}.Debug|Any CPU.ActiveCfg = Debug
+		{1D5895F8-4464-4FFF-8007-45CC77E5CCC8}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {845E0C8C-68C4-4C63-858C-BD10C0728BF4}
+	EndGlobalSection
+EndGlobal

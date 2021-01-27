@@ -1,0 +1,44 @@
+﻿<Window x:Class="GPXManager.entities.mapping.Views.AOIWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.entities.mapping.Views"
+        mc:Ignorable="d"
+        SizeToContent="Height"
+        Title="AOIWindow" Height="450" Width="392.056" WindowStyle="ToolWindow">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition Height="60" x:Name="rowAOIName"/>
+            <RowDefinition x:Name="rowAOIList"/>
+            <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        <Label Content="This is the label title" x:Name="labelTitle"/>
+        <WrapPanel x:Name="panelAOIName" Margin="0 10" Grid.Row="1">
+            <Label Content="Name" Margin="20 0"/>
+            <TextBox x:Name="textBoxAOIName" Width="275" Height="30"/>
+        </WrapPanel>
+        <StackPanel Grid.Row="2" x:Name="panelListAOI">
+            <StackPanel>
+                <Label Content="List of AOIs" Margin="20 0"/>
+                <DataGrid x:Name="dataGridAOIs" Height="250" Margin="20 0"  
+                          AutoGenerateColumns="False" ItemsSource="{Binding}"
+                          SelectionUnit="Cell" CanUserAddRows="False" ContextMenuOpening="OnContextMenuOpening"
+                          SelectedCellsChanged="OnGridSelectedCellChanged">
+                    <DataGrid.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
+                            <MenuItem Header="Edit extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
+                            <MenuItem Header="Remove" x:Name="menuAOIRemove" Click="OnMenuClick"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                </DataGrid>
+            </StackPanel>
+        </StackPanel>
+        <WrapPanel Grid.Row="32" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Height="30" Width="70" Margin="10"/>
+            <Button Content="Ok" x:Name="buttonOk" Click="OnButtonClick" Height="30" Width="70" Margin="10"/>
+        </WrapPanel>
+    </Grid>
+</Window>

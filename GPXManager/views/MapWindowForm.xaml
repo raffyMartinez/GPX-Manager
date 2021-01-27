@@ -1,0 +1,98 @@
+﻿<Window x:Class="GPXManager.views.MapWindowForm"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Loaded="OnWindowLoaded"
+        Title="Map" Height="744.18" Width="800">
+    <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="34" />
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Menu VerticalAlignment="Center">
+            <MenuItem Header="File">
+                <MenuItem Header="Layers">
+                    <MenuItem Header="Add ..." x:Name="menuAddLayer" Click="OnMenuClick"/>
+                    <MenuItem Header="Add LGU boundary ..." x:Name="menuAddLayerBoundaryLGU" Click="OnMenuClick"/>
+                    <MenuItem Header="Add LGU poblacion ..." x:Name="menuAddLayerBoundaryLGUPoblacion" Click="OnMenuClick"/>
+                    <MenuItem Header="Add barangay boundary ..." x:Name="menuAddLayerBoundaryBarangay" Click="OnMenuClick"/>
+                    <MenuItem Header="Add island names ..." x:Name="menuAddLayerIslandNames" Click="OnMenuClick"/>
+                    <MenuItem Header="Add reef area ..." x:Name="menuAddLayerReef" Click="OnMenuClick"/>
+                    <MenuItem Header="Add mangrove area ..." x:Name="menuAddLayerMangrove" Click="OnMenuClick"/>
+                </MenuItem>
+                <MenuItem Header="Save map state" x:Name="menuSaveMapState" Click="OnMenuClick"/>
+                <MenuItem Header="Close" x:Name="menuClose" Click="OnMenuClick"/>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Area of interest">
+                    <MenuItem Header="Create" x:Name="menuAOICreate" Click="OnMenuClick" />
+                    <MenuItem Header="List" x:Name="menuAOIList" Click="OnMenuClick" />
+                    <MenuItem Header="Show all" x:Name="menuAOIShowAll" Click="OnMenuClick" />
+                </MenuItem>
+                <MenuItem Header="Coastline visible" x:Name="menuMapCoastlineVisible" IsCheckable="True" Checked="OnMenuChecked" Unchecked="OnMenuChecked"/>
+                <MenuItem Header="Map tiles">
+                    <MenuItem Header="Map tiles visible" x:Name="menuMapTilesVisible" IsCheckable="True" Checked="OnMenuChecked" Unchecked="OnMenuChecked"/>
+                    <MenuItem Header="Select provider" x:Name="menuMapTilesSelectProvider" Click="OnMenuClick"/>
+                </MenuItem>
+                <MenuItem Header="Label islands" x:Name="menuIslandLabels" Click="OnMenuClick"/>
+            </MenuItem>
+        </Menu>
+
+        <ToolBarTray Grid.Row="1" Height="34">
+            <ToolBar Height="32" Width="Auto" >
+                <Button x:Name="buttonLayers" Click="OnToolbarButtonClick" ToolTip="Layers">
+                    <Image Source="layers1.png" />
+                </Button>
+                <Button x:Name="buttonAddLayer" Click="OnToolbarButtonClick" ToolTip="Add layer">
+                    <Image Source="layers-new1.png"  />
+                </Button>
+                <Button x:Name="buttonZoomPlus" Click="OnToolbarButtonClick" ToolTip="Zoom in">
+                    <Image Source="zoom+.png" OpacityMask="White" />
+                </Button>
+                <Button x:Name="buttonZoomMinus" Click="OnToolbarButtonClick" ToolTip="Zoom out">
+                    <Image Source="zoom-.png" OpacityMask="White" />
+                </Button >
+                <Button x:Name="buttonPan" Click="OnToolbarButtonClick" ToolTip="Pan">
+                    <Image Source="move.png" OpacityMask="White" />
+                </Button >
+                <Button x:Name="buttonAttributes" Click="OnToolbarButtonClick" ToolTip="Layer attributes">
+                    <Image Source="table1.png" OpacityMask="White" />
+                </Button>
+                <Button x:Name="buttonGPS" Click="OnToolbarButtonClick" ToolTip="GPS">
+                    <Image Source="gps2.png" OpacityMask="White" />
+                </Button>
+                <Button x:Name="buttonSelect" Click="OnToolbarButtonClick" ToolTip="Select">
+                    <Image Source="select1.png" OpacityMask="White" />
+                </Button>
+                <Button x:Name="buttonSelectNone" Click="OnToolbarButtonClick" ToolTip="Clear selectiong">
+                    <Image Source="select_none1.png" OpacityMask="White" />
+                </Button>
+                <ToggleButton x:Name="buttonTrack" Checked="OnToolbarButtonChecked" Unchecked="OnToolbarButtonChecked" ToolTip="Show or hide vertices" IsEnabled="False">
+                    <Image Source="track.png" OpacityMask="White" />
+                </ToggleButton>
+                <Button x:Name="buttonRuler" Click="OnToolbarButtonClick" ToolTip="Measure">
+                    <Image Source="ruler.png" OpacityMask="White" />
+                </Button>
+
+                <Button x:Name="buttonDataScreen" Click="OnToolbarButtonClick" ToolTip="Hide map window">
+                    <Image Source="map screen grey.png" OpacityMask="White" />
+                </Button>
+
+
+                <Button x:Name="buttonExit" Click="OnToolbarButtonClick" ToolTip="Close">
+                    <Image Source="exit.png" OpacityMask="White" />
+                </Button>                
+
+
+            </ToolBar>
+        </ToolBarTray>
+        <Grid x:Name="MapGrid" Grid.Row="2">
+
+        </Grid>
+    </Grid>
+</Window>

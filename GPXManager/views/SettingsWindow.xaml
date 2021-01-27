@@ -1,0 +1,69 @@
+﻿<Window x:Class="GPXManager.views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="Settings" Height="519.816" Width="652.689">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="1"  Grid.RowSpan="2">
+            <Button Content="OK" x:Name="buttonOk" Click="OnButtonClick" Margin="20 30 10 10" Height="25"/>
+            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Margin="20 10 10 10" Height="25"/>
+        </StackPanel>
+        <Grid Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <StackPanel>
+                <Label Content="GPX folder in computer" />
+                <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                <TextBox x:Name="textBoxGPXFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
+                <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocate" Margin="20 0 0 0" VerticalAlignment="Center"/>
+                </WrapPanel>
+            </StackPanel>
+            <StackPanel Grid.Row="1" HorizontalAlignment="Left">
+                <Label Content="GPX folder in device"/>
+                <TextBox x:Name="textBoxGPXFolderDevice" Height="25" Margin="10 0 0 0" Width="400"/>
+            </StackPanel>
+            <StackPanel Grid.Row="2">
+                <Label Content="Path to backend database"/>
+                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                <TextBox x:Name="textBoxBackendPath" Height="25" Margin="10 0 0 0" Width="400"/>
+                <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateBackend"/>
+                </WrapPanel>
+            </StackPanel>
+            <StackPanel Grid.Row="3">
+                <Label Content="Hours offset from GMT"/>
+                <TextBox x:Name="textBoxHoursOffsetGMT" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+            </StackPanel>
+            <StackPanel Grid.Row="4">
+                <Label Content="Bing API Key"/>
+                <TextBox x:Name="textBoxBingAPIKey" Height="25" Margin="10 0 0 0 " Width="450" HorizontalAlignment="Left"/>
+            </StackPanel>
+            <StackPanel Grid.Row="5">
+                <Label Content="Number of latest trips to show"/>
+                <TextBox x:Name="textLatestTripCount" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+            </StackPanel> 
+            <StackPanel Grid.Row="6">
+                <Label Content="Number of latest GPX files to show"/>
+                <TextBox x:Name="textLatestGPXFileCount" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+            </StackPanel>             
+        </Grid>
+    </Grid>
+</Window>
