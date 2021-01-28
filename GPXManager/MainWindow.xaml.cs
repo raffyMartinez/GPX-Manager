@@ -872,6 +872,10 @@ namespace GPXManager
             switch (menuName)
             {
                 case "menuShowAllGPXOnMap":
+                    var showAll = new ShowAllGPSDataInArchiveWindow();
+                    showAll.ParentForm = MapWindowForm.Instance;
+                    showAll.Owner = MapWindowForm.Instance;
+                    showAll.Show();
                     break;
                 case "menuMapGPSMonthWaypopintData":
                     ShowSelectedMonthGPXDataOnMap(whatToShow: "wpt");

@@ -5,8 +5,41 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
-        Title="ShowAllGPSDataInArchiveWindow" Height="450" Width="800">
+        Title="ShowAllGPSDataInArchiveWindow" Height="554.333" Width="443.794" WindowStyle="ToolWindow" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="70"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Label Content="Select GPS and date for mapping" FontSize="16" FontWeight="Bold" />
+        </StackPanel>
+        <Label Grid.Row="1" Content="List of GPS" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <Label Grid.Row="1" Grid.Column="1" Content="List of dates" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+        <ScrollViewer Grid.Row="2" Grid.Column="0">
+            <StackPanel x:Name="panelGPS">
+                <CheckBox Margin="10 5 10 0" Content="GPS name here"/>        
+            </StackPanel>
+        </ScrollViewer>
         
+        <ScrollViewer Grid.Row="2" Grid.Column="1">
+            <StackPanel x:Name="panelMonths">
+                <CheckBox  Margin="10 5 10 0" Content="Month-Year here"/>        
+            </StackPanel>
+        </ScrollViewer>
+        <CheckBox Content="Select all" Grid.Row="3" HorizontalContentAlignment="Left" Margin="10 0" VerticalAlignment="Bottom" x:Name="chkSelectAllGPS" Checked="OnCheckChecked" Unchecked="OnCheckChecked"/>
+        <CheckBox Content="Select all" Grid.Row="3" Grid.Column="1" HorizontalContentAlignment="Left" Margin="10 0" VerticalAlignment="Bottom" x:Name="chkSelectAllDate" Checked="OnCheckChecked" Unchecked="OnCheckChecked"/>
+        <WrapPanel Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Height="30" Width="60" Margin="15 0"/>
+            <Button Content="Ok" x:Name="buttonOk" Click="OnButtonClick" Height="30" Width="60" Margin="10 0 20 0"/>
+            
+        </WrapPanel>
     </Grid>
 </Window>

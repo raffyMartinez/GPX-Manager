@@ -106,7 +106,7 @@ namespace GPXManager.entities
         public string TimeSpanHourMinute { get; internal set; }
         public DateTime DateRangeStart { get; internal set; }
         public DateTime DateRangeEnd { get; internal set; }
-        public void ComputeStats(DeviceGPX deviceGPX = null)
+        public bool ComputeStats(DeviceGPX deviceGPX = null)
         {
             DateTime? trkDateStart = null;
             DateTime? trkDateEnd = null;
@@ -135,7 +135,7 @@ namespace GPXManager.entities
                 {
                     if(trk.Statistics==null)
                     {
-                        return;
+                        return false;
                     }
                     TrackPointsCount += trk.Waypoints.Count;
                     TrackLength += trk.Statistics.Length;
@@ -224,7 +224,7 @@ namespace GPXManager.entities
             {
                 if(wptDateStart==null)
                 {
-                    return;
+                    return false;
                 }
                 DateRangeStart = (DateTime)wptDateStart;
             }
@@ -259,6 +259,8 @@ namespace GPXManager.entities
                 var m = ((TimeSpan)TimeSpan).TotalMinutes % 60;
                 TimeSpanHourMinute = $"{h.ToString("000")}:{m.ToString("N1")}";
             }
+
+            return true;
         }
         public string SizeFormatted { get { return FileSizeFormatter.FormatSize(Size); } }
 

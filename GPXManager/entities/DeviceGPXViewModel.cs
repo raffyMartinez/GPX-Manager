@@ -45,6 +45,29 @@ namespace GPXManager.entities
             }
         }
 
+        public List<DateTime> GetAllMonthYear(DateTime? startingDate = null)
+        {
+            DateTime earliest;
+            if (startingDate == null)
+            {
+                earliest = DeviceGPXCollection.OrderBy(t => t.TimeRangeStart).First().TimeRangeStart;
+            }
+            else
+            {
+                earliest = (DateTime)startingDate;
+            }
+            var latest = DeviceGPXCollection.OrderByDescending(t => t.TimeRangeStart).First().TimeRangeStart;
+            var dates = new List<DateTime>();
+
+            while (earliest <= latest)
+            {
+                dates.Add(new DateTime(earliest.Year, earliest.Month, 1));
+                earliest= earliest.AddMonths(1);
+            }
+            return dates;
+
+        }
+
         public List<GPXFile>GetDeviceGPX(GPS gps, GPXFileType gpxType, DateTime monthYear)
         {
             return ArchivedGPXFiles[gps].Where(t => t.GPXFileType == gpxType && t.MonthYear == monthYear).ToList();  
@@ -134,7 +157,7 @@ namespace GPXManager.entities
         /// <param name=""></param>
         /// <returns></returns>
 
-        public int ImportGPXByLGUFolder(string folder, GPS in_gps = null,  bool? first=false )
+        public int ImportGPXByLGUFolder(string folder, GPS in_gps = null,  bool? first=false, int yearStartProcess = 2019 )
         {
             if ((bool)first)
             {
@@ -171,43 +194,56 @@ namespace GPXManager.entities
                         {
                             GPXFile g = new GPXFile(file);
                             g.GPS = current_gps;
-                            g.ComputeStats();
-                            DeviceGPX d = new DeviceGPX
+                            if (g.ComputeStats())
                             {
-                                Filename = file.Name,
-                                GPS = current_gps,
-                                GPX = g.XML,
-                                GPXType = g.GPXFileType == GPXFileType.Track ? "track" : "waypoint",
-                                RowID = NextRecordNumber,
-                                MD5 = CreateMD5(g.XML),
-                                TimeRangeStart = g.DateRangeStart,
-                                TimeRangeEnd = g.DateRangeEnd
-                            };
-
-                            string fileProcessed = $@"{current_gps.DeviceName}:{file.FullName}";
-
-                            DeviceGPX saved = GetDeviceGPX(d);
-                            if (saved == null)
-                            {
-                                if (AddRecordToRepo(d))
+                                if (g.DateRangeStart.Year >= yearStartProcess)
                                 {
-                                    _count++;
-                                    fileProcessed += "  (ADDED)";
+                                    DeviceGPX d = new DeviceGPX
+                                    {
+                                        Filename = file.Name,
+                                        GPS = current_gps,
+                                        GPX = g.XML,
+                                        GPXType = g.GPXFileType == GPXFileType.Track ? "track" : "waypoint",
+                                        RowID = NextRecordNumber,
+                                        MD5 = CreateMD5(g.XML),
+                                        TimeRangeStart = g.DateRangeStart,
+                                        TimeRangeEnd = g.DateRangeEnd
+                                    };
+
+                                    string fileProcessed = $@"{current_gps.DeviceName}:{file.FullName}";
+
+                                    DeviceGPX saved = GetDeviceGPX(d);
+                                    if (saved == null)
+                                    {
+                                        if (AddRecordToRepo(d))
+                                        {
+                                            _count++;
+                                            fileProcessed += "  (ADDED)";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (saved.MD5 != d.MD5 && d.TimeRangeEnd > saved.TimeRangeEnd)
+                                        {
+                                            UpdateRecordInRepo(d);
+                                            fileProcessed += " (MODIFIED ADDED)";
+                                        }
+                                        else
+                                        {
+                                            fileProcessed += "  (DUPLICATE)";
+                                        }
+                                    }
+                                    Console.WriteLine(fileProcessed);
+                                }
+                                else
+                                {
+                                    Logger.Log($"GPX file {file.FullName} time is {g.DateRangeEnd.ToString("MMM-dd-yyyy")} and is not saved");
                                 }
                             }
                             else
                             {
-                                if (saved.MD5 != d.MD5 && d.TimeRangeEnd > saved.TimeRangeEnd)
-                                {
-                                    UpdateRecordInRepo(d);
-                                    fileProcessed += " (MODIFIED ADDED)";
-                                }
-                                else
-                                {
-                                    fileProcessed += "  (DUPLICATE)";
-                                }
+                                Logger.Log($"Error computing stats for GPX file {file.FullName} and is not saved");
                             }
-                            Console.WriteLine(fileProcessed);
                         }
                     }
                 }
@@ -244,7 +280,7 @@ namespace GPXManager.entities
             }
             return numericPart;
         }
-        public int ImportGPX(string folder, GPS in_gps = null, bool first=false)
+        public int ImportGPX(string folder, GPS in_gps = null, bool first=false, int startYear=2019)
         {
             if(first)
             {
@@ -282,43 +318,56 @@ namespace GPXManager.entities
                         {
                             GPXFile g = new GPXFile(file);
                             g.GPS = current_gps;
-                            g.ComputeStats();
-                            DeviceGPX d = new DeviceGPX
+                            if (g.ComputeStats())
                             {
-                                Filename = file.Name,
-                                GPS = current_gps,
-                                GPX = g.XML,
-                                GPXType = g.GPXFileType == GPXFileType.Track ? "track" : "waypoint",
-                                RowID = NextRecordNumber,
-                                MD5 = CreateMD5(g.XML),
-                                TimeRangeStart = g.DateRangeStart,
-                                TimeRangeEnd = g.DateRangeEnd
-                            };
-
-                            string fileProcessed = $@"{current_gps.DeviceName}:{file.FullName}";
-
-                            DeviceGPX saved = GetDeviceGPX(d);
-                            if(saved==null)
-                            {
-                                if(AddRecordToRepo(d))
+                                if (g.DateRangeStart.Year >= startYear)
                                 {
-                                    _count++;
-                                    fileProcessed += "  (ADDED)";
+                                    DeviceGPX d = new DeviceGPX
+                                    {
+                                        Filename = file.Name,
+                                        GPS = current_gps,
+                                        GPX = g.XML,
+                                        GPXType = g.GPXFileType == GPXFileType.Track ? "track" : "waypoint",
+                                        RowID = NextRecordNumber,
+                                        MD5 = CreateMD5(g.XML),
+                                        TimeRangeStart = g.DateRangeStart,
+                                        TimeRangeEnd = g.DateRangeEnd
+                                    };
+
+                                    string fileProcessed = $@"{current_gps.DeviceName}:{file.FullName}";
+
+                                    DeviceGPX saved = GetDeviceGPX(d);
+                                    if (saved == null)
+                                    {
+                                        if (AddRecordToRepo(d))
+                                        {
+                                            _count++;
+                                            fileProcessed += "  (ADDED)";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (saved.MD5 != d.MD5 && d.TimeRangeEnd > saved.TimeRangeEnd)
+                                        {
+                                            UpdateRecordInRepo(d);
+                                            fileProcessed += " (MODIFIED ADDED)";
+                                        }
+                                        else
+                                        {
+                                            fileProcessed += "  (DUPLICATE)";
+                                        }
+                                    }
+                                    Console.WriteLine(fileProcessed);
+                                }
+                                else
+                                {
+                                    Logger.Log($"GPX year for {file.FullName} is less than {startYear}");
                                 }
                             }
                             else
                             {
-                                if(saved.MD5!=d.MD5 && d.TimeRangeEnd > saved.TimeRangeEnd)
-                                {
-                                    UpdateRecordInRepo(d);
-                                    fileProcessed += " (MODIFIED ADDED)";
-                                }
-                                else
-                                {
-                                    fileProcessed += "  (DUPLICATE)";
-                                }
+                                Logger.Log($"Error in computing stats for {file.FullName}");
                             }
-                            Console.WriteLine(fileProcessed);
                         }
                     }
                 }

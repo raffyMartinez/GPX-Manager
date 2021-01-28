@@ -89,6 +89,10 @@ namespace GPXManager.entities
             return importedCount;
         }
 
+        public List<GPS>GetAll()
+        {
+            return GPSCollection.OrderBy(t => t.DeviceName).ToList();
+        }
         private string XMLValue(XmlReader reader)
         {
             reader.Read();

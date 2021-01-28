@@ -32,7 +32,6 @@ namespace GPXManager.views
             switch(((Button)sender).Name)
             {
                 case "buttonOK":
-                    string msg = "";
                     _proceed = false;                    
                     if(txtEndNumber.Text.Length>0 && 
                         txtStartNumber.Text.Length>0 &&
@@ -49,6 +48,7 @@ namespace GPXManager.views
                                 ImportGPSData.StartGPSNumbering = val;
                                 ImportGPSData.GPSNameStart = namePart;
                                 ParentForm.ImportGPX();
+                                Close();
                                    
                             }
                             else
@@ -66,8 +66,13 @@ namespace GPXManager.views
                     {
                         MessageBox.Show("Please fill up all fields correctly", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+                    else
+                    {
+                        Close();
+                    }
                     break;
                 case "buttonCancel":
+                    Close();
                     break;
             }
         }
