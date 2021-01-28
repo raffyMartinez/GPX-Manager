@@ -24,34 +24,42 @@ namespace GPXManager.entities
             var trackList = new List<Track>();
             using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
             {
-                while (reader.Read())
+                try
                 {
-                    if (reader.IsStartElement())
+                    while (reader.Read())
                     {
-                        if (reader.Name == "trk")
+                        if (reader.IsStartElement())
                         {
-                            Track trk = new Track();
-                            trk.GPS = gps;
-                            trk.FileName = Path.GetFileName(fileName);
-                            trk.IsRoute = false;
-                            trk.Read(reader);
+                            if (reader.Name == "trk")
+                            {
+                                Track trk = new Track();
+                                trk.GPS = gps;
+                                trk.FileName = Path.GetFileName(fileName);
+                                trk.IsRoute = false;
+                                trk.Read(reader);
 
-                            if (!Tracks.ContainsKey(gps))
-                            {
-                                Tracks.Add(gps, new List<Track>());
-                                Tracks[gps].Add(trk);
-                            }
-                            else
-                            {
-                                if (Tracks[gps].Where(t => t.Name == trk.Name).FirstOrDefault() == null)
+                                if (!Tracks.ContainsKey(gps))
                                 {
+                                    Tracks.Add(gps, new List<Track>());
                                     Tracks[gps].Add(trk);
                                 }
-                            }
+                                else
+                                {
+                                    if (Tracks[gps].Where(t => t.Name == trk.Name).FirstOrDefault() == null)
+                                    {
+                                        Tracks[gps].Add(trk);
+                                    }
+                                }
 
-                            trackList.Add(trk);
+                                trackList.Add(trk);
+                            }
                         }
                     }
+                }
+                catch(Exception ex)
+                {
+                    Logger.Log(ex);
+                    return null;
                 }
             }
             return trackList;

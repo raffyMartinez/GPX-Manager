@@ -118,6 +118,10 @@ namespace GPXManager.entities
             if (deviceGPX != null && deviceGPX.GPX .Length > 0)
             {
                 tracks = Entities.TrackViewModel.ReadTracksFromXML(deviceGPX);
+                if(tracks==null)
+                {
+                    return false;
+                }
             }
             else
             {

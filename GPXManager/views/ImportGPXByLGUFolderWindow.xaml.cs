@@ -18,10 +18,10 @@ namespace GPXManager.views
     /// <summary>
     /// Interaction logic for ImportGPXByLGUFolderWindow.xaml
     /// </summary>
-    public partial class ImportGPXByLGUFolderWindow : Window
+    public partial class ImportGPXByFolderWindow : Window
     {
         private bool _proceed;
-        public ImportGPXByLGUFolderWindow()
+        public ImportGPXByFolderWindow()
         {
             InitializeComponent();
         }
@@ -47,8 +47,11 @@ namespace GPXManager.views
                             {
                                 ImportGPSData.StartGPSNumbering = val;
                                 ImportGPSData.GPSNameStart = namePart;
-                                ParentForm.ImportGPX();
-                                Close();
+                                //ParentForm.ImportGPX();
+                                if (ImportGPSData.ImportGPX())
+                                {
+                                    Close();
+                                }
                                    
                             }
                             else

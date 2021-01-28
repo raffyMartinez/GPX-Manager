@@ -67,7 +67,12 @@ namespace GPXManager.entities.mapping
             }
         }
 
-
+        public static void RemoveGPSDataFromMap()
+        {
+            RemoveLayerByKey("gpxfile_track");
+            RemoveLayerByKey("gpxfile_waypoint");
+            GPXMappingManager.RemoveAllFromMap();
+        }
         public static string CoastLineFile
         {
             get { return $@"{globalMapping.ApplicationPath}\Layers\Coastline\philippines_polygon.shp"; }

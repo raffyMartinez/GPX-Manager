@@ -126,7 +126,7 @@ namespace GPXManager
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
-                        m = new MenuItem { Header = "Import GPX by LGU", Name = "menuImportGPXByLGU" };
+                        m = new MenuItem { Header = "Import GPX by folder", Name = "menuImportGPXByFolder" };
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
@@ -831,7 +831,14 @@ namespace GPXManager
             {
                 msg = ImportGPSData.ImportMessage;
             }
-            MessageBox.Show(msg, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+
+            if(msg==null || msg.Length==0)
+            {
+                msg = "No GPX data was imported";
+            }
+
+             MessageBox.Show(msg, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+
         }
 
         private void ImportGPS()
@@ -886,8 +893,8 @@ namespace GPXManager
                 case "menuMapGPSMonthData":
                     ShowSelectedMonthGPXDataOnMap(whatToShow: "track_wpt");
                     break;
-                case "menuImportGPXByLGU":
-                    ImportGPXByLGUFolderWindow iw = new ImportGPXByLGUFolderWindow();
+                case "menuImportGPXByFolder":
+                    ImportGPXByFolderWindow iw = new ImportGPXByFolderWindow();
                     iw.ParentForm = this;
                     iw.ShowDialog();
                     break;
@@ -959,9 +966,7 @@ namespace GPXManager
                 case "menuGPXRemoveAllFromMap":
                     if (dataGridGPXFiles.SelectedItems.Count > 0)
                     {
-                        MapWindowManager.RemoveLayerByKey("gpxfile_track");
-                        MapWindowManager.RemoveLayerByKey("gpxfile_waypoint");
-                        GPXMappingManager.RemoveAllFromMap();
+                        MapWindowManager.RemoveGPSDataFromMap();
                         dataGridGPXFiles.Items.Refresh();
                     }
                     break;

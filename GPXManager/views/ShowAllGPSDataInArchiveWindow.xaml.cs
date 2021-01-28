@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using GPXManager.entities;
+using GPXManager.entities.mapping;
 
 namespace GPXManager.views
 {
@@ -74,7 +75,7 @@ namespace GPXManager.views
                 if ((bool)c.IsChecked)
                 {
 
-                    //selectedGPS.Add()
+                    selectedGPS.Add(Entities.GPSViewModel.GetGPS(c.Tag.ToString()));
                 }
             }
 
@@ -83,12 +84,26 @@ namespace GPXManager.views
             {
                 if ((bool)c.IsChecked)
                 {
-                    
+                    selectedMonth.Add(DateTime.Parse(c.Content.ToString()));
                 }
             }
 
             if(selectedGPS.Count>0 && selectedMonth.Count>0)
             {
+
+                int h = -1;
+                List<int> handles = new List<int>();
+                var gpxFiles = Entities.DeviceGPXViewModel.GetGPXFiles(selectedGPS, selectedMonth);
+                foreach (var item in gpxFiles)
+                {
+                    MapWindowManager.MapGPX(item, out h, out handles);
+                    item.ShapeIndexes = handles;
+                    item.ShownInMap = true;
+                }
+                if (h >= 0)
+                {
+                    MapWindowManager.MapControl.Redraw();
+                }
 
             }
             else
@@ -104,6 +119,7 @@ namespace GPXManager.views
                     Close();
                     break;
                 case "buttonOk":
+                    MapWindowManager.RemoveGPSDataFromMap();
                     ProcessChecked();
                     break;
             }

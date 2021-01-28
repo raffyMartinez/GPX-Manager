@@ -112,6 +112,7 @@
     </ApplicationDefinition>
     <Compile Include="entities\DetectDeviceEventArg.cs" />
     <Compile Include="entities\ImportGPSData.cs" />
+    <Compile Include="entities\ImportGPXEventArg.cs" />
     <Compile Include="entities\mapping\AOI.cs" />
     <Compile Include="entities\DateTimePickerEditor.cs" />
     <Compile Include="entities\DateTimePickerWithTime.cs" />

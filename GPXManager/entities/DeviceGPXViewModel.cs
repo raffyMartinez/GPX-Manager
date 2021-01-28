@@ -22,6 +22,7 @@ namespace GPXManager.entities
         private DeviceGPXRepository DeviceWaypointGPXes{ get; set; }
 
 
+
         public Dictionary<GPS, List<GPXFile>> ArchivedGPXFiles { get; private set; } = new Dictionary<GPS, List<GPXFile>>();
         public DeviceGPXViewModel()
         {
@@ -145,8 +146,32 @@ namespace GPXManager.entities
             return count;
         }
 
+        public List<GPXFile>GetGPXFiles(List<GPS>selectedGPS, List<DateTime>selectedDates )
+        {
+            var list = new List<GPXFile>();
+            foreach(var gps in selectedGPS)
+            {
+                if (ArchivedGPXFiles.Keys.Contains(gps))
+                {
+                    foreach (var item in ArchivedGPXFiles[gps])
+                    {
+                        foreach (var date in selectedDates)
+                        {
+                            if (item.DateRangeStart >= date && item.DateRangeStart < date.AddMonths(1))
+                            {
+                                list.Add(item);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
         /// <summary>
-        /// assume that the first folder is named after an LGU and subfolders will contain numbered folder names.
+        /// assume that the selected folder will contain subfolders with numbered folder names. 
+        /// GPS that all the folders will refer will be similarly named, but with differing numbers
         /// The number will point to a specific GPS so folder names need not be precise. The number will be concatenated to
         /// a string that referes to an LGU so CON 11 which then points to a GPS already stored in the database
         /// </summary>
@@ -157,7 +182,7 @@ namespace GPXManager.entities
         /// <param name=""></param>
         /// <returns></returns>
 
-        public int ImportGPXByLGUFolder(string folder, GPS in_gps = null,  bool? first=false, int yearStartProcess = 2019 )
+        public int ImportGPXByFolder(string folder, GPS in_gps = null,  bool? first=false, int yearStartProcess = 2019 )
         {
             if ((bool)first)
             {
@@ -175,7 +200,15 @@ namespace GPXManager.entities
                         var folderName = Path.GetFileName(folder);
                         if(ImportGPSData.GPSNameStart.Length>0)
                         {
-                             gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                            int numericPart = int.Parse(GetNumericPartOfFolderName(folderName));
+                            if (numericPart >= ImportGPSData.StartGPSNumbering && numericPart <= ImportGPSData.EndGPSNumbering)
+                            {
+                                gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                            }
+                            else
+                            {
+                                return 0;
+                            }
                         }
                         else {
                             gps = Entities.GPSViewModel.GetGPSByName(folderName);
