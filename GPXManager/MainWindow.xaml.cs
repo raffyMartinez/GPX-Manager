@@ -122,11 +122,11 @@ namespace GPXManager
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
-                        m = new MenuItem { Header = "Import GPX", Name = "menuImportGPX" };
-                        m.Click += OnMenuClick;
-                        cm.Items.Add(m);
+                        //m = new MenuItem { Header = "Import GPX", Name = "menuImportGPX" };
+                        //m.Click += OnMenuClick;
+                        //cm.Items.Add(m);
 
-                        m = new MenuItem { Header = "Import GPX by folder", Name = "menuImportGPXByFolder" };
+                        m = new MenuItem { Header = "Import GPX", Name = "menuImportGPXByFolder" };
                         m.Click += OnMenuClick;
                         cm.Items.Add(m);
 
@@ -819,27 +819,27 @@ namespace GPXManager
             }
         }
 
-        public void ImportGPX()
-        {
-            string msg = "Import successful";
-            if (ImportGPSData.ImportGPX())
-            {
-                ShowArchive();
-                msg += $"\r\n{ImportGPSData.ImportMessage}";
-            }
-            else
-            {
-                msg = ImportGPSData.ImportMessage;
-            }
+        //public void ImportGPX()
+        //{
+        //    string msg = "Import successful";
+        //    if (ImportGPSData.ImportGPX())
+        //    {
+        //        ShowArchive();
+        //        msg += $"\r\n{ImportGPSData.ImportMessage}";
+        //    }
+        //    else
+        //    {
+        //        msg = ImportGPSData.ImportMessage;
+        //    }
 
-            if(msg==null || msg.Length==0)
-            {
-                msg = "No GPX data was imported";
-            }
+        //    if(msg==null || msg.Length==0)
+        //    {
+        //        msg = "No GPX data was imported";
+        //    }
 
-             MessageBox.Show(msg, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+        //     MessageBox.Show(msg, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
 
-        }
+        //}
 
         private void ImportGPS()
         {
@@ -918,7 +918,7 @@ namespace GPXManager
 
                 case "menuFileImportGPX":
                 case "menuImportGPX":
-                    ImportGPX();
+                    //ImportGPX();
                     break;
 
                 case "menuFileImportGPS":
@@ -2194,7 +2194,7 @@ namespace GPXManager
             }
         }
 
-        private void ShowArchive()
+        public void ShowArchive()
         {
             if (Global.AppProceed)
             {

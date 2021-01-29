@@ -5,20 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
-        Title="Import GPX" Height="358.314" Width="502.81" WindowStyle="ToolWindow" WindowStartupLocation="CenterScreen">
+        Title="Import GPX" Height="399.432" Width="502.81" WindowStyle="ToolWindow" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="50"/>
             <RowDefinition/>
             <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
         <Label Content="Import GPX by folder" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
         <Label Content="First part of GPS name" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0 0 5 0" Grid.Row="1"/>
@@ -37,6 +37,9 @@
             <Button Content="Cancel" Height="30" Margin="5" Width="70" x:Name="buttonCancel" Click="OnButtonClick"/>
             <Button Content="Ok" Height="30" Margin="5" Width="70" x:Name="buttonOK" Click="OnButtonClick"/>
         </WrapPanel>
-        <ProgressBar Grid.Row="6" Grid.ColumnSpan="2" Height="15" Margin="40 0" VerticalAlignment="Top" Visibility="Hidden"/>
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2" x:Name="panelStatus" Visibility="Collapsed" VerticalAlignment="top" HorizontalAlignment="Center">
+            <Label Content="Status label" HorizontalAlignment="Center" x:Name="statusLabel"/>
+            <ProgressBar  Height="10" Margin="40 0" VerticalAlignment="Top"  x:Name="progressBar" Width="250"/>
+        </StackPanel>
     </Grid>
 </Window>
