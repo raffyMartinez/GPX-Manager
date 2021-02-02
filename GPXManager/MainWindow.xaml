@@ -83,6 +83,12 @@
                 <Button x:Name="buttonArchive" Click="OnToolbarButtonClick" ToolTip="Archive">
                     <Image Source="archive.png" OpacityMask="White" />
                 </Button>
+                <Button x:Name="buttonPath" Click="OnToolbarButtonClick" ToolTip="Fishing operation path">
+                    <Image Source="navigation path.png" OpacityMask="White" />
+                </Button>
+                <Button x:Name="buttonImage" Click="OnToolbarButtonClick" ToolTip="Manage logbook image">
+                    <Image Source="file image.png" OpacityMask="White" />
+                </Button>                
                 <Button x:Name="buttonUploadCloud" Click="OnToolbarButtonClick" ToolTip="Upload to cloud">
                     <Image Source="upload to cloud.png" OpacityMask="White" />
                 </Button>

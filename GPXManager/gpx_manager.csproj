@@ -65,6 +65,9 @@
     <Reference Include="GongSolutions.WPF.DragDrop, Version=2.0.0.0, Culture=neutral, PublicKeyToken=91f1945125b7a587, processorArchitecture=MSIL">
       <HintPath>..\packages\gong-wpf-dragdrop.2.3.2\lib\net47\GongSolutions.WPF.DragDrop.dll</HintPath>
     </Reference>
+    <Reference Include="MetadataExtractor, Version=2.4.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MetadataExtractor.2.4.3\lib\net45\MetadataExtractor.dll</HintPath>
+    </Reference>
     <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=66aa232afad40158, processorArchitecture=MSIL">
       <HintPath>..\packages\Ookii.Dialogs.Wpf.1.1.0\lib\net45\Ookii.Dialogs.Wpf.dll</HintPath>
     </Reference>
@@ -104,6 +107,9 @@
     <Reference Include="Xceed.Wpf.Toolkit, Version=4.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\Extended.Wpf.Toolkit.4.0.1\lib\net40\Xceed.Wpf.Toolkit.dll</HintPath>
     </Reference>
+    <Reference Include="XmpCore, Version=6.1.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\XmpCore.6.1.10\lib\net35\XmpCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -111,8 +117,12 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="entities\DetectDeviceEventArg.cs" />
+    <Compile Include="entities\ImageMetadata.cs" />
     <Compile Include="entities\ImportGPSData.cs" />
     <Compile Include="entities\ImportGPXEventArg.cs" />
+    <Compile Include="entities\LogbookImage.cs" />
+    <Compile Include="entities\LogBookImageRepository.cs" />
+    <Compile Include="entities\LogbookImageViewModel.cs" />
     <Compile Include="entities\mapping\AOI.cs" />
     <Compile Include="entities\DateTimePickerEditor.cs" />
     <Compile Include="entities\DateTimePickerWithTime.cs" />
@@ -201,6 +211,9 @@
     <Compile Include="views\GPXFIlePropertiesWindow.xaml.cs">
       <DependentUpon>GPXFIlePropertiesWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\ImageManagerWindow.xaml.cs">
+      <DependentUpon>ImageManagerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\ImportGPXByLGUFolderWindow.xaml.cs">
       <DependentUpon>ImportGPXByLGUFolderWindow.xaml</DependentUpon>
     </Compile>
@@ -210,12 +223,16 @@
     <Compile Include="views\MapWindowForm.xaml.cs">
       <DependentUpon>MapWindowForm.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\PathWindow.xaml.cs">
+      <DependentUpon>PathWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\ShowAllGPSDataInArchiveWindow.xaml.cs">
       <DependentUpon>ShowAllGPSDataInArchiveWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\ZoomBorder.cs" />
     <Page Include="entities\mapping\Views\AOIWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -291,11 +308,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\ImageManagerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\ImportGPXByLGUFolderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\MapWindowForm.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\PathWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -528,6 +553,18 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="views\gpx_logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="navigation path.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="file image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\rotate left.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\rotate right.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

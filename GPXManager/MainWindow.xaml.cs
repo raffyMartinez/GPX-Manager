@@ -207,6 +207,7 @@ namespace GPXManager
             Entities.TripWaypointViewModel = new TripWaypointViewModel();
             Entities.DeviceGPXViewModel = new DeviceGPXViewModel();
             Entities.AOIViewModel = new AOIViewModel();
+            Entities.LogbookImageViewModel = new LogbookImageViewModel();
 
             _cboBrand = new ComboBox();
             _cboModel = new ComboBox();
@@ -2253,6 +2254,11 @@ namespace GPXManager
         {
             switch (((Button)sender).Name)
             {
+                case "buttonImage":
+                    ImageManagerWindow imw = new ImageManagerWindow();
+                    imw.Owner = this;
+                    imw.Show();
+                    break;
                 case "buttonAbout":
                     ShowAboutWindow();
                     break;

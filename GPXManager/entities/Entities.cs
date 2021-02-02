@@ -29,6 +29,9 @@ namespace GPXManager.entities
 
         public static AOIViewModel AOIViewModel { get; set; }
 
+        public static LogbookImageViewModel LogbookImageViewModel { get; set; }
+        
+
 
 
         public static bool ClearTables()

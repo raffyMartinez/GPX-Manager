@@ -17,6 +17,7 @@ namespace GPXManager.entities.mapping
             AOIs = new AOIRepository();
             AOICollection = new ObservableCollection<AOI>(AOIs.AOIs);
             AOICollection.CollectionChanged += AOICollection_CollectionChanged;
+
         }
 
 
