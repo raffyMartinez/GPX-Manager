@@ -117,6 +117,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="entities\DetectDeviceEventArg.cs" />
+    <Compile Include="entities\Fisher.cs" />
+    <Compile Include="entities\FisherRepository.cs" />
+    <Compile Include="entities\FisherViewModel.cs" />
     <Compile Include="entities\ImageMetadata.cs" />
     <Compile Include="entities\ImportGPSData.cs" />
     <Compile Include="entities\ImportGPXEventArg.cs" />
@@ -193,8 +196,14 @@
     <Compile Include="views\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\EditrSingleItemDialogWindow.xaml.cs">
+      <DependentUpon>EditrSingleItemDialogWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\EditBrandModelWindow.xaml.cs">
       <DependentUpon>EditBrandModelWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\EditFisherWindow.xaml.cs">
+      <DependentUpon>EditFisherWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\EditTripWaypointsWindow.xaml.cs">
       <DependentUpon>EditTripWaypointsWindow.xaml</DependentUpon>
@@ -210,9 +219,6 @@
     </Compile>
     <Compile Include="views\GPXFIlePropertiesWindow.xaml.cs">
       <DependentUpon>GPXFIlePropertiesWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="views\ImageManagerWindow.xaml.cs">
-      <DependentUpon>ImageManagerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\ImportGPXByLGUFolderWindow.xaml.cs">
       <DependentUpon>ImportGPXByLGUFolderWindow.xaml</DependentUpon>
@@ -284,7 +290,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\EditrSingleItemDialogWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\EditBrandModelWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\EditFisherWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -305,10 +319,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\GPXFIlePropertiesWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="views\ImageManagerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -565,6 +575,42 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="views\rotate right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\flip vertical.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="person.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\delete.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\cancel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\ok.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\tags.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="views\tags gray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="rotate left.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="rotate right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="flip vertical.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="tags gray.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

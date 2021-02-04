@@ -5,17 +5,33 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager"
+        xmlns:local2="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
         Title="GPX Manager" Height="450" Width="800" WindowState="Maximized" Foreground="{x:Null}">
 
     <Grid>
         <Grid.RowDefinitions>
+            <!--holds the menu-->
             <RowDefinition Height="30"/>
+
+            <!--Holds the toolbar -->
             <RowDefinition Height="34" />
-            <RowDefinition/>
+
+            <!--Holds the main body of the window -->
+            <RowDefinition x:Name="parentGridRowClient" Height="0"/>
+
+            <!--for fisher grid-->
+            <RowDefinition x:Name="parentGridRowClientFishers" Height="0"/>
+
+            <!--for image manager grid-->
+            <RowDefinition x:Name="parentGridRowClientLogbookImages" Height="*"/>
+
+            <!--Holds the status bar -->
             <RowDefinition Height="35"/>
         </Grid.RowDefinitions>
-        <Menu  VerticalAlignment="Center" Padding="3">
+
+        <!--Menu bar row -->
+        <Menu  Grid.Row="0" VerticalAlignment="Center" Padding="3" >
             <MenuItem Header="File">
                 <MenuItem Header="Save">
                     <MenuItem Header="GPS" x:Name="menuSaveGPS" Click="OnMenuClick"/>
@@ -66,6 +82,8 @@
                 <MenuItem Header="About" x:Name="menuHelpAbout" Click="OnMenuClick"/>
             </MenuItem>
         </Menu>
+
+        <!--Toolbar row -->
         <ToolBarTray Grid.Row="1" Height="34">
             <ToolBar Height="32" Width="Auto" >
                 <Button x:Name="buttonMap" Click="OnToolbarButtonClick" ToolTip="Open map">
@@ -83,12 +101,14 @@
                 <Button x:Name="buttonArchive" Click="OnToolbarButtonClick" ToolTip="Archive">
                     <Image Source="archive.png" OpacityMask="White" />
                 </Button>
-                <Button x:Name="buttonPath" Click="OnToolbarButtonClick" ToolTip="Fishing operation path">
-                    <Image Source="navigation path.png" OpacityMask="White" />
+                <Button x:Name="buttonPerson" Click="OnToolbarButtonClick" ToolTip="Manage fishers">
+                    <Image Source="person.png" OpacityMask="White" />
+
                 </Button>
+
                 <Button x:Name="buttonImage" Click="OnToolbarButtonClick" ToolTip="Manage logbook image">
                     <Image Source="file image.png" OpacityMask="White" />
-                </Button>                
+                </Button>
                 <Button x:Name="buttonUploadCloud" Click="OnToolbarButtonClick" ToolTip="Upload to cloud">
                     <Image Source="upload to cloud.png" OpacityMask="White" />
                 </Button>
@@ -105,6 +125,8 @@
 
             </ToolBar>
         </ToolBarTray>
+
+        <!--main body or client area-->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="300"/>
@@ -255,7 +277,7 @@
 
                     </StackPanel>
                 </ScrollViewer>
-                
+
                 <ScrollViewer Grid.Row="6" VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="stackPanelTripWaypoints" Visibility="Collapsed" Margin="10 0 0 0">
                         <Label x:Name="labelTripWaypoints" Content="Waypoints for selected trip" Margin="0 20 0 5"/>
@@ -270,11 +292,132 @@
                         </WrapPanel>
                     </StackPanel>
                 </ScrollViewer>
-                
+
             </Grid>
 
         </Grid>
-        <StatusBar Grid.Row="3" Grid.ColumnSpan="3">
+
+        <!--for displaying fisherss-->
+        <Grid Grid.Row="3" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition/>
+                <RowDefinition Height="60"/>
+            </Grid.RowDefinitions>
+            <Label Content="This is the label for the fisher grid" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <DataGrid Grid.Row="1" x:Name="dataGridFishers" Margin="10 5" SelectionChanged="OnDataGridSelectionChanged"/>
+            <WrapPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="buttonFishersDelete" Height="30" Width="80" Content="Delete" Margin="10 0" IsEnabled="False" Click="OnButtonClick"/>
+                <Button x:Name="buttonFishersEdit" Height="30" Width="80" Content="Edit" Margin="10 0" IsEnabled="False" Click="OnButtonClick"/>
+                <Button x:Name="buttonFishersAdd" Height="30" Width="80" Content="Add" Margin="10 0" Click="OnButtonClick"/>
+
+            </WrapPanel>
+        </Grid>
+
+        <!--for logbook image manager-->
+        <Grid Grid.Row="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="labelSelectedImageItem" Content="This is the selected item in the tree" Grid.Column="1" Grid.ColumnSpan="2" FontSize="14" FontWeight="Bold"/>
+
+            
+            <!--Holds the image treeview-->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Button Content="Select folder" Height="30" Width="100" Click="OnButtonClick" x:Name="buttonSelectFolder" Margin="0 10"/>
+                <TreeView x:Name="treeImages" SelectedItemChanged="OnImageTreeSelectionChnaged" Grid.Row="1">
+                    <TreeViewItem Header="Not registered" Tag="top" x:Name="tvItemNotRegistered"/>
+                    <TreeViewItem Header="Registered" Tag="top" x:Name="tvItemRegistered"/>
+                    <TreeViewItem Header="Ignored" Tag="top" x:Name="tvItemIgnored"/>
+                </TreeView>
+            </Grid>
+
+            
+            
+            <!--Holds the image control and buttons-->
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="40"/>
+                </Grid.RowDefinitions>
+                <local2:ZoomBorder x:Name="imageBorder" ClipToBounds="True" Background="Gray">
+                    <Image x:Name="imagePreview"/>
+                </local2:ZoomBorder>
+                <WrapPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Height="30" Width="30" Margin="10 0" x:Name="buttonRotateLeft" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}">
+                        <Button.Background>
+                            <ImageBrush ImageSource="rotate left.png" Stretch="Uniform"/>
+                        </Button.Background>
+                    </Button>
+                    <Button Height="30" Width="30" Margin="10 0" x:Name="buttonRotateRight" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}">
+                        <Button.Background>
+                            <ImageBrush ImageSource="rotate right.png" Stretch="Uniform"/>
+                        </Button.Background>
+
+                    </Button>
+                    <Button Height="30" Width="30" Margin="10 0" x:Name="buttonFlipVertical" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}">
+                        <Button.Background>
+                            <ImageBrush ImageSource="flip vertical.png" Stretch="Uniform"/>
+                        </Button.Background>
+                    </Button>
+                    <Button Height="30" Width="30" Margin="10 0" Visibility="Visible" x:Name="buttonMetadata"  Click="OnButtonClick" BorderBrush="{x:Null}">
+                        <Button.Background>
+                            <ImageBrush ImageSource="tags gray.png" Stretch="Uniform"/>
+                        </Button.Background>
+                    </Button>
+                </WrapPanel>
+            </Grid>
+
+
+            <!--holds the list of field controls-->
+            <StackPanel Grid.Row="1" Grid.Column="2">
+                <StackPanel>
+                    <Label Content="Filename" Margin="3 0"/>
+                    <Label Content="image filname here" x:Name="labelImageFilename" Margin="10 0"/>
+                </StackPanel>
+
+                <StackPanel Margin="3 5">
+                    <Label Content="GPS"/>
+                    <ComboBox x:Name="comboGPS"/>
+                </StackPanel>
+
+                <StackPanel Margin="3 5">
+                    <Label Content="Gear"/>
+                    <ComboBox x:Name="comboGear"/>
+                </StackPanel>
+
+                <StackPanel Margin="3 5">
+                    <Label Content="Date start"/>
+                    <xctk:DateTimePicker x:Name="dtPickerStart"/>
+                    <!--<ComboBox x:Name="comboStart"/>-->
+                </StackPanel>
+
+                <StackPanel Margin="3 5">
+                    <Label Content="Date end"/>
+                    <xctk:DateTimePicker x:Name="dtPickerEnd"/>
+                    <!--<ComboBox x:Name="comboEnd"/>-->
+                </StackPanel>
+                <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Button Content="Ignore" Height="30" Width="60" x:Name="buttonIgnore" Margin="5 10" Click="OnButtonClick" IsEnabled="False"/>
+                    <Button Content="Register" Height="30" Width="60" x:Name="buttonRegister" Margin="5 10" Click="OnButtonClick" IsEnabled="False"/>
+                </WrapPanel>
+
+            </StackPanel>
+        </Grid>
+
+
+        <!--status bar-->
+        <StatusBar Grid.Row="5" Grid.ColumnSpan="3">
             <Label x:Name="statusLabel" Content="This is a status label" MouseDoubleClick="OnStatusLabelDoubleClick"/>
         </StatusBar>
     </Grid>

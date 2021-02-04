@@ -16,6 +16,8 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using xceedPropertyGrid = Xceed.Wpf.Toolkit.PropertyGrid;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace GPXManager
 {
@@ -52,6 +54,13 @@ namespace GPXManager
         private string _gpsid;
         private bool _archiveTreeExpanded;
         private Dictionary<string, string> _deviceDetectError = new Dictionary<string, string>();
+
+
+        private List<FileInfo> _rawImageFiles;
+        private BitmapImage _src;
+        private FileInfo _file;
+        private LogbookImage _logbookImage;
+        private TreeViewItem _selected;
         public DataGrid CurrentDataGrid { get; set; }
 
         public MainWindow()
@@ -208,6 +217,7 @@ namespace GPXManager
             Entities.DeviceGPXViewModel = new DeviceGPXViewModel();
             Entities.AOIViewModel = new AOIViewModel();
             Entities.LogbookImageViewModel = new LogbookImageViewModel();
+            Entities.FisherViewModel = new FisherViewModel();
 
             _cboBrand = new ComboBox();
             _cboModel = new ComboBox();
@@ -247,6 +257,7 @@ namespace GPXManager
                 if (File.Exists(Global.MDBPath))
                 {
                     SetupEntities();
+                    SetupLogBookImageControls();
                 }
                 else
                 {
@@ -277,6 +288,61 @@ namespace GPXManager
             SetMapButtonsEnabled();
         }
 
+        private void SetupLogBookImageControls()
+        {
+            comboGPS.DisplayMemberPath = "Value";
+            comboGPS.SelectedValuePath = "Key";
+
+            comboGear.DisplayMemberPath = "Value";
+            comboGear.SelectedValuePath = "Key";
+
+            foreach (var item in Entities.GPSViewModel.GetAll())
+            {
+
+                KeyValuePair<string, string> kv = new KeyValuePair<string, string>(item.DeviceID, item.DeviceName);
+                comboGPS.Items.Add(kv);
+
+            }
+
+            foreach (var gear in Entities.GearViewModel.GetAllGears())
+            {
+                KeyValuePair<string, string> kv = new KeyValuePair<string, string>(gear.Code, gear.Name);
+                comboGear.Items.Add(kv);
+            }
+
+            labelSelectedImageItem.Content = "";
+        }
+
+        private void ShowImageList()
+        {
+            foreach (TreeViewItem item in treeImages.Items)
+            {
+                item.Items.Clear();
+            }
+            if (_rawImageFiles.Count > 0)
+            {
+                foreach (var rawImage in _rawImageFiles)
+                {
+
+                    var logbookImage = Entities.LogbookImageViewModel.GetImage(rawImage.FullName);
+                    if (logbookImage != null)
+                    {
+                        if (logbookImage.Ignore)
+                        {
+                            tvItemIgnored.Items.Add(new TreeViewItem { Header = rawImage.Name, Tag = logbookImage });
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        tvItemNotRegistered.Items.Add(new TreeViewItem { Header = rawImage.Name, Tag = rawImage });
+                    }
+                }
+            }
+        }
         private void OnComboSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var cbo = (ComboBox)sender;
@@ -399,10 +465,82 @@ namespace GPXManager
                 MessageBox.Show("GPX data successfully archived", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-        private void OnButtonClick(object sender, RoutedEventArgs e)
+        private async void OnButtonClick(object sender, RoutedEventArgs e)
         {
             switch (((Button)sender).Name)
             {
+                case "buttonIgnore":
+                    if (Entities.LogbookImageViewModel.IgnoreImage(new LogbookImage { Ignore = true, FileName = _file.FullName }))
+                    {
+
+                        imagePreview.Source = null;
+                        var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
+                        tvItemIgnored.Items.Add(new TreeViewItem { Header = System.IO.Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
+                        int index = tvItemNotRegistered.Items.IndexOf(_selected);
+                        tvItemNotRegistered.Items.Remove(_selected);
+                        _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
+                        _selected.IsSelected = true;
+                        //((TreeViewItem)tvItemNotRegistered.Items[index]).IsSelected = true;
+                        //_selected = null;
+                    }
+                    break;
+                case "buttonMetadata":
+                    break;
+                case "buttonRegister":
+
+                    break;
+                case "buttonSelectFolder":
+                    _rawImageFiles = await Entities.LogbookImageViewModel.GetImagesFromFolder();
+                    ShowImageList();
+                    imagePreview.Source = null;
+                    tvItemNotRegistered.IsExpanded = true;
+                    break;
+                case "buttonFlipVertical":
+                    if (_src != null)
+                    {
+                        TransformedBitmap transformBmp = new TransformedBitmap();
+                        transformBmp.BeginInit();
+                        transformBmp.Source = _src;
+                        RotateTransform transform = new RotateTransform(180);
+                        transformBmp.Transform = transform;
+                        transformBmp.EndInit();
+
+                        imagePreview.Source = transformBmp;
+                    }
+                    break;
+                case "buttonRotateLeft":
+                    if (_src != null)
+                    {
+                        TransformedBitmap transformBmp = new TransformedBitmap();
+                        transformBmp.BeginInit();
+                        transformBmp.Source = _src;
+                        RotateTransform transform = new RotateTransform(270);
+                        transformBmp.Transform = transform;
+                        transformBmp.EndInit();
+
+                        imagePreview.Source = transformBmp;
+                    }
+                    break;
+                case "buttonRotateRight":
+                    if (_src != null)
+                    {
+                        TransformedBitmap transformBmp = new TransformedBitmap();
+                        transformBmp.BeginInit();
+                        transformBmp.Source = _src;
+                        RotateTransform transform = new RotateTransform(90);
+                        transformBmp.Transform = transform;
+                        transformBmp.EndInit();
+
+                        imagePreview.Source = transformBmp;
+
+
+                    }
+                    break;
+                case "buttonFishersAdd":
+                    EditFisherWindow efw = new EditFisherWindow();
+                    efw.Owner = this;
+                    efw.ShowDialog();
+                    break;
                 case "buttonArchiveGPX":
                     ArchiveGPSData();
                     break;
@@ -1482,6 +1620,22 @@ namespace GPXManager
             }
         }
 
+        private void ShowLogbookManager()
+        {
+            ResetView();
+            parentGridRowClient.Height = new GridLength(0);
+            parentGridRowClientLogbookImages.Height = new GridLength(1, GridUnitType.Star);
+        }
+        private void ShowFishers()
+        {
+            ResetView();
+            parentGridRowClient.Height = new GridLength(0);
+            parentGridRowClientFishers.Height = new GridLength(1, GridUnitType.Star);
+
+            dataGridFishers.Columns.Clear();
+            dataGridFishers.Columns.Add(new DataGridTextColumn { Header = "Fisher", Binding = new Binding("FisherName") });
+            dataGridFishers.Columns.Add(new DataGridTextColumn { Header = "Boats", Binding = new Binding("VesselList") });
+        }
         private void ResetView()
         {
             gpsPanel.Visibility = Visibility.Collapsed;
@@ -1501,6 +1655,10 @@ namespace GPXManager
             textBlock.Visibility = Visibility.Collapsed;
             buttonEjectDevice.Visibility = Visibility.Visible;
             labelCalendarMonth.Visibility = Visibility.Collapsed;
+
+            parentGridRowClient.Height = new GridLength(1, GridUnitType.Star);
+            parentGridRowClientFishers.Height = new GridLength(0);
+            parentGridRowClientLogbookImages.Height = new GridLength(0);
 
             treeRowArchive.Height = new GridLength(0);
             treeRowUSB.Height = new GridLength(0);
@@ -1942,6 +2100,10 @@ namespace GPXManager
             }
             switch (((DataGrid)sender).Name)
             {
+                case "dataGridFishers":
+                    buttonFishersDelete.IsEnabled = true;
+                    buttonFishersEdit.IsEnabled = true;
+                    break;
                 case "dataGridGPSSummary":
                     if (dataGridGPSSummary.Items.Count > 0 && dataGridGPSSummary.SelectedItems.Count > 0)
                     {
@@ -2252,12 +2414,17 @@ namespace GPXManager
 
         private void OnToolbarButtonClick(object sender, RoutedEventArgs e)
         {
+
             switch (((Button)sender).Name)
             {
+                case "buttonPerson":
+                    ShowFishers();
+                    break;
                 case "buttonImage":
-                    ImageManagerWindow imw = new ImageManagerWindow();
-                    imw.Owner = this;
-                    imw.Show();
+                    //ImageManagerWindow imw = new ImageManagerWindow();
+                    //imw.Owner = this;
+                    //imw.Show();
+                    ShowLogbookManager();
                     break;
                 case "buttonAbout":
                     ShowAboutWindow();
@@ -2379,6 +2546,44 @@ namespace GPXManager
                         }
                     }
                     break;
+            }
+        }
+
+        private void OnImageTreeSelectionChnaged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            _selected = e.NewValue as TreeViewItem;
+            _file = null;
+            _logbookImage = null;
+
+            if (_selected.Tag.ToString() != "main")
+            {
+                buttonIgnore.IsEnabled = true;
+                buttonRegister.IsEnabled = true;
+                switch (_selected.Tag.GetType().Name)
+                {
+                    case "FileInfo":
+                        _file = _selected.Tag as FileInfo;
+                        _src = new BitmapImage(uriSource: new Uri(_file.FullName));
+                        labelSelectedImageItem.Content = _file.FullName;
+                        break;
+                    case "LogbookImage":
+                        _logbookImage = _selected.Tag as LogbookImage;
+                        _src = new BitmapImage(uriSource: new Uri(_logbookImage.FileName));
+
+                        var parentHeader = ((TreeViewItem)_selected.Parent).Header;
+                        switch (parentHeader)
+                        {
+                            case "Registered":
+                                buttonRegister.IsEnabled = false;
+                                break;
+                            case "Ignored":
+                                buttonIgnore.IsEnabled = false;
+                                break;
+                        }
+                        labelSelectedImageItem.Content = _logbookImage.Title;
+                        break;
+                }
+                imagePreview.Source = _src;
             }
         }
     }

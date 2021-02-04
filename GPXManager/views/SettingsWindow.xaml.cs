@@ -53,6 +53,7 @@ namespace GPXManager.views
                 textBoxBingAPIKey.Text = Global.Settings.BingAPIKey;
                 textLatestTripCount.Text = Global.Settings.LatestTripCount.ToString();
                 textLatestGPXFileCount.Text = Global.Settings.LatestGPXFileCount.ToString();
+                textLogImageFolder.Text = Global.Settings.LogImagesFolder.ToString();
                 
             }
             else
@@ -69,7 +70,7 @@ namespace GPXManager.views
         }
         public bool Validate()
         {
-            if(textBoxBackendPath.Text.Length>0 && textBoxGPXFolder.Text.Length>0 && textBoxGPXFolderDevice.Text.Length>0)
+            if(textBoxBackendPath.Text.Length>0 && textBoxGPXFolder.Text.Length>0 && textBoxGPXFolderDevice.Text.Length>0 && textLogImageFolder.Text.Length>0)
             {
                 return int.TryParse(textBoxHoursOffsetGMT.Text, out int v);
             }
@@ -81,23 +82,32 @@ namespace GPXManager.views
             switch(((Button)sender).Name)
             {
                 case "buttonOk":
-                    DialogResult =  Validate() && Global.SetSettings(
-                        textBoxGPXFolder.Text, 
-                        textBoxGPXFolderDevice.Text, 
-                        textBoxBackendPath.Text, 
-                        int.Parse(textBoxHoursOffsetGMT.Text),
-                        textBoxBingAPIKey.Text,
-                        int.Parse(textLatestTripCount.Text),
-                        int.Parse(textLatestGPXFileCount.Text)
-                        );
-                    if(!Validate())
+                    if (Validate())
                     {
-                        MessageBox.Show("All fields should be answered with the expected values", "Validation error",MessageBoxButton.OK, MessageBoxImage.Information);
+                        Global.SetSettings(
+                          textBoxGPXFolder.Text,
+                          textBoxGPXFolderDevice.Text,
+                          textBoxBackendPath.Text,
+                          int.Parse(textBoxHoursOffsetGMT.Text),
+                          textBoxBingAPIKey.Text,
+                          int.Parse(textLatestTripCount.Text),
+                          int.Parse(textLatestGPXFileCount.Text),
+                          textLogImageFolder.Text
+                          );
+
+                        DialogResult = true;
                     }
+                    else
+                    {
+                        MessageBox.Show("Required fields* should be answered with the expected values", "Validation error",MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+ 
                     break;
                 case "buttonCancel":
                     DialogResult = false;
                     break;
+
                 case "buttonLocate":
                     VistaFolderBrowserDialog fbd = new VistaFolderBrowserDialog();
                     fbd.UseDescriptionForTitle = true;
@@ -105,6 +115,15 @@ namespace GPXManager.views
                     if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
                     {
                         textBoxGPXFolder.Text = fbd.SelectedPath;
+                    }
+                    break;
+                case "buttonLocateImageLog":
+                    fbd = new VistaFolderBrowserDialog();
+                    fbd.UseDescriptionForTitle = true;
+                    fbd.Description = "Locate folder of logbook images in computer";
+                    if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
+                    {
+                        textLogImageFolder.Text = fbd.SelectedPath;
                     }
                     break;
                 case "buttonLocateBackend":

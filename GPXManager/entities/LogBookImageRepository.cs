@@ -35,10 +35,17 @@ namespace GPXManager.entities
                         foreach (DataRow dr in dt.Rows)
                         {
                             LogbookImage item = new LogbookImage();
+                            item.FileName = dr["FileName"].ToString();
                             item.GPS = Entities.GPSViewModel.GetGPS(dr["GPSID"].ToString());
                             item.Start = (DateTime)dr["DateStart"];
                             item.End = (DateTime)dr["DateEnd"];
+                            item.FisherID = int.Parse(dr["FisherID"].ToString());
+                            item.Boat = dr["Boat"].ToString();
                             item.Gear = Entities.GearViewModel.GetGear(dr["GearID"].ToString());
+                            item.DateAddedToDatabase = (DateTime)dr["DateAdded"];
+                            item.Ignore = false;
+
+                            thisList.Add(item);
                         }
                     }
                 }
@@ -55,6 +62,51 @@ namespace GPXManager.entities
                     Logger.Log(ex);
                 }
             }
+            thisList.AddRange(GetIgnoredImages());
+            return thisList;
+        }
+
+        public List<LogbookImage> GetIgnoredImages()
+        {
+            var thisList = new List<LogbookImage>();
+            var dt = new DataTable();
+            using (var conection = new OleDbConnection(Global.ConnectionString))
+            {
+                try
+                {
+                    conection.Open();
+                    string query = $"Select * from logbook_image_ignore";
+
+
+                    var adapter = new OleDbDataAdapter(query, conection);
+                    adapter.Fill(dt);
+                    if (dt.Rows.Count > 0)
+                    {
+                        thisList.Clear();
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            LogbookImage item = new LogbookImage();
+                            item.FileName = dr["FileName"].ToString();
+                            item.DateAddedToDatabase = (DateTime)dr["DateAdded"];
+                            item.Ignore = true;
+                            thisList.Add(item);
+                        }
+                    }
+                }
+                catch (OleDbException dbex)
+                {
+                    if (dbex.ErrorCode == -2147217865)
+                    {
+                        //table not found so we create one
+                        CreateTable();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            }
+
             return thisList;
         }
 
@@ -64,14 +116,26 @@ namespace GPXManager.entities
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $@"Insert into logbook_image(FileName, GPSID,DateStart,DateEnd,GearID,DateAdded)
+                var sql = "";
+                if (image.Ignore)
+                {
+                    sql = $@"Insert into logbook_image_ignore(FileName,DateAdded ) Values
+                             ('{image.FileName}', '{DateTime.Now}')";
+                }
+                else
+                {
+                    sql = $@"Insert into logbook_image(FileName, GPSID,DateStart,DateEnd,GearID,DateAdded,FisherID,Boat)
                            Values (
+                            '{image.FileName}',
                             '{image.GPS.DeviceID}',
                             '{image.Start}', 
                             '{image.End}',
                             '{image.Gear.Code}',
-                            '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}'
+                            '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}',
+                             {image.FisherID}.
+                            '{image.Boat}'    
                            )";
+                }
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -91,7 +155,9 @@ namespace GPXManager.entities
                                 GPSID= '{image.GPS.DeviceID}',
                                 DateStart = '{image.Start}',
                                 DateEnd = '{image.End}',
-                                GearID = '{image.Gear.Code}'
+                                GearID = '{image.Gear.Code}',
+                                FisherID = {image.FisherID},
+                                Boat = '{image.Boat}'
                             WHERE FileName = '{image.FileName}'";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -136,10 +202,12 @@ namespace GPXManager.entities
                                 (
                                 FileName VarChar NOT NULL PRIMARY KEY,
                                 GPSID VarChar,
-                                DateStart DateTime NOT NULL,
+                                DateStart DateTime,
                                 DateEnd DateTime,
                                 GearID VarChar, 
-                                DateAdded DateTime Not Null,
+                                FisherID Int,
+                                Boat VarChar,
+                                DateAdded DateTime,
                                 CONSTRAINT image_gear FOREIGN KEY (GearID) REFERENCES gear(GearCode),
                                 CONSTRAINT image_gps FOREIGN KEY (GPSID) REFERENCES devices(DeviceID)
                                 )";
@@ -167,6 +235,14 @@ namespace GPXManager.entities
 
                 sql = @"CREATE INDEX DateEndIndex
                         ON logbook_image(DateStart)";
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+
+                sql = @"CREATE TABLE logbook_image_ignore
+                                (
+                                FileName VarChar NOT NULL PRIMARY KEY,
+                                DateAdded DateTime
+                                )";
                 cmd.CommandText = sql;
                 cmd.ExecuteNonQuery();
 

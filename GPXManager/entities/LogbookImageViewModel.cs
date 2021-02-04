@@ -28,8 +28,13 @@ namespace GPXManager.entities
 
 
         }
+
         public LogbookImage CurrentEntity { get; set; }
 
+        public LogbookImage GetImage(string fileName)
+        {
+            return ImageCollection.Where(t => t.FileName == fileName).FirstOrDefault();
+        }
         public async Task<List<FileInfo>> GetImagesFromFolder()
         {
             List<FileInfo> thisList = new List<FileInfo>();
@@ -37,7 +42,7 @@ namespace GPXManager.entities
             {
                 Description = "Locate folder with files of images of logbook data",
                 UseDescriptionForTitle = true,
-                SelectedPath = Global.Settings.ComputerGPXFolder
+                SelectedPath = Global.Settings.LogImagesFolder
             };
             if ((bool)vfbd.ShowDialog() && System.IO.Directory.Exists(vfbd.SelectedPath))
             {
@@ -105,6 +110,12 @@ namespace GPXManager.entities
                 }
 
             return metadata;
+        }
+
+        public bool IgnoreImage(LogbookImage image)
+        {
+            return AddRecordToRepo(image);
+            
         }
 
         private DateTime GetDateTimeFromMetadataTag(string tag,bool pureNumeric=true)
@@ -192,13 +203,12 @@ namespace GPXManager.entities
 
         public bool AddRecordToRepo(LogbookImage image)
         {
-            int oldCount = ImageCollection.Count;
             if (image == null)
                 throw new ArgumentNullException("Error: The argument is Null");
 
-            LogBookImages.Add(image);
+            ImageCollection.Add(image);
 
-            return ImageCollection.Count > oldCount;
+            return EditSuccess;
         }
 
         public bool UpdateRecordInRepo(LogbookImage image)

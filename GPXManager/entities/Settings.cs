@@ -46,6 +46,8 @@ namespace GPXManager.entities
         public string BingAPIKey { get; set; }
         public string MDBPath { get; set; }
         public string ComputerGPXFolder { get; set; }
+
+        public string LogImagesFolder { get; set; }
         public string DeviceGPXFolder { get; set; }
 
         public int HoursOffsetGMT { get; set; }

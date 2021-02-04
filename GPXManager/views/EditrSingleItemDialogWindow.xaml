@@ -1,0 +1,28 @@
+﻿<Window x:Class="GPXManager.views.EditBoatNameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="Provide name of boat" Height="205.504" Width="383.724">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="1">
+            <Label Content="Name of boat" Margin="10 0"/>
+            <Border BorderBrush="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" BorderThickness="0.5" Margin="10 0">
+                <TextBlock x:Name="textBoatName" Height="30"/>
+             </Border>
+        </StackPanel>
+        <WrapPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="50" Height="30" Margin="10 0"/>
+            <Button Content="Ok" Width="50" Height="30" Margin="10 0"/>
+            
+        </WrapPanel>
+    </Grid>
+</Window>

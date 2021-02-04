@@ -1,0 +1,61 @@
+﻿<Window x:Class="GPXManager.views.EditFisherWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="Manage fisher" Height="434.967" Width="381.069" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+            <RowDefinition Height="70"/>
+        </Grid.RowDefinitions>
+        <Label Content="Manage a fisher" x:Name="labelTitle" VerticalAlignment="Center" Margin="10 0" FontSize="14" FontWeight="Bold"/>
+        <StackPanel Grid.Row="1" >
+            <WrapPanel Margin="5 20 0 0" VerticalAlignment="Center" Width="350">
+                <Label Content="Name of fisher" Width="100"/>
+                <TextBox x:Name="textFisherName" Width="190" />
+            </WrapPanel>
+            <StackPanel Margin="10 20 0 0" HorizontalAlignment="Left" Width="350">
+                <Label Content="Names of boats"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="40"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox Height="190" Width="300" x:Name="listBoxBoats" MouseDoubleClick="OnListDoubleClick" HorizontalAlignment="Left"/>
+                    <StackPanel Grid.Column="1">
+                        <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDelete" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}">
+                            <Button.Background>
+                                <ImageBrush ImageSource="delete.png"/>
+                            </Button.Background>
+                        </Button>
+                        <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAdd" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}">
+                            <Button.Background>
+                                <ImageBrush ImageSource="add.png"/>
+                            </Button.Background>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+
+
+
+            </StackPanel>
+        </StackPanel>
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button x:Name="buttonCancel"  Click="OnButtonClick" Height="40" Width="40" Margin="10 0"  BorderBrush="{x:Null}">
+                <Button.Background>
+                    <ImageBrush ImageSource="cancel.png" Stretch="Uniform" />
+                </Button.Background>
+            </Button>
+            <Button x:Name="buttonOk" Click="OnButtonClick" Height="40" Width="40" Margin="10 0 25 0" BorderBrush="{x:Null}">
+                <Button.Background>
+                    <ImageBrush ImageSource="ok.png" Stretch="Uniform"/>
+                </Button.Background>
+            </Button>
+        </WrapPanel>
+    </Grid>
+</Window>

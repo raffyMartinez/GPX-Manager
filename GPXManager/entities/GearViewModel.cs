@@ -56,7 +56,7 @@ namespace GPXManager.entities
         }
         public List<Gear> GetAllGears()
         {
-            return GearCollection.ToList();
+            return GearCollection.OrderBy(t=>t.Name).ToList();
         }
         public bool GearNameExist(string gearName)
         {

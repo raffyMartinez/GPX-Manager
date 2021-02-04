@@ -58,6 +58,7 @@ namespace GPXManager.entities
         public static string ConnectionString { get; private set; }
 
         public static string ConnectionStringGrid25 { get; private set; }
+
         static Global()
         {
 
@@ -100,7 +101,7 @@ namespace GPXManager.entities
 
         public static bool SetSettings(string computerGPXFolder, string deviceGPXFolder, 
               string backendPath, int hoursGMTOffset, string bingAPIKey, int countLatestTrip,
-              int countLatestGPXFiles)
+              int countLatestGPXFiles, string logImagesFolder)
         {
             Settings = new Settings
             {
@@ -110,7 +111,8 @@ namespace GPXManager.entities
                 HoursOffsetGMT = hoursGMTOffset,
                 BingAPIKey = bingAPIKey,
                 LatestTripCount = countLatestTrip,
-                LatestGPXFileCount = countLatestGPXFiles
+                LatestGPXFileCount = countLatestGPXFiles,
+                LogImagesFolder = logImagesFolder
             };
 
             SaveGlobalSettings();
