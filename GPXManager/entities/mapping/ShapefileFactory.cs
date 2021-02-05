@@ -255,7 +255,7 @@ namespace GPXManager.entities.mapping
                 shpIndex = sf.EditAddShape(shp);
                 handles.Add(shpIndex);
                 sf.EditCellValue(sf.FieldIndexByName["GPS"], shpIndex, trip.GPS.DeviceName);
-                sf.EditCellValue(sf.FieldIndexByName["Fisher"], shpIndex, trip.OperatorName);
+                sf.EditCellValue(sf.FieldIndexByName["Fisher"], shpIndex, trip.Operator.Name);
                 sf.EditCellValue(sf.FieldIndexByName["Vessel"], shpIndex, trip.VesselName);
                 sf.EditCellValue(sf.FieldIndexByName["Departed"], shpIndex, trip.DateTimeDeparture);
                 sf.EditCellValue(sf.FieldIndexByName["Arrived"], shpIndex, trip.DateTimeArrival);

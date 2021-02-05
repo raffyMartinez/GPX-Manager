@@ -8,6 +8,16 @@ using System.Windows.Media.Animation;
 
 namespace GPXManager.entities
 {
+    public enum GPXEntityType
+    {
+        GPS,
+        LogBookImage,
+        Fisher,
+        Trip,
+        Track,
+        Waypoint,
+        GPXFile
+    }
     public static class Entities
     {
         public static GPSViewModel GPSViewModel { get; set; }

@@ -12,6 +12,65 @@ namespace GPXManager.entities
         public ObservableCollection<Trip> TripCollection { get; set; }
         private TripRepository Trips{ get; set; }
 
+        public bool SetTrackOfTrip(TripEdited trip)
+        {
+            bool success = false;
+            string trackFileName = "";
+            if (trip.DateTimeArrival > trip.DateTimeDeparture && Entities.TrackViewModel.Tracks.Count > 0)
+            {
+                var waypoints = new List<Waypoint>();
+                foreach (var trk in Entities.TrackViewModel.Tracks[trip.GPS])
+                {
+                    foreach (var wpt in trk.Waypoints.OrderBy(t => t.Time).ToList())
+                    {
+                        //adjust waypoint time to local time by adding offset from GMT
+                        var wptTimeAdjusted = wpt.Time.AddHours(Global.Settings.HoursOffsetGMT);
+
+                        if (wptTimeAdjusted > trip.DateTimeDeparture && wptTimeAdjusted < trip.DateTimeArrival)
+                        {
+                            waypoints.Add(wpt);
+                        }
+                    }
+
+                    //if we have a collection of waypoints then we exit the loop to avoid reading time from other track files
+                    if (waypoints.Count > 0)
+                    {
+                        trackFileName = trk.FileName;
+                        break;
+                    }
+
+                }
+                if (waypoints.Count > 0)
+                {
+                    var timeStamp = waypoints[0].Time.AddHours(Global.Settings.HoursOffsetGMT);
+                    if(trip.Track==null)
+                    {
+                        trip.Track = new Track();
+                        trip.Track.GPS = trip.GPS;
+                    }
+                    trip.Track.FileName = trackFileName;
+                    trip.Track.Waypoints = waypoints;
+                    trip.Track.Name = $"{trip.GPS.DeviceName} {timeStamp.ToString("MMM-dd-yyyy HH:mm")}";
+                    var trackXML = trip.Track.SerializeToString(trip.GPS, timeStamp, trackFileName);
+                    trip.Track.ResetStatistics();
+                    success = true;
+                    //PropertyGrid.Update();
+
+                    //foreach (PropertyItem prp in PropertyGrid.Properties)
+                    //{
+                    //    if (prp.PropertyName == "TrackSummary")
+                    //    {
+                    //        prp.Value = ((TripEdited)PropertyGrid.SelectedObject).TrackSummary;
+                    //        return;
+                    //    }
+                    //}
+
+
+                    //_dateTimeDepartureArrivalChanged = false;
+                }
+            }
+            return success;
+        }
         public void Serialize(string fileName)
         {
             List <TripEdited> trips= new List<TripEdited>();
@@ -103,6 +162,11 @@ namespace GPXManager.entities
                     return Trips.MaxRecordNumber() + 1;
                 }
             }
+        }
+
+        public Fisher GetFisherOfTrip(int tripID)
+        {
+            return TripCollection.FirstOrDefault(t => t.TripID == tripID).Operator;
         }
 
         public Trip GetLastTripOfDevice(string deviceID)
@@ -235,7 +299,7 @@ namespace GPXManager.entities
         {
             EntityValidationResult evr = new EntityValidationResult();
 
-            if (trip.OperatorName== null || trip.OperatorName.Length<3)
+            if (trip.Operator== null || trip.Operator.Name.Length<3)
             {
                 evr.AddMessage("Operator name must be at least 3 letters long");
             }

@@ -35,6 +35,7 @@ namespace GPXManager.views
         private static EditTripWindow _instance;
         private DateTime? _defaultStart;
         private DateTime? _defaultEnd;
+
         
         public static EditTripWindow GetInstance()
         {
@@ -115,7 +116,11 @@ namespace GPXManager.views
             }
 
             _trip.VesselName = VesselName;
-            _trip.OperatorName = OperatorName;
+            //_trip.OperatorID = (int)OperatorID;
+            if(OperatorID!=null)
+            {
+                _trip.OperatorID = OperatorID;
+            }
             if (GearCode != null && GearCode.Length > 0)
             {
                 _trip.GearCode = GearCode;
@@ -140,7 +145,7 @@ namespace GPXManager.views
             
             PropertyGrid.NameColumnWidth = 200;
 
-            PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "OperatorName", DisplayName = "Name of operator", DisplayOrder = 1, Description = "Name of operator of fishing boat" });
+            PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "OperatorID", DisplayName = "Name of operator", DisplayOrder = 1, Description = "Name of operator of fishing boat" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "VesselName", DisplayName = "Name of fishing vessel", DisplayOrder = 2, Description = "Name of fishing vessel" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "GearCode", DisplayName = "Gear used", DisplayOrder = 3, Description = "Name of fishing gear" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "OtherGear", DisplayName = "Other fishing gear", DisplayOrder = 4, Description = "Name of other fishing gear" });
@@ -164,49 +169,76 @@ namespace GPXManager.views
 
         private void ExtractTracks()
         {
-            string trackFileName = "";
-            if (_trip.DateTimeArrival > _trip.DateTimeDeparture && Entities.TrackViewModel.Tracks.Count > 0)
+           if( Entities.TripViewModel.SetTrackOfTrip(_trip))
             {
-                _waypoints = new List<Waypoint>();
-                foreach (var trk in Entities.TrackViewModel.Tracks[GPS])
+                foreach (PropertyItem prp in PropertyGrid.Properties)
                 {
-                    foreach (var wpt in trk.Waypoints.OrderBy(t => t.Time).ToList())
+                    if (prp.PropertyName == "TrackSummary")
                     {
-                        //adjust waypoint time to local time by adding offset from GMT
-                        var wptTimeAdjusted = wpt.Time.AddHours(Global.Settings.HoursOffsetGMT);
-
-                        if (wptTimeAdjusted > _trip.DateTimeDeparture && wptTimeAdjusted < _trip.DateTimeArrival)
-                        {
-                            _waypoints.Add(wpt);
-                        }
+                        prp.Value = _trip.TrackSummary;
+                        return;
                     }
-
-                    //if we have a collection of waypoints then we exit the loop to avoid reading time from other track files
-                    if (_waypoints.Count > 0)
-                    {
-                        trackFileName = trk.FileName;
-                        break;
-                    }
-
-                }
-                if (_waypoints.Count > 0)
-                {
-                    var timeStamp = _waypoints[0].Time.AddHours(Global.Settings.HoursOffsetGMT);
-                    _trip.Track.FileName = trackFileName;
-                    _trip.Track.Waypoints = _waypoints;
-                    _trip.Track.Name = $"{GPS.DeviceName} {timeStamp.ToString("MMM-dd-yyyy HH:mm")}";
-                    _trackXML= _trip.Track.SerializeToString(GPS, timeStamp, trackFileName);
-                    _trip.Track.ResetStatistics();
-                    PropertyGrid.Update();
-                    _dateTimeDepartureArrivalChanged = false;
-                }
-                else
-                {
-                    MessageBox.Show("No waypoints found that match date of departure and arrival", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
+           else
+            {
+                MessageBox.Show("No waypoints found that match date of departure and arrival", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            //string trackFileName = "";
+            //if (_trip.DateTimeArrival > _trip.DateTimeDeparture && Entities.TrackViewModel.Tracks.Count > 0)
+            //{
+            //    _waypoints = new List<Waypoint>();
+            //    foreach (var trk in Entities.TrackViewModel.Tracks[GPS])
+            //    {
+            //        foreach (var wpt in trk.Waypoints.OrderBy(t => t.Time).ToList())
+            //        {
+            //            //adjust waypoint time to local time by adding offset from GMT
+            //            var wptTimeAdjusted = wpt.Time.AddHours(Global.Settings.HoursOffsetGMT);
+
+            //            if (wptTimeAdjusted > _trip.DateTimeDeparture && wptTimeAdjusted < _trip.DateTimeArrival)
+            //            {
+            //                _waypoints.Add(wpt);
+            //            }
+            //        }
+
+            //        //if we have a collection of waypoints then we exit the loop to avoid reading time from other track files
+            //        if (_waypoints.Count > 0)
+            //        {
+            //            trackFileName = trk.FileName;
+            //            break;
+            //        }
+
+            //    }
+            //    if (_waypoints.Count > 0)
+            //    {
+            //        var timeStamp = _waypoints[0].Time.AddHours(Global.Settings.HoursOffsetGMT);
+            //        _trip.Track.FileName = trackFileName;
+            //        _trip.Track.Waypoints = _waypoints;
+            //        _trip.Track.Name = $"{GPS.DeviceName} {timeStamp.ToString("MMM-dd-yyyy HH:mm")}";
+            //        _trackXML= _trip.Track.SerializeToString(GPS, timeStamp, trackFileName);
+            //        _trip.Track.ResetStatistics();
+            //        //PropertyGrid.Update();
+
+            //        foreach (PropertyItem prp in PropertyGrid.Properties)
+            //        {
+            //            if (prp.PropertyName == "TrackSummary")
+            //            {
+            //                prp.Value = ((TripEdited)PropertyGrid.SelectedObject).TrackSummary;
+            //                return;
+            //            }
+            //        }
+
+
+            //        _dateTimeDepartureArrivalChanged = false;
+            //    }
+            //    else
+            //    {
+            //        MessageBox.Show("No waypoints found that match date of departure and arrival", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    }
+            //}
         }
-        public string OperatorName { get; set; }
+        public int? OperatorID { get; set; }
         public string VesselName { get; set; }
         public string GearCode { get; set; }
 
@@ -228,7 +260,7 @@ namespace GPXManager.views
                         Trip trip = new Trip
                         {
                             VesselName = _trip.VesselName,
-                            OperatorName = _trip.OperatorName,
+                            OperatorID = _trip.OperatorID,
                             DateTimeArrival = _trip.DateTimeArrival,
                             DateTimeDeparture = _trip.DateTimeDeparture,
                             GPS = _trip.GPS,
@@ -241,7 +273,7 @@ namespace GPXManager.views
                             GPXFileName = _trip.Track.FileName,
                             XML = _trip.Track.XMLString
                         };
-                        trip.GPS = _trip.GPS;
+                        //trip.GPS = _trip.GPS;
                         var result = Entities.TripViewModel.ValidateTrip(trip, IsNew);
                         if (result.ErrorMessage.Length == 0)
                         {
@@ -283,8 +315,54 @@ namespace GPXManager.views
 
         private void OnPropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
         {
+
+            ComboBox cbo = new ComboBox();
+            cbo.Items.Clear();
+            cbo.SelectionChanged += OnComboSelectionChanged;
+
             _selectedProperty = (PropertyItem)e.OriginalSource;
-            _dateTimeDepartureArrivalChanged = (_selectedProperty.PropertyName == "DateTimeDeparture" || _selectedProperty.PropertyName == "DateTimeArrival");
+            switch(_selectedProperty.PropertyName)
+            {
+                case "DateTimeDeparture":
+                case "DateTimeArrival":
+                    _dateTimeDepartureArrivalChanged = (_selectedProperty.PropertyName == "DateTimeDeparture" || _selectedProperty.PropertyName == "DateTimeArrival");
+                    break;
+                case "OperatorID":
+                    cbo.Tag = "vessels";
+
+                    foreach (var item in Entities.FisherViewModel.GetFisherBoats((int)_selectedProperty.Value))
+                    {
+                        cbo.Items.Add(item);
+                    }
+
+                    foreach (PropertyItem prp in PropertyGrid.Properties)
+                    {
+                        if (prp.PropertyName == "VesselName")
+                        {
+                            prp.Editor = cbo;
+                        }
+                    }
+                    break;
+            }
+            
+        }
+
+        private void OnComboSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox cbo = (ComboBox)sender;
+            switch(cbo.Tag.ToString())
+            {
+                case "vessels":
+                    foreach (PropertyItem prp in PropertyGrid.Properties)
+                    {
+                        if (prp.PropertyName == "VesselName")
+                        {
+                            prp.Value = cbo.SelectedItem;
+                            return;
+                        }
+                    }
+                    break;
+            }
         }
 
         private void OnPropertyDblClick(object sender, MouseButtonEventArgs e)
@@ -295,7 +373,7 @@ namespace GPXManager.views
                     if(_selectedProperty.Value.ToString().Length>0)
                     {
                         GPXFIlePropertiesWindow gpw = new GPXFIlePropertiesWindow();
-                        gpw.GPXXML = _trackXML;
+                        gpw.GPXXML = _trackXML ==null ? _trip.XML : _trackXML;
                         gpw.Owner = this;
                         gpw.ShowDialog();
                     }

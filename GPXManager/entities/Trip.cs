@@ -13,6 +13,7 @@ namespace GPXManager.entities
 {
     public class TripEdited
     {
+        private int? _operatorID;
         public TripEdited() { }
         public TripEdited(GPS gps)
         {
@@ -24,7 +25,7 @@ namespace GPXManager.entities
         public TripEdited(Trip trip)
         {
             GPS = trip.GPS;
-            OperatorName = trip.OperatorName;
+            Operator = trip.Operator;
             VesselName = trip.VesselName;
             DateTimeArrival = trip.DateTimeArrival;
             DateTimeDeparture = trip.DateTimeDeparture;
@@ -55,9 +56,9 @@ namespace GPXManager.entities
                 }
             }
         }
-        public Track Track { get; internal set; }
+        public Track Track { get; set; }
 
-
+        public Fisher Operator { get; set; }
         public DateTime MonthYear
         {
             get
@@ -86,19 +87,35 @@ namespace GPXManager.entities
         [ReadOnly(true)]
         public int TripID { get; set; }
 
+        [ItemsSource(typeof(VesselNameItemsSource))]
         public string VesselName { get; set; }
 
         [ReadOnly(true)]
         public GPS GPS { get; set; }
 
-        public string OperatorName { get; set; }
+        [ItemsSource(typeof(FisherItemsSource))]
+        public int? OperatorID
+        {
+            get
+            {
+                if (_operatorID == null && Operator != null)
+                {
+                    _operatorID = Operator.FisherID;
+                }
+                return _operatorID;
+            }
+            set { _operatorID = value; }
+        }
+
 
         public List<TripWaypointLite>TripWaypoints { get; set; }
 
     }
     public class Trip
     {
+
         private string _deviceID;
+        private int? _operatorID;
         public Trip()
         {
             Track = new Track();
@@ -107,7 +124,18 @@ namespace GPXManager.entities
         public string Notes { get; set; }
 
         public DateTime DateTimeArrival { get; set; }
-        public string OperatorName { get; set; }
+        public int? OperatorID 
+        {
+            get
+            {
+                if(_operatorID==null)
+                {
+                    _operatorID = Operator.FisherID;
+                }
+                return _operatorID;
+            }
+            set { _operatorID = value; }
+        }
         
         public Track Track { get; set; }
         public Gear Gear { get; set; }
@@ -172,6 +200,8 @@ namespace GPXManager.entities
                 //}
             }
         }
+
+        public Fisher Operator { get { return Entities.FisherViewModel.GetFisher((int)OperatorID); } }
         public List<TripWaypointLite> TripWaypoints { get; set; }
 
         public List<int> ShapeIndexes { get; set; }

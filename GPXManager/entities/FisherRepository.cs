@@ -16,7 +16,20 @@ namespace GPXManager.entities
         {
             Fishers = getFishers();
         }
-
+        public int MaxRecordNumber()
+        {
+            int max_rec_no = 0;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+                const string sql = "SELECT Max(FisherID) AS max_record_no FROM fishers";
+                using (OleDbCommand getMax = new OleDbCommand(sql, conn))
+                {
+                    max_rec_no = (int)getMax.ExecuteScalar();
+                }
+            }
+            return max_rec_no;
+        }
         private List<Fisher> getFishers()
         {
             var thisList = new List<Fisher>();
@@ -37,9 +50,9 @@ namespace GPXManager.entities
                         foreach (DataRow dr in dt.Rows)
                         {
                             Fisher item = new Fisher();
-                            item.FIsherID = int.Parse(dr["FisherID"].ToString());
+                            item.FisherID = int.Parse(dr["FisherID"].ToString());
                             item.Name = dr["FisherName"].ToString();
-                            item.Vessels = dr["Boats"].ToString().Split(',').ToList();
+                            item.Vessels = dr["Boats"].ToString().Split('|').ToList();
                             thisList.Add(item);
                         }
                     }
@@ -71,9 +84,9 @@ namespace GPXManager.entities
 
                 sql = $@"Insert into fishers(FisherID, FisherName, Boats, DateAdded)
                         Values (
-                         {fisher.FIsherID}  
+                         {fisher.FisherID},  
                         '{fisher.Name}',
-                        '{fisher.VesselList()}',
+                        '{fisher.VesselList}',
                         '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}'
                         )";
 
@@ -94,8 +107,8 @@ namespace GPXManager.entities
                 conn.Open();
                 var sql = $@"Update fishers set
                             FisherName = '{fisher.Name}',
-                            Boats ='{fisher.VesselList()}'
-                            WHERE FisherID = {fisher.FIsherID}";
+                            Boats ='{fisher.VesselList}'
+                            WHERE FisherID = {fisher.FisherID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     success = update.ExecuteNonQuery() > 0;
@@ -111,7 +124,7 @@ namespace GPXManager.entities
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $"Delete * from fishers where FisherID={fisher.FIsherID}";
+                var sql = $"Delete * from fishers where FisherID={fisher.FisherID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     try

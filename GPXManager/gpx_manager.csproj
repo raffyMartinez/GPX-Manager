@@ -117,7 +117,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="entities\DetectDeviceEventArg.cs" />
+    <Compile Include="entities\EntitiesChangedEventArg.cs" />
+    <Compile Include="entities\FileSizeFormatExtension.cs" />
     <Compile Include="entities\Fisher.cs" />
+    <Compile Include="entities\FisherItemsSource.cs" />
     <Compile Include="entities\FisherRepository.cs" />
     <Compile Include="entities\FisherViewModel.cs" />
     <Compile Include="entities\ImageMetadata.cs" />
@@ -189,6 +192,7 @@
     <Compile Include="entities\TripWaypoint.cs" />
     <Compile Include="entities\TripWaypointRepository.cs" />
     <Compile Include="entities\TripWaypointViewModel.cs" />
+    <Compile Include="entities\VesselNameItemsSource.cs" />
     <Compile Include="entities\Waypoint.cs" />
     <Compile Include="entities\WaypointItemsSource.cs" />
     <Compile Include="entities\WaypointTypeItemsSource.cs" />
@@ -196,14 +200,14 @@
     <Compile Include="views\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="views\EditrSingleItemDialogWindow.xaml.cs">
-      <DependentUpon>EditrSingleItemDialogWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="views\EditBrandModelWindow.xaml.cs">
       <DependentUpon>EditBrandModelWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\EditFisherWindow.xaml.cs">
       <DependentUpon>EditFisherWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\EditSingleItemDialog.xaml.cs">
+      <DependentUpon>EditSingleItemDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\EditTripWaypointsWindow.xaml.cs">
       <DependentUpon>EditTripWaypointsWindow.xaml</DependentUpon>
@@ -290,15 +294,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="views\EditrSingleItemDialogWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="views\EditBrandModelWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\EditFisherWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\EditSingleItemDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -611,6 +615,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="tags gray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="cancel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="openfolder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="prevent.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="prevent2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ok2.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

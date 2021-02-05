@@ -44,6 +44,7 @@ namespace GPXManager.entities
                             item.Gear = Entities.GearViewModel.GetGear(dr["GearID"].ToString());
                             item.DateAddedToDatabase = (DateTime)dr["DateAdded"];
                             item.Ignore = false;
+                            item.Trip = Entities.TripViewModel.GetTrip(int.Parse(dr["TripID"].ToString()));
 
                             thisList.Add(item);
                         }
@@ -51,7 +52,7 @@ namespace GPXManager.entities
                 }
                 catch (OleDbException dbex)
                 {
-                    if (dbex.ErrorCode==-2147217865)
+                    if (dbex.ErrorCode == -2147217865)
                     {
                         //table not found so we create one
                         CreateTable();
@@ -124,7 +125,16 @@ namespace GPXManager.entities
                 }
                 else
                 {
-                    sql = $@"Insert into logbook_image(FileName, GPSID,DateStart,DateEnd,GearID,DateAdded,FisherID,Boat)
+                    sql = $@"Insert into logbook_image (
+                            FileName, 
+                            GPSID,
+                            DateStart,
+                            DateEnd,        
+                            GearID,
+                            DateAdded,
+                            FisherID,
+                            Boat,
+                            TripID )
                            Values (
                             '{image.FileName}',
                             '{image.GPS.DeviceID}',
@@ -132,8 +142,9 @@ namespace GPXManager.entities
                             '{image.End}',
                             '{image.Gear.Code}',
                             '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}',
-                             {image.FisherID}.
-                            '{image.Boat}'    
+                             {image.FisherID},
+                            '{image.Boat}',
+                             {image.Trip.TripID}   
                            )";
                 }
 
@@ -157,7 +168,8 @@ namespace GPXManager.entities
                                 DateEnd = '{image.End}',
                                 GearID = '{image.Gear.Code}',
                                 FisherID = {image.FisherID},
-                                Boat = '{image.Boat}'
+                                Boat = '{image.Boat}',
+                                TripID = {image.Trip.TripID}
                             WHERE FileName = '{image.FileName}'";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -195,13 +207,14 @@ namespace GPXManager.entities
         }
         public static void CreateTable()
         {
-             using (var conn = new OleDbConnection(Global.ConnectionString))
+            using (var conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
                 string sql = @"CREATE TABLE logbook_image 
                                 (
                                 FileName VarChar NOT NULL PRIMARY KEY,
                                 GPSID VarChar,
+                                TripID Int,
                                 DateStart DateTime,
                                 DateEnd DateTime,
                                 GearID VarChar, 
@@ -209,7 +222,8 @@ namespace GPXManager.entities
                                 Boat VarChar,
                                 DateAdded DateTime,
                                 CONSTRAINT image_gear FOREIGN KEY (GearID) REFERENCES gear(GearCode),
-                                CONSTRAINT image_gps FOREIGN KEY (GPSID) REFERENCES devices(DeviceID)
+                                CONSTRAINT image_gps FOREIGN KEY (GPSID) REFERENCES devices(DeviceID),
+                                CONSTRAINT image_trip FOREIGN KEY (TripID) REFERENCES trips(TripID)
                                 )";
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;
@@ -247,7 +261,7 @@ namespace GPXManager.entities
                 cmd.ExecuteNonQuery();
 
 
-                cmd.Connection.Close();                    
+                cmd.Connection.Close();
                 conn.Close();
             }
         }

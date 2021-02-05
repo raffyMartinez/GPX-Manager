@@ -8,18 +8,33 @@ namespace GPXManager.entities
 {
     public class Fisher
     {
-        public int FIsherID { get; set; }
+        public int FisherID { get; set; }
         public string Name { get; set; }
-        public List<string> Vessels { get; set; }
+        public List<string> Vessels { get; set; } = new List<string>();
 
-        public string VesselList()
+        public string VesselListCSV
         {
-            string list = "";
-            foreach(var item in Vessels)
+            get
             {
-                list += (item + ",");
+                string list = "";
+                foreach (var item in Vessels)
+                {
+                    list += $"{item}, ";
+                }
+                return list.Trim(',', ' ');
             }
-            return list.Trim(',');
+        }
+        public string VesselList
+        {
+            get
+            {
+                string list = "";
+                foreach (var item in Vessels)
+                {
+                    list += $"{item}|";
+                }
+                return list.Trim('|');
+            }
         }
     }
 }

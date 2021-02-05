@@ -9,6 +9,8 @@ using System.IO;
 using Ookii.Dialogs.Wpf;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace GPXManager.entities
 {
@@ -51,67 +53,158 @@ namespace GPXManager.entities
                 return thisList;
         }
 
-        public ImageMetadata GetImageMetadata(FileInfo imagePath)
+        public EntityValidationResult EntityValidated(LogbookImage image, bool isNew)
         {
-            var directories = ImageMetadataReader.ReadMetadata(imagePath.FullName);
+            var result = new EntityValidationResult();
 
-            // print out all metadata
-            var metadata = new entities.ImageMetadata();
-            foreach (var directory in directories)
-                foreach (var tag in directory.Tags)
-                {
-                    switch ($"{directory.Name}-{tag.Name}")
+            
+            return result;
+
+            
+        }
+        public string MetadataFlatText(string fileName)
+        {
+            var m = GetImageMetadata(fileName);
+            string s = $"File name: {m.FileName}\r\n";
+            s += $"File type: {m.FileType}\r\n";
+            s += $"Size: {m.FileSize} ({m.FileSize.ToSize(FileSizeFormatExtension.SizeUnits.MB)}MB)\r\n";
+            s += $"Height: {m.Height}\r\n";
+            s += $"Width: {m.Width}\r\n";
+            s += $"Camera: {m.Make}\r\n";
+            s += $"Model: {m.Model}\r\n";
+            s += $"Data precision: {m.DataPrecision}\r\n";
+            s += $"Exposure time: {m.ExposureTime}\r\n\r\n";
+            s += $"Date created: {m.Original.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
+            s += $"Date digitized: {m.Digitized.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
+            s += $"Date modified: {m.Modified.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
+
+            return s;
+        }
+        public ImageMetadata GetImageMetadata(string fileName)
+        {
+            ImageMetadata metadata = null;
+            if (fileName.Length>0)
+            {
+                var directories = ImageMetadataReader.ReadMetadata(fileName);
+
+                // print out all metadata
+                metadata = new ImageMetadata();
+                foreach (var directory in directories)
+                    foreach (var tag in directory.Tags)
                     {
-                        case "JPEG-Image Height":
-                            var arr = tag.Description.Split(' ');
-                            metadata.Height = int.Parse(arr[0]);
-                            break;
+                        switch ($"{directory.Name}-{tag.Name}")
+                        {
+                            case "JPEG-Image Height":
+                                var arr = tag.Description.Split(' ');
+                                metadata.Height = int.Parse(arr[0]);
+                                break;
                             case "JPEG-Image Width":
-                            arr = tag.Description.Split(' ');
-                            metadata.Width= int.Parse(arr[0]);
-                            break;
-                        case "JPEG-Data Precision":
-                            metadata.DataPrecision = tag.Description;
-                            break;
-                        case "Exif IFD0-Make":
-                            metadata.Make = tag.Description;
-                            break;
-                        case "Exif IFD0-Model":
-                            metadata.Model = tag.Description;
-                            break;
-                        case "Exif IFD0-Orientation":
-                            metadata.Orientation = tag.Description;
-                            break;
-                        case "Exif SubIFD-Exposure Time":
-                            metadata.ExposureTime = tag.Description;
-                            break;
-                        case "Exif SubIFD-Date/Time Digitized":
+                                arr = tag.Description.Split(' ');
+                                metadata.Width = int.Parse(arr[0]);
+                                break;
+                            case "JPEG-Data Precision":
+                                metadata.DataPrecision = tag.Description;
+                                break;
+                            case "Exif IFD0-Make":
+                                metadata.Make = tag.Description;
+                                break;
+                            case "Exif IFD0-Model":
+                                metadata.Model = tag.Description;
+                                break;
+                            case "Exif IFD0-Orientation":
+                                metadata.Orientation = tag.Description;
+                                break;
+                            case "Exif SubIFD-Exposure Time":
+                                metadata.ExposureTime = tag.Description;
+                                break;
+                            case "Exif SubIFD-Date/Time Digitized":
 
-                            metadata.Digitized = GetDateTimeFromMetadataTag(tag.Description);
-                            break;
-                        case "Exif SubIFD-Date/Time Original":
-                            metadata.Original = GetDateTimeFromMetadataTag(tag.Description);
-                            break;
-                        case "File Type-Detected File Type Name":
-                            metadata.FileType = tag.Description;
-                            break;
-                        case "File-File Name":
-                            metadata.FileName = tag.Description;
-                            break;
-                        case "File-File Size":
-                            arr = tag.Description.Split(' ');
-                            metadata.FileSize = int.Parse(arr[0]);
-                            break;
-                        case "File-File Modified Date":
-                            metadata.Modified = GetDateTimeFromMetadataTag(tag.Description,false);
-                            break;
+                                metadata.Digitized = GetDateTimeFromMetadataTag(tag.Description);
+                                break;
+                            case "Exif SubIFD-Date/Time Original":
+                                metadata.Original = GetDateTimeFromMetadataTag(tag.Description);
+                                break;
+                            case "File Type-Detected File Type Name":
+                                metadata.FileType = tag.Description;
+                                break;
+                            case "File-File Name":
+                                metadata.FileName = tag.Description;
+                                break;
+                            case "File-File Size":
+                                arr = tag.Description.Split(' ');
+                                metadata.FileSize = int.Parse(arr[0]);
+                                break;
+                            case "File-File Modified Date":
+                                metadata.Modified = GetDateTimeFromMetadataTag(tag.Description, false);
+                                break;
+                        }
+                        Console.WriteLine($"{directory.Name} - {tag.Name} = {tag.Description}");
                     }
-                    Console.WriteLine($"{directory.Name} - {tag.Name} = {tag.Description}");
-                }
-
+            }
             return metadata;
         }
 
+        public ImageSource ImageRotate(BitmapImage src, int rotationDegrees)
+        {
+            TransformedBitmap transformBmp = null;
+            if (src != null)
+            {
+                transformBmp = new TransformedBitmap();
+                transformBmp.BeginInit();
+                transformBmp.Source = src;
+                RotateTransform transform = new RotateTransform(rotationDegrees);
+                transformBmp.Transform = transform;
+                transformBmp.EndInit();
+            }
+            return transformBmp;
+        }
+        public void AddImageComment(string imageFlePath, string comments)
+        {
+            string jpegDirectory = Path.GetDirectoryName(imageFlePath);
+            string jpegFileName = Path.GetFileNameWithoutExtension(imageFlePath);
+
+            BitmapDecoder decoder = null;
+            BitmapFrame bitmapFrame = null;
+            BitmapMetadata metadata = null;
+            FileInfo originalImage = new FileInfo(imageFlePath);
+
+            if (File.Exists(imageFlePath))
+            {
+                // load the jpg file with a JpegBitmapDecoder    
+                using (Stream jpegStreamIn = File.Open(imageFlePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+                {
+                    decoder = new JpegBitmapDecoder(jpegStreamIn, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                }
+
+                bitmapFrame = decoder.Frames[0];
+                metadata = (BitmapMetadata)bitmapFrame.Metadata;
+
+                if (bitmapFrame != null)
+                {
+                    BitmapMetadata metaData = (BitmapMetadata)bitmapFrame.Metadata.Clone();
+
+                    if (metaData != null)
+                    {
+                        // modify the metadata   
+                        metaData.SetQuery("/app1/ifd/exif:{uint=40092}", comments);
+
+                        // get an encoder to create a new jpg file with the new metadata.      
+                        JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                        encoder.Frames.Add(BitmapFrame.Create(bitmapFrame, bitmapFrame.Thumbnail, metaData, bitmapFrame.ColorContexts));
+                        //string jpegNewFileName = Path.Combine(jpegDirectory, "JpegTemp.jpg");
+
+                        // Delete the original
+                        originalImage.Delete();
+
+                        // Save the new image 
+                        using (Stream jpegStreamOut = File.Open(imageFlePath, FileMode.CreateNew, FileAccess.ReadWrite))
+                        {
+                            encoder.Save(jpegStreamOut);
+                        }
+                    }
+                }
+            }
+        }
         public bool IgnoreImage(LogbookImage image)
         {
             return AddRecordToRepo(image);

@@ -27,15 +27,11 @@
                     </Grid.ColumnDefinitions>
                     <ListBox Height="190" Width="300" x:Name="listBoxBoats" MouseDoubleClick="OnListDoubleClick" HorizontalAlignment="Left"/>
                     <StackPanel Grid.Column="1">
-                        <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDelete" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}">
-                            <Button.Background>
-                                <ImageBrush ImageSource="delete.png"/>
-                            </Button.Background>
+                        <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDelete" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                            <Image Source="delete.png"/>
                         </Button>
-                        <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAdd" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}">
-                            <Button.Background>
-                                <ImageBrush ImageSource="add.png"/>
-                            </Button.Background>
+                        <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAdd" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                            <Image Source="add.png"/>
                         </Button>
                     </StackPanel>
                 </Grid>
@@ -46,15 +42,11 @@
             </StackPanel>
         </StackPanel>
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button x:Name="buttonCancel"  Click="OnButtonClick" Height="40" Width="40" Margin="10 0"  BorderBrush="{x:Null}">
-                <Button.Background>
-                    <ImageBrush ImageSource="cancel.png" Stretch="Uniform" />
-                </Button.Background>
+            <Button x:Name="buttonCancel"  Click="OnButtonClick" Height="40" Width="40" Margin="10 0"  BorderBrush="{x:Null}" Background="{x:Null}">
+                <Image Source="cancel.png"/>
             </Button>
-            <Button x:Name="buttonOk" Click="OnButtonClick" Height="40" Width="40" Margin="10 0 25 0" BorderBrush="{x:Null}">
-                <Button.Background>
-                    <ImageBrush ImageSource="ok.png" Stretch="Uniform"/>
-                </Button.Background>
+            <Button x:Name="buttonOk" Click="OnButtonClick" Height="40" Width="40" Margin="10 0 25 0" BorderBrush="{x:Null}" Background="{x:Null}">
+                <Image Source="ok.png"/>
             </Button>
         </WrapPanel>
     </Grid>

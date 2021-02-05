@@ -27,7 +27,7 @@ namespace GPXManager.entities
 
         public string FileName { get; set; }
 
-        public int FileSize { get; set; }
+        public Int64 FileSize { get; set; }
 
         public DateTime Modified { get; set; }
     }
