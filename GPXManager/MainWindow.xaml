@@ -8,8 +8,21 @@
         xmlns:local2="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
         Title="GPX Manager" Height="754.8" Width="1025.6" WindowState="Maximized" Foreground="{x:Null}">
-    
+
     <Window.Resources>
+
+        <Style TargetType="{x:Type DatePickerTextBox}">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <TextBox x:Name="PART_TextBox"
+                             Text="{Binding Path=SelectedDate, StringFormat='MMM-dd-yyyy', 
+                             RelativeSource={RelativeSource AncestorType={x:Type DatePicker}}}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ImageEnabled" TargetType="Image">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
@@ -17,16 +30,16 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        
+
         <Style x:Key="ButtonEnabled" TargetType="Button">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="BorderThickness" Value="0"></Setter>
                 </Trigger>
             </Style.Triggers>
-        </Style>        
+        </Style>
     </Window.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <!--holds the menu-->
@@ -357,9 +370,10 @@
                     <Image Source="openfolder.png"/>
                 </Button>
                 <TreeView x:Name="treeImages" SelectedItemChanged="OnImageTreeSelectionChnaged" Grid.Row="1" Margin="3 5">
-                    <TreeViewItem Header="Not registered" Tag="top" x:Name="tvItemNotRegistered"/>
-                    <TreeViewItem Header="Registered" Tag="top" x:Name="tvItemRegistered"/>
-                    <TreeViewItem Header="Ignored" Tag="top" x:Name="tvItemIgnored"/>
+                    <TreeViewItem Header="Not registered" Tag="top" x:Name="tvItemNotRegistered" FontWeight="Bold" Background="{x:Null}" Foreground="#FFEA8918"/>
+                    <TreeViewItem Header="Registered" Tag="top" x:Name="tvItemRegistered" FontWeight="Bold" Background="{x:Null}" Foreground="#FFEA8918"/>
+                    <TreeViewItem Header="Registered, no tracks" Tag="top" x:Name="tvItemRegisteredNoTrack" FontWeight="Bold" Background="{x:Null}" Foreground="#FFEA8918"/>
+                    <TreeViewItem Header="Ignored" Tag="top" x:Name="tvItemIgnored" FontWeight="Bold" Background="{x:Null}" Foreground="#FFEA8918"/>
                 </TreeView>
             </Grid>
 
@@ -416,16 +430,19 @@
                     </StackPanel>
 
                     <StackPanel Margin="3 5">
-                        <Label Content="Date start"/>
-                        <xctk:DateTimePicker x:Name="dtPickerStart" Format="Custom" FormatString="MMM-dd-yyyy hh:mm tt"
-                                            TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"/>
+                        <Label Content="Date start" MouseRightButtonDown="OnDTPickerRightButtonDown"/>
+                        <xctk:DateTimePicker x:Name="dtPickerStart" Format="Custom" FormatString="MMM-dd-yyyy HH:mm"
+                                            TimeFormat="Custom" TimeFormatString="HH:mm" AllowSpin="true"
+                                             ValueChanged="OnDTPickerValueChanged" MouseRightButtonDown="OnDTPickerRightButtonDown" />
+
                         <!--<ComboBox x:Name="comboStart"/>-->
                     </StackPanel>
 
                     <StackPanel Margin="3 5">
-                        <Label Content="Date end"/>
-                        <xctk:DateTimePicker x:Name="dtPickerEnd" Format="Custom" FormatString="MMM-dd-yyyy hh:mm tt"
-                                            TimeFormat="Custom" TimeFormatString="hh:mm:ss tt"/>
+                        <Label Content="Date end" MouseRightButtonDown="OnDTPickerRightButtonDown"/>
+                        <xctk:DateTimePicker x:Name="dtPickerEnd"  Format="Custom" FormatString="MMM-dd-yyyy HH:mm"
+                                            TimeFormat="Custom" TimeFormatString="HH:mm tt" AllowSpin="true"
+                                             MouseRightButtonDown="OnDTPickerRightButtonDown"/>
                         <!--<ComboBox x:Name="comboEnd"/>-->
                     </StackPanel>
 
@@ -440,6 +457,9 @@
                         </Button>
                         <Button  Height="40" Width="40" x:Name="buttonRegister" Margin="5 10" Click="OnButtonClick" IsEnabled="False" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}">
                             <Image Source="ok2.png" Style="{StaticResource ImageEnabled}"/>
+                        </Button>
+                        <Button  Height="40" Width="40" x:Name="buttonTripOfImage" Margin="5 10" Click="OnButtonClick" Visibility="Collapsed" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}">
+                            <Image Source="navigation path.png" Style="{StaticResource ImageEnabled}"/>
                         </Button>
                     </WrapPanel>
                 </StackPanel>

@@ -261,7 +261,10 @@ namespace GPXManager.entities.mapping
                 sf.EditCellValue(sf.FieldIndexByName["Arrived"], shpIndex, trip.DateTimeArrival);
                 sf.EditCellValue(sf.FieldIndexByName["Gear"], shpIndex, trip.Gear);
                 sf.EditCellValue(sf.FieldIndexByName["FileName"], shpIndex, trip.GPXFileName);
-                sf.EditCellValue(sf.FieldIndexByName["Length"], shpIndex, trip.Track.Statistics.Length);
+                if (trip.Track.Statistics != null)
+                {
+                    sf.EditCellValue(sf.FieldIndexByName["Length"], shpIndex, trip.Track.Statistics.Length);
+                }
                 counter++;
             }
             return sf;

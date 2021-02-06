@@ -154,7 +154,7 @@ namespace GPXManager.views
                 case "WaypointName":
                     if (Trip != null)
                     {
-                        var wpt = Entities.WaypointViewModel.GetWaypoint(prp.Value.ToString(), Trip.GPS);
+                        var wpt = Entities.WaypointViewModel.GetWaypoint(prp.Value.ToString(), Trip);
                         _oldWaypoint = ((TripWaypoint)PropertyGrid.SelectedObject).Waypoint;
                         ((TripWaypoint)PropertyGrid.SelectedObject).Waypoint = wpt;
                         ((TripWaypoint)PropertyGrid.SelectedObject).TimeStamp = wpt.Time.AddHours(Global.Settings.HoursOffsetGMT);

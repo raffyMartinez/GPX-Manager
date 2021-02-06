@@ -42,5 +42,22 @@ namespace GPXManager.entities
         public bool Ignore { get; set; }
 
         public DateTime DateAddedToDatabase { get; set; }
+
+        public bool TripWithTrack
+        {
+            get
+            {
+                Trip = Entities.TripViewModel.GetTrip(Trip.TripID);
+                if(Trip.GPXFileName==null || Trip.GPXFileName.Length==0)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
     }
 }

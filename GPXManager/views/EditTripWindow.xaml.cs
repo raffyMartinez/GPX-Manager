@@ -42,6 +42,14 @@ namespace GPXManager.views
             if (_instance == null) _instance = new EditTripWindow();
             return _instance;
         }
+
+        public static EditTripWindow Instance
+        {
+            get
+            {
+                return _instance;
+            }
+        }
         public EditTripWindow()
         {
             InitializeComponent();
@@ -70,7 +78,7 @@ namespace GPXManager.views
             base.OnSourceInitialized(e);
             this.ApplyPlacement();
         }
-        private void ShowTripDetails(bool newTrip=false)
+        public void ShowTripDetails(bool newTrip=false)
         {
             if (newTrip)
             {
