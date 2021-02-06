@@ -120,12 +120,13 @@ namespace GPXManager.entities
                 var sql = "";
                 if (image.Ignore)
                 {
-                    sql = $@"Insert into logbook_image_ignore(FileName,DateAdded ) Values
-                             ('{image.FileName}', '{DateTime.Now}')";
+                    sql = $@"Insert into logbook_image_ignore(ID, FileName,DateAdded ) Values
+                             ('{image.Comment}', '{image.FileName}', '{DateTime.Now}')";
                 }
                 else
                 {
                     sql = $@"Insert into logbook_image (
+                            ID,    
                             FileName, 
                             GPSID,
                             DateStart,
@@ -136,6 +137,7 @@ namespace GPXManager.entities
                             Boat,
                             TripID )
                            Values (
+                            '{image.Comment}',
                             '{image.FileName}',
                             '{image.GPS.DeviceID}',
                             '{image.Start}', 
@@ -170,7 +172,7 @@ namespace GPXManager.entities
                                 FisherID = {image.FisherID},
                                 Boat = '{image.Boat}',
                                 TripID = {image.Trip.TripID}
-                            WHERE FileName = '{image.FileName}'";
+                            WHERE ID = '{image.Comment}'";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     success = update.ExecuteNonQuery() > 0;
@@ -179,13 +181,13 @@ namespace GPXManager.entities
             return success;
         }
 
-        public bool Delete(string fileName)
+        public bool Delete(string ID)
         {
             bool success = false;
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $"Delete * from logbook_image where FileName='{fileName}'";
+                var sql = $"Delete * from logbook_image where ID='{ID}'";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     try
@@ -212,7 +214,8 @@ namespace GPXManager.entities
                 conn.Open();
                 string sql = @"CREATE TABLE logbook_image 
                                 (
-                                FileName VarChar NOT NULL PRIMARY KEY,
+                                ID VarChar NOT NULL PRIMARY KEY,
+                                FileName VarChar ,
                                 GPSID VarChar,
                                 TripID Int,
                                 DateStart DateTime,
@@ -254,7 +257,8 @@ namespace GPXManager.entities
 
                 sql = @"CREATE TABLE logbook_image_ignore
                                 (
-                                FileName VarChar NOT NULL PRIMARY KEY,
+                                ID VarChar NOT NULL PRIMARY KEY, 
+                                FileName VarChar,
                                 DateAdded DateTime
                                 )";
                 cmd.CommandText = sql;

@@ -48,19 +48,19 @@ namespace GPXManager.entities
             };
             if ((bool)vfbd.ShowDialog() && System.IO.Directory.Exists(vfbd.SelectedPath))
             {
-                thisList =  await Task.Run(() => GetImagesByFoldereRecursive(vfbd.SelectedPath,true));
+                thisList = await Task.Run(() => GetImagesByFoldereRecursive(vfbd.SelectedPath, true));
             }
-                return thisList;
+            return thisList;
         }
 
         public EntityValidationResult EntityValidated(LogbookImage image, bool isNew)
         {
             var result = new EntityValidationResult();
 
-            
+
             return result;
 
-            
+
         }
         public string MetadataFlatText(string fileName)
         {
@@ -76,14 +76,20 @@ namespace GPXManager.entities
             s += $"Exposure time: {m.ExposureTime}\r\n\r\n";
             s += $"Date created: {m.Original.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
             s += $"Date digitized: {m.Digitized.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
-            s += $"Date modified: {m.Modified.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n";
+            s += $"Date modified: {m.Modified.ToString("dd-MMM-yyyy HH:mm:ss")}\r\n\r\n\r\n";
+            s += $"Comment: {m.Comment} ";
 
             return s;
+        }
+
+        public string GetImageCommentMetadata(string fileName)
+        {
+            return GetImageMetadata(fileName).Comment;
         }
         public ImageMetadata GetImageMetadata(string fileName)
         {
             ImageMetadata metadata = null;
-            if (fileName.Length>0)
+            if (fileName.Length > 0)
             {
                 var directories = ImageMetadataReader.ReadMetadata(fileName);
 
@@ -113,6 +119,9 @@ namespace GPXManager.entities
                                 break;
                             case "Exif IFD0-Orientation":
                                 metadata.Orientation = tag.Description;
+                                break;
+                            case "Exif IFD0-Windows XP Comment":
+                                metadata.Comment = tag.Description;
                                 break;
                             case "Exif SubIFD-Exposure Time":
                                 metadata.ExposureTime = tag.Description;
@@ -158,60 +167,14 @@ namespace GPXManager.entities
             }
             return transformBmp;
         }
-        public void AddImageComment(string imageFlePath, string comments)
-        {
-            string jpegDirectory = Path.GetDirectoryName(imageFlePath);
-            string jpegFileName = Path.GetFileNameWithoutExtension(imageFlePath);
 
-            BitmapDecoder decoder = null;
-            BitmapFrame bitmapFrame = null;
-            BitmapMetadata metadata = null;
-            FileInfo originalImage = new FileInfo(imageFlePath);
-
-            if (File.Exists(imageFlePath))
-            {
-                // load the jpg file with a JpegBitmapDecoder    
-                using (Stream jpegStreamIn = File.Open(imageFlePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-                {
-                    decoder = new JpegBitmapDecoder(jpegStreamIn, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-                }
-
-                bitmapFrame = decoder.Frames[0];
-                metadata = (BitmapMetadata)bitmapFrame.Metadata;
-
-                if (bitmapFrame != null)
-                {
-                    BitmapMetadata metaData = (BitmapMetadata)bitmapFrame.Metadata.Clone();
-
-                    if (metaData != null)
-                    {
-                        // modify the metadata   
-                        metaData.SetQuery("/app1/ifd/exif:{uint=40092}", comments);
-
-                        // get an encoder to create a new jpg file with the new metadata.      
-                        JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-                        encoder.Frames.Add(BitmapFrame.Create(bitmapFrame, bitmapFrame.Thumbnail, metaData, bitmapFrame.ColorContexts));
-                        //string jpegNewFileName = Path.Combine(jpegDirectory, "JpegTemp.jpg");
-
-                        // Delete the original
-                        originalImage.Delete();
-
-                        // Save the new image 
-                        using (Stream jpegStreamOut = File.Open(imageFlePath, FileMode.CreateNew, FileAccess.ReadWrite))
-                        {
-                            encoder.Save(jpegStreamOut);
-                        }
-                    }
-                }
-            }
-        }
         public bool IgnoreImage(LogbookImage image)
         {
             return AddRecordToRepo(image);
-            
+
         }
 
-        private DateTime GetDateTimeFromMetadataTag(string tag,bool pureNumeric=true)
+        private DateTime GetDateTimeFromMetadataTag(string tag, bool pureNumeric = true)
         {
             var arr = tag.Split(new char[] { ' ', ':', '+' });
             if (pureNumeric)
@@ -233,9 +196,9 @@ namespace GPXManager.entities
                 return DateTime.Parse(date).AddHours(offset);
             }
         }
-        private List<FileInfo> GetImagesByFoldereRecursive(string folder,bool? first=false)
+        private List<FileInfo> GetImagesByFoldereRecursive(string folder, bool? first = false)
         {
-            
+
             if ((bool)first)
             {
                 _imageLists = new List<FileInfo>();
@@ -246,7 +209,7 @@ namespace GPXManager.entities
                 foreach (var file in files)
                 {
                     string ext = file.Extension.ToLower();
-                    if (ext == ".jpg" || ext == "*.jpeg" || ext=="png")
+                    if (ext == ".jpg" || ext == "*.jpeg" || ext == "png")
                     {
                         _imageLists.Add(file);
                     }
@@ -281,38 +244,71 @@ namespace GPXManager.entities
                     {
 
                         List<LogbookImage> tempListOfRemovedItems = e.OldItems.OfType<LogbookImage>().ToList();
-                        EditSuccess =  LogBookImages.Delete(tempListOfRemovedItems[0].FileName);
+                        EditSuccess = LogBookImages.Delete(tempListOfRemovedItems[0].Comment);
 
                     }
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<LogbookImage> tempList = e.NewItems.OfType<LogbookImage>().ToList();
-                        EditSuccess =  LogBookImages.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        EditSuccess = LogBookImages.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
                     }
                     break;
             }
         }
 
+
+        public bool AddImageCommentToMetadata(string file)
+        {
+            bool success = false;
+            var jpeg = new JpegMetadataAdapter(file);
+            if (jpeg.Metadata != null)
+            {
+               
+                try
+                {
+                    string comment = jpeg.Metadata.Comment;
+                    if (comment == null || !comment.Contains("GPXManager"))
+                    {
+                        string newComment = $"GPXManager-{Guid.NewGuid().ToString()}";
+                        jpeg.Metadata.Comment = newComment;
+                        jpeg.Metadata.Title = "Logbook image for GPX Manager";
+                        jpeg.Save();              // Saves the jpeg in-place
+                        success = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            }
+            return success;
+        }
         public bool AddRecordToRepo(LogbookImage image)
         {
             if (image == null)
                 throw new ArgumentNullException("Error: The argument is Null");
 
-            ImageCollection.Add(image);
+            image.Comment = GetImageCommentMetadata(image.FileName);
+            
+            if (image.Comment.Contains("GPXManager"))
+            {
+                ImageCollection.Add(image);
+            }
+            
 
             return EditSuccess;
         }
 
         public bool UpdateRecordInRepo(LogbookImage image)
         {
-            if (image.FileName== null)
+            if (image.FileName == null)
                 throw new Exception("Error: Filename cannot be null");
 
             int index = 0;
             while (index < ImageCollection.Count)
             {
-                if (ImageCollection[index].FileName== image.FileName)
+                if (ImageCollection[index].FileName == image.FileName)
                 {
                     ImageCollection[index] = image;
                     break;
@@ -330,7 +326,7 @@ namespace GPXManager.entities
             int index = 0;
             while (index < ImageCollection.Count)
             {
-                if (ImageCollection[index].FileName== fileName)
+                if (ImageCollection[index].FileName == fileName)
                 {
                     ImageCollection.RemoveAt(index);
                     break;

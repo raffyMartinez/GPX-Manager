@@ -367,23 +367,23 @@ namespace GPXManager
                         }
                         else
                         {
-                            TreeViewItem tv = new TreeViewItem { Header = logbookImage.GPS.DeviceName, Tag = logbookImage.GPS };
-                            bool itemExists = false;
-                            foreach (TreeViewItem item in tvItemRegistered.Items)
-                            {
-                                if (item.Header.ToString() == logbookImage.GPS.DeviceName)
-                                {
-                                    item.Items.Add(new TreeViewItem { Header = Path.GetFileName(logbookImage.FileName), Tag = logbookImage });
-                                    itemExists = true;
-                                    break;
-                                }
-                            }
-                            if(!itemExists)
-                            {
-                                TreeViewItem tvi = new TreeViewItem { Header = logbookImage.GPS.DeviceName, Tag = logbookImage.GPS };
-                                tvItemRegistered.Items.Add(tvi);
-                                tvi.Items.Add( new TreeViewItem { Header = Path.GetFileName(logbookImage.FileName),Tag=logbookImage});
-                            }
+                            AddSavedImageToTree(logbookImage);
+                            //bool itemExists = false;
+                            //foreach (TreeViewItem item in tvItemRegistered.Items)
+                            //{
+                            //    if (item.Header.ToString() == logbookImage.GPS.DeviceName)
+                            //    {
+                            //        item.Items.Add(new TreeViewItem { Header = Path.GetFileName(logbookImage.FileName), Tag = logbookImage });
+                            //        itemExists = true;
+                            //        break;
+                            //    }
+                            //}
+                            //if(!itemExists)
+                            //{
+                            //    TreeViewItem tvi = new TreeViewItem { Header = logbookImage.GPS.DeviceName, Tag = logbookImage.GPS };
+                            //    tvItemRegistered.Items.Add(tvi);
+                            //    tvi.Items.Add( new TreeViewItem { Header = Path.GetFileName(logbookImage.FileName),Tag=logbookImage});
+                            //}
 
                         }
                     }
@@ -577,6 +577,43 @@ namespace GPXManager
 
         }
 
+        private void AddSavedImageToTree(LogbookImage li, bool isRegistered = true)
+        {
+            int index;
+            imagePreview.Source = null;
+            if (isRegistered)
+            {
+                bool itemExists = false;
+                index = tvItemNotRegistered.Items.IndexOf(_selected);
+                foreach (TreeViewItem item in tvItemRegistered.Items)
+                {
+                    if (item.Header.ToString() == li.GPS.DeviceName)
+                    {
+                        item.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
+                        itemExists = true;
+                        break;
+                    }
+                }
+                if (!itemExists)
+                {
+                    TreeViewItem tvi = new TreeViewItem { Header = li.GPS.DeviceName, Tag = li.GPS };
+                    tvItemRegistered.Items.Add(tvi);
+                    tvi.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
+                }
+            }
+            else
+            {
+                var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
+                tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
+                index = tvItemNotRegistered.Items.IndexOf(_selected);
+            }
+            if (_selected != null)
+            {
+                tvItemNotRegistered.Items.Remove(_selected);
+                _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
+                _selected.IsSelected = true;
+            }
+        }
         private bool RegisterLogBookImage()
         {
             bool success = false;
@@ -650,8 +687,17 @@ namespace GPXManager
                             if (Entities.TripViewModel.AddRecordToRepo(trip))
                             {
                                 li.Trip = trip;
-                                success = Entities.LogbookImageViewModel.AddRecordToRepo(li);
+                                if (Entities.LogbookImageViewModel.AddRecordToRepo(li))
+                                {
+
+                                    AddSavedImageToTree(li);
+                                }
+                                success = true;
                             }
+                        }
+                        else
+                        {
+                            MessageBox.Show(result.ErrorMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
                 }
@@ -683,15 +729,20 @@ namespace GPXManager
                     panelImageFields.Visibility = Visibility.Visible;
                     break;
                 case "buttonIgnore":
-                    if (_fileSelectedLogBookImage != null && Entities.LogbookImageViewModel.IgnoreImage(new LogbookImage { Ignore = true, FileName = _fileSelectedLogBookImage.FullName }))
+                    if (_fileSelectedLogBookImage != null)
                     {
-                        imagePreview.Source = null;
-                        var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
-                        tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
-                        int index = tvItemNotRegistered.Items.IndexOf(_selected);
-                        tvItemNotRegistered.Items.Remove(_selected);
-                        _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
-                        _selected.IsSelected = true;
+                        var li = new LogbookImage { Ignore = true, FileName = _fileSelectedLogBookImage.FullName };
+                        if (Entities.LogbookImageViewModel.IgnoreImage(li))
+                        {
+                            AddSavedImageToTree(li, false);
+                        }
+                        //imagePreview.Source = null;
+                        //var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
+                        //tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
+                        //int index = tvItemNotRegistered.Items.IndexOf(_selected);
+                        //tvItemNotRegistered.Items.Remove(_selected);
+                        //_selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
+                        //_selected.IsSelected = true;
                     }
                     break;
                 case "buttonMetadata":
@@ -2752,6 +2803,7 @@ namespace GPXManager
             _selected = e.NewValue as TreeViewItem;
             _fileSelectedLogBookImage = null;
             _logbookImage = null;
+            _src = null;
 
             if (_selected.Tag.ToString() != "main")
             {
@@ -2761,31 +2813,50 @@ namespace GPXManager
                 {
                     case "FileInfo":
                         _fileSelectedLogBookImage = _selected.Tag as FileInfo;
+                        Entities.LogbookImageViewModel.AddImageCommentToMetadata(_fileSelectedLogBookImage.FullName);
+                        
                         _src = new BitmapImage(uriSource: new Uri(_fileSelectedLogBookImage.FullName));
                         labelSelectedImageItem.Content = _fileSelectedLogBookImage.FullName;
+                        
                         break;
                     case "LogbookImage":
+
                         _logbookImage = _selected.Tag as LogbookImage;
                         _src = new BitmapImage(uriSource: new Uri(_logbookImage.FileName));
 
-                        var parentHeader = ((TreeViewItem)_selected.Parent).Header;
-                        switch (parentHeader)
+                        var parentHeader = ((TreeViewItem)_selected.Parent).Tag;
+                        switch (parentHeader.GetType().Name)
                         {
-                            case "Registered":
+                            case "GPS":
                                 buttonRegister.IsEnabled = false;
+                                comboFisher.Text = _logbookImage.Fisher.Name;
+                                comboVessel.Text = _logbookImage.Boat;
+                                comboGear.Text = _logbookImage.Gear.Name;
+                                comboGPS.Text = _logbookImage.GPS.DeviceName;
                                 break;
-                            case "Ignored":
-                                buttonIgnore.IsEnabled = false;
+                            case "String":
+                                if (((TreeViewItem)_selected.Parent).Header.ToString() == "Ignored")
+                                {
+                                    comboFisher.Text = "";
+                                    comboVessel.Text = "";
+                                    comboGear.Text = "";
+                                    comboGPS.Text = "";
+                                    buttonIgnore.IsEnabled = false;
+                                }
                                 break;
                         }
                         labelSelectedImageItem.Content = _logbookImage.Title;
                         break;
                 }
                 imagePreview.Source = _src;
-                if (panelMetadata.Visibility == Visibility.Visible)
+                if (panelMetadata.Visibility == Visibility.Visible && _fileSelectedLogBookImage!=null || _logbookImage!=null)
                 {
                     var fileName = _fileSelectedLogBookImage != null ? _fileSelectedLogBookImage.FullName : _logbookImage.FileName;
                     textMetadata.Text = Entities.LogbookImageViewModel.MetadataFlatText(fileName);
+                }
+                else
+                {
+                    textMetadata.Text = "No image selected";
                 }
             }
         }

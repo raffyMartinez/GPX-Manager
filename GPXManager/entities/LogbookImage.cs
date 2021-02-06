@@ -22,6 +22,7 @@ namespace GPXManager.entities
                 }
             }
         }
+        public string Comment { get; set; }
         public string FileName { get; set; }
         public GPS GPS { get; set; }
         public DateTime? Start { get; set; }

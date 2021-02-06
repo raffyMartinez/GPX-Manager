@@ -14,7 +14,7 @@ namespace GPXManager.entities
         public string DataPrecision { get; set; }
         public string Make { get; set; }
         public string Model { get; set; }
-
+        public string Comment { get; set; }
         public string Orientation { get; set; }
 
         public DateTime Digitized { get; set; }
