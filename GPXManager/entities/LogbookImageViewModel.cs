@@ -305,10 +305,13 @@ namespace GPXManager.entities
             if (image.FileName == null)
                 throw new Exception("Error: Filename cannot be null");
 
+         
+            image.Comment = GetImageCommentMetadata(image.FileName);
+            
             int index = 0;
             while (index < ImageCollection.Count)
             {
-                if (ImageCollection[index].FileName == image.FileName)
+                if (ImageCollection[index].Comment == image.Comment)
                 {
                     ImageCollection[index] = image;
                     break;

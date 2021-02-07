@@ -45,7 +45,7 @@ namespace GPXManager.entities
                             item.DateAddedToDatabase = (DateTime)dr["DateAdded"];
                             item.Ignore = false;
                             item.Trip = Entities.TripViewModel.GetTrip(int.Parse(dr["TripID"].ToString()));
-
+                            item.Comment = dr["ID"].ToString();
                             thisList.Add(item);
                         }
                     }

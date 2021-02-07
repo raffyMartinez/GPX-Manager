@@ -72,6 +72,7 @@ namespace GPXManager
             _usbGPSPresent = false;
             treeDevices.MouseRightButtonDown += Tree_MouseRightButtonDown;
             treeArchive.MouseRightButtonDown += Tree_MouseRightButtonDown;
+            treeCalendar.MouseRightButtonDown += Tree_MouseRightButtonDown;
         }
 
 
@@ -101,7 +102,19 @@ namespace GPXManager
                         return;
                     }
                     break;
-
+                case "treeCalendar":
+                    if (((TreeViewItem)treeCalendar.SelectedItem).Tag.GetType().Name=="GPS")
+                    {
+                        _gps = (GPS)((TreeViewItem)treeCalendar.SelectedItem).Tag;
+                        m = new MenuItem { Header = "Add trip using selected GPS", Name = "menuAddTripUsingGPS" };
+                        m.Click += OnMenuClick;
+                        cm.Items.Add(m);
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    break;
                 case "treeArchive":
                     string tag = ((TreeViewItem)treeArchive.SelectedItem).Tag.ToString();
                     if (DateTime.TryParse(tag, out DateTime v))
@@ -176,6 +189,8 @@ namespace GPXManager
                     }
                     break;
             }
+
+            cm.IsOpen = true;
 
 
         }
@@ -484,7 +499,7 @@ namespace GPXManager
                     ew.ParentWindow = this;
                     ew.IsNew = isNew;
                     ew.TripID = tripID;
-                    ew.GPS = _gps;
+                    ew.GPS = Entities.GPSViewModel.CurrentEntity;
                     ew.OperatorID = (int)operatorID;
                     ew.VesselName = vesselName;
                     ew.GearCode = gearCode;
@@ -645,8 +660,17 @@ namespace GPXManager
         private bool RegisterLogBookImage()
         {
             bool success = false;
+            bool isNew = true;
 
-            if (_fileSelectedLogBookImage != null &&
+            if(_fileSelectedLogBookImage==null)
+            {
+                isNew = false;
+            }
+            
+            string fileName = _fileSelectedLogBookImage != null ? _fileSelectedLogBookImage.FullName : _logbookImage.FileName;
+
+            //if (_fileSelectedLogBookImage != null &&
+              if(fileName != null &&  
                     comboFisher.SelectedIndex >= 0 &&
                     comboVessel.SelectedIndex >= 0 &&
                     comboGear.SelectedIndex >= 0 &&
@@ -664,7 +688,7 @@ namespace GPXManager
                 LogbookImage li = new LogbookImage
                 {
                     FisherID = ((KeyValuePair<int, string>)comboFisher.SelectedItem).Key,
-                    FileName = _fileSelectedLogBookImage.FullName,
+                    FileName = fileName,
                     Boat = comboVessel.SelectedItem.ToString(),
                     Gear = Entities.GearViewModel.GetGear(((KeyValuePair<string, string>)comboGear.SelectedItem).Key),
                     GPS = Entities.GPSViewModel.GetGPS(((KeyValuePair<string, string>)comboGPS.SelectedItem).Key),
@@ -677,17 +701,34 @@ namespace GPXManager
 
                 if (validationReult.ErrorMessage.Length == 0)
                 {
-                    TripEdited t = new TripEdited
+                    TripEdited t = null;
+
+                    if (isNew)
                     {
-                        DateTimeDeparture = (DateTime)li.Start,
-                        DateTimeArrival = (DateTime)li.End,
-                        GPS = li.GPS,
-                        OperatorID = li.Fisher.FisherID,
-                        VesselName = li.Boat,
-                        TripID = Entities.TripViewModel.NextRecordNumber,
-                        GearCode = li.Gear.Code,
-                        Notes = li.Notes,
-                    };
+                        t = new TripEdited
+                        {
+                            DateTimeDeparture = (DateTime)li.Start,
+                            DateTimeArrival = (DateTime)li.End,
+                            GPS = li.GPS,
+                            OperatorID = li.Fisher.FisherID,
+                            VesselName = li.Boat,
+                            TripID = Entities.TripViewModel.NextRecordNumber,
+                            GearCode = li.Gear.Code,
+                            Notes = li.Notes,
+                        };
+                    }
+                    else
+                    {
+                        t = new TripEdited(_logbookImage.Trip);
+                        t.DateTimeDeparture = (DateTime)li.Start;
+                        t.DateTimeArrival = (DateTime)li.End;
+                        t.GPS = li.GPS;
+                        t.OperatorID = li.Fisher.FisherID;
+                        t.VesselName = li.Boat;
+                        //t.TripID = Entities.TripViewModel.NextRecordNumber;
+                        t.GearCode = li.Gear.Code;
+                        t.Notes = li.Notes;
+                    }
 
                     bool tripHasMatchingTrack = Entities.TripViewModel.SetTrackOfTrip(t);
                     //if (Entities.TripViewModel.SetTrackOfTrip(t))
@@ -720,18 +761,33 @@ namespace GPXManager
                     var result = Entities.TripViewModel.ValidateTrip(trip, true);
                     if (result.ErrorMessage.Length == 0)
                     {
-                        if (Entities.TripViewModel.AddRecordToRepo(trip))
+                        if(isNew)
                         {
-                            li.Trip = trip;
-                            if (Entities.LogbookImageViewModel.AddRecordToRepo(li))
+                            if (Entities.TripViewModel.AddRecordToRepo(trip))
                             {
+                                li.Trip = trip;
+                                if (Entities.LogbookImageViewModel.AddRecordToRepo(li))
+                                {
 
-                                AddSavedImageToTree(li);
-                                //dtPickerStart.Value = null;
-                                dtPickerEnd.Value = null;
+                                    AddSavedImageToTree(li);
+                                    //dtPickerStart.Value = null;
+                                    dtPickerEnd.Value = null;
+                                }
+                                success = true;
                             }
-                            success = true;
                         }
+                        else
+                        {
+                            if(Entities.TripViewModel.UpdateRecordInRepo(trip))
+                            {
+                                li.Trip = trip;
+                                if(Entities.LogbookImageViewModel.UpdateRecordInRepo(li))
+                                {
+                                    success = true;
+                                }
+                            }
+                        }
+
                     }
                     else
                     {
@@ -1151,7 +1207,7 @@ namespace GPXManager
 
             foreach (var gps in Entities.GPSViewModel.GPSCollection.OrderBy(t => t.DeviceName))
             {
-                gps_root.Items.Add(new TreeViewItem { Header = gps.DeviceName, Tag = gps.DeviceID });
+                gps_root.Items.Add(new TreeViewItem { Header = gps.DeviceName, Tag = gps });
             }
 
 
@@ -1298,6 +1354,21 @@ namespace GPXManager
             string menuName = ((MenuItem)sender).Name;
             switch (menuName)
             {
+                case "menuAddTripUsingGPS":
+
+                   EditTripWindow etw = EditTripWindow.GetInstance();
+                    etw.IsNew = true;
+                    etw.GPS = _gps;
+                    etw.ParentWindow = this;
+                    if(etw.Visibility==Visibility.Visible)
+                    {
+                        etw.BringIntoView();
+                    }
+                    else
+                    {
+                        etw.Show();
+                    }
+                    break;
                 case "menuGetTimeFromTrack":
 
                     break;
@@ -1796,7 +1867,7 @@ namespace GPXManager
 
             col = new DataGridTextColumn()
             {
-                Binding = new Binding("TimeStamp"),
+                Binding = new Binding("TimeStampAdjusted"),
                 Header = "Waypoint timestamp"
             };
             col.Binding.StringFormat = "MMM-dd-yyyy HH:mm";
@@ -1981,23 +2052,6 @@ namespace GPXManager
 
         private void ShowTripWaypoints(bool fromGPSSummary = false)
         {
-            //if (fromGPSSummary)
-            //{
-            //    tripPanel.Children.Remove(stackPanelTripWaypoints);
-            //    if (!panelMain.Children.Contains(stackPanelTripWaypoints))
-            //    {
-            //        panelMain.Children.Add(stackPanelTripWaypoints);
-            //        stackPanelTripWaypoints.Margin = new Thickness(10);
-            //    }
-            //}
-            //else
-            //{
-            //    if (panelMain.Children.Contains(stackPanelTripWaypoints))
-            //    {
-            //        panelMain.Children.Remove(stackPanelTripWaypoints);
-            //        tripPanel.Children.Add(stackPanelTripWaypoints);
-            //    }
-            //}
             if (fromGPSSummary)
             {
                 gridRowGPSSummary.Height = new GridLength(1, GridUnitType.Star);
@@ -2879,13 +2933,14 @@ namespace GPXManager
                         {
                             case "GPS":
                                 buttonTripOfImage.Visibility = Visibility.Visible;
-                                buttonRegister.IsEnabled = false;
+                                buttonRegister.IsEnabled = true;
                                 dtPickerStart.Value = (DateTime)_logbookImage.Start;
                                 dtPickerEnd.Value = (DateTime)_logbookImage.End;
                                 comboFisher.Text = _logbookImage.Fisher.Name;
                                 comboVessel.Text = _logbookImage.Boat;
                                 comboGear.Text = _logbookImage.Gear.Name;
                                 comboGPS.Text = _logbookImage.GPS.DeviceName;
+                                Entities.GPSViewModel.CurrentEntity = _logbookImage.GPS;
 
                                 if (EditTripWindow.Instance != null)
                                 {

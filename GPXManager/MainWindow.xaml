@@ -163,6 +163,8 @@
                 <ColumnDefinition Width="300"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
+            
+            <!--grid container for treeview-->
             <Border Grid.Column="0" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
                 <Grid Grid.Column="0">
                     <Grid.RowDefinitions>

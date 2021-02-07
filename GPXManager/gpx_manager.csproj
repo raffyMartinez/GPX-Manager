@@ -123,6 +123,7 @@
     <Compile Include="entities\FisherItemsSource.cs" />
     <Compile Include="entities\FisherRepository.cs" />
     <Compile Include="entities\FisherViewModel.cs" />
+    <Compile Include="entities\GridUpdateCellHelper.cs" />
     <Compile Include="entities\ImageMetadata.cs" />
     <Compile Include="entities\ImportGPSData.cs" />
     <Compile Include="entities\ImportGPXEventArg.cs" />

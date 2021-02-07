@@ -29,18 +29,28 @@ namespace GPXManager.entities
     }
     public class TripWaypoint
     {
+        private string _wayPointName;
         public DateTime? _timeStamp;
         public  Trip Trip{get;set;}
         [ReadOnly(true)]
         public int RowID { get; set; }
 
         [ItemsSource(typeof(WaypointItemsSource))]
-        public string WaypointName { get; set; }
+        public string WaypointName 
+        { 
+            get { return _wayPointName; } 
+            set 
+            {
+                _wayPointName=value; 
+            } 
+        }
 
         [ItemsSource(typeof(WaypointTypeItemsSource))]
         public string WaypointType { get; set; }
 
-        public DateTime TimeStampAdjusted { get; internal set; }
+
+        public string TimeStampAdjustedDisplay { get; set; }
+        public DateTime TimeStampAdjusted { get; set; }
 
 
         public DateTime? TimeStamp { 

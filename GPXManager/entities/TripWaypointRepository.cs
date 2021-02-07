@@ -7,7 +7,7 @@ using System.Data;
 using System.Data.OleDb;
 namespace GPXManager.entities
 {
-   public class TripWaypointRepository
+    public class TripWaypointRepository
     {
         public List<TripWaypoint> TripWaypoints { get; set; }
 
@@ -41,13 +41,15 @@ namespace GPXManager.entities
                                 RowID = int.Parse(dr["RowID"].ToString()),
                                 WaypointName = dr["WaypointName"].ToString(),
                                 SetNumber = int.Parse(dr["SetNumber"].ToString()),
-                                TimeStamp = timestamp,
+                                TimeStamp = timestamp.AddHours(-1 * Global.Settings.HoursOffsetGMT),
                                 WaypointType = dr["WaypointType"].ToString(),
                                 WaypointGPXFileName = dr["WaypointGPXFileName"].ToString(),
-                                Waypoint = new Waypoint {
-                                    Latitude = double.Parse(dr["Latitude"].ToString()), 
+                                Waypoint = new Waypoint
+                                {
+                                    Latitude = double.Parse(dr["Latitude"].ToString()),
                                     Longitude = double.Parse(dr["Longitude"].ToString()),
-                                    Time = timestamp }
+                                    Time = timestamp
+                                }
                             };
                             thisList.Add(t);
                         }
@@ -116,7 +118,7 @@ namespace GPXManager.entities
                                {t.RowID},
                               '{t.WaypointName}',
                               '{t.WaypointType}',
-                              '{t.TimeStamp}',
+                              '{t.TimeStampAdjusted}',
                                {t.SetNumber},
                                {t.Waypoint.Latitude},
                                {t.Waypoint.Longitude},
@@ -141,7 +143,7 @@ namespace GPXManager.entities
                                 TripID = {t.Trip.TripID},
                                 WaypointName = '{t.WaypointName}',
                                 WaypointType = '{t.WaypointType}',
-                                [TimeStamp] = '{t.TimeStamp}',
+                                [TimeStamp] = '{t.TimeStampAdjusted}',
                                 SetNumber = {t.SetNumber},
                                 Longitude = {t.Waypoint.Longitude},
                                 Latitude = {t.Waypoint.Latitude},

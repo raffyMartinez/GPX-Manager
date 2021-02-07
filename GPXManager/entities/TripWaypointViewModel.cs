@@ -180,7 +180,8 @@ namespace GPXManager.entities
                 evr.AddMessage("Waypoint name must be at least 1 character long");
             }
 
-            if(tw.TimeStamp <= tw.Trip.DateTimeDeparture || tw.TimeStamp >= tw.Trip.DateTimeArrival)
+            var wptAdjustedTime = ((DateTime)tw.TimeStamp).AddHours(Global.Settings.HoursOffsetGMT);
+            if(wptAdjustedTime <= tw.Trip.DateTimeDeparture || wptAdjustedTime >= tw.Trip.DateTimeArrival)
             {
                 evr.AddMessage("Waypoint timestamp must be within departure and arrival time of trip");
             }

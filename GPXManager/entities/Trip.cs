@@ -37,9 +37,11 @@ namespace GPXManager.entities
             Notes = trip.Notes;
             GPXFileName = trip.GPXFileName;
             XML = trip.XML;
+            Trip = trip;
 
         }
 
+        public Trip Trip { get; set; }
         public string TrackSummary
         {
             get
@@ -108,7 +110,7 @@ namespace GPXManager.entities
         }
 
 
-        public List<TripWaypointLite>TripWaypoints { get; set; }
+        public List<TripWaypointLite> TripWaypoints { get; set; }
 
     }
     public class Trip
@@ -124,11 +126,11 @@ namespace GPXManager.entities
         public string Notes { get; set; }
 
         public DateTime DateTimeArrival { get; set; }
-        public int? OperatorID 
+        public int? OperatorID
         {
             get
             {
-                if(_operatorID==null)
+                if (_operatorID == null)
                 {
                     _operatorID = Operator.FisherID;
                 }
@@ -136,7 +138,7 @@ namespace GPXManager.entities
             }
             set { _operatorID = value; }
         }
-        
+
         public Track Track { get; set; }
         public Gear Gear { get; set; }
         public string GPXFileName { get; set; }
@@ -171,10 +173,10 @@ namespace GPXManager.entities
         public string XML { get; set; }
 
         public List<TripWaypoint> Waypoints
-        { 
+        {
             get
             {
-                return  Entities.TripWaypointViewModel.GetAllTripWaypoints(TripID);
+                return Entities.TripWaypointViewModel.GetAllTripWaypoints(TripID);
             }
         }
         public int WaypointCount

@@ -124,6 +124,7 @@ namespace GPXManager.entities
             {
                 conn.Open();
                 var sql = $@"Update trips set
+                                DeviceID = '{t.GPS.DeviceID}',
                                 DateTimeDeparted = '{t.DateTimeDeparture}',
                                 DateTimeArrived = '{t.DateTimeArrival}',
                                 NameOfOperator = '{t.OperatorID}',

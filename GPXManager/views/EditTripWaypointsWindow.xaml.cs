@@ -36,6 +36,7 @@ namespace GPXManager.views
         {
             this.SavePlacement();
         }
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
@@ -157,7 +158,7 @@ namespace GPXManager.views
                         var wpt = Entities.WaypointViewModel.GetWaypoint(prp.Value.ToString(), Trip);
                         _oldWaypoint = ((TripWaypoint)PropertyGrid.SelectedObject).Waypoint;
                         ((TripWaypoint)PropertyGrid.SelectedObject).Waypoint = wpt;
-                        ((TripWaypoint)PropertyGrid.SelectedObject).TimeStamp = wpt.Time.AddHours(Global.Settings.HoursOffsetGMT);
+                        ((TripWaypoint)PropertyGrid.SelectedObject).TimeStamp = wpt.Time;//.AddHours(Global.Settings.HoursOffsetGMT);
                         ((TripWaypoint)PropertyGrid.SelectedObject).WaypointGPXFileName = wpt.GPXFileName;
                         PropertyGrid.Update();
                     }
