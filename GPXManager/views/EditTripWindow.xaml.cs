@@ -335,18 +335,15 @@ namespace GPXManager.views
             {
                 case "buttonTripWaypointsSave":
                     int saveCount = 0;
-                    if (Entities.TripWaypointViewModel.GetAllTripWaypoints(_trip.TripID).Count > 0)
-                    {
 
-                    }
-                    else
+                    try
                     {
-                        try
+                        foreach (TripWaypoint item in dataGridWaypoints.Items)
                         {
-                            foreach (TripWaypoint item in dataGridWaypoints.Items)
-                            {
 
-                                if (item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
+                            if (item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
+                            {
+                                if (Entities.TripWaypointViewModel.GetTripWaypoint(item.WaypointName, item.Trip.TripID) == null)
                                 {
                                     item.RowID = Entities.TripWaypointViewModel.NextRecordNumber;
                                     if (Entities.TripWaypointViewModel.AddRecordToRepo(item))
@@ -354,26 +351,34 @@ namespace GPXManager.views
                                         saveCount++;
                                     }
                                 }
-
+                                else
+                                {
+                                    if (Entities.TripWaypointViewModel.UpdateRecordInRepo(item))
+                                    {
+                                        saveCount++;
+                                    }
+                                }
                             }
-                        }
-                        catch(InvalidCastException)
-                        {
-                            //ignore
-                        }
-
-                        string saveMessage = "";
-                        if (saveCount > 0)
-                        {
-                            saveMessage = $"Saved {saveCount} trip waypoints";
 
                         }
-                        else
-                        {
-                            saveMessage = "Was not able to save waypoints";
-                        }
-                        MessageBox.Show(saveMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+                    catch (InvalidCastException)
+                    {
+                        //ignore
+                    }
+
+                    string saveMessage = "";
+                    if (saveCount > 0)
+                    {
+                        saveMessage = $"Saved {saveCount} trip waypoints";
+
+                    }
+                    else
+                    {
+                        saveMessage = "Was not able to save waypoints";
+                    }
+                    MessageBox.Show(saveMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+
                     break;
                 case "buttonWpts":
 
@@ -398,14 +403,14 @@ namespace GPXManager.views
                             TripID = _trip.TripID,
                             Gear = Entities.GearViewModel.GetGear(_trip.GearCode),
                             OtherGear = _trip.OtherGear,
-                            DeviceID = GPS.DeviceID,
+                            DeviceID = _trip.GPS.DeviceID,
                             Track = _trip.Track,
                             Notes = _trip.Notes,
                             GPXFileName = _trip.Track.FileName,
                             XML = _trip.Track.XMLString
                         };
                         //trip.GPS = _trip.GPS;
-                        if(trip.TripID==0)
+                        if (trip.TripID == 0)
                         {
                             trip.TripID = Entities.TripViewModel.NextRecordNumber;
                             _trip.Trip = trip;
@@ -424,6 +429,10 @@ namespace GPXManager.views
 
                             //DialogResult = true;
                             checkEditWaypoints.IsEnabled = true;
+                            if(!(bool)checkEditWaypoints.IsChecked)
+                            {
+                                Close();
+                            }
                         }
 
                         else
@@ -548,7 +557,7 @@ namespace GPXManager.views
         private DateTime GetAdjustedTimeofWaypoint(string wpt)
         {
 
-           return Entities.WaypointViewModel.GetWaypoint(wpt, _trip.Trip).Time.AddHours(Global.Settings.HoursOffsetGMT);
+            return Entities.WaypointViewModel.GetWaypoint(wpt, _trip.Trip).Time.AddHours(Global.Settings.HoursOffsetGMT);
 
         }
         private void OnGridCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -569,7 +578,7 @@ namespace GPXManager.views
 
         private void OnGridRowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
         {
-            if (_wptName!=null && _wptName.Length > 0)
+            if (_wptName != null && _wptName.Length > 0)
             {
                 ((TripWaypoint)e.Row.Item).Waypoint = _waypoints.FirstOrDefault(t => t.Name == _wptName);
                 ((TripWaypoint)e.Row.Item).TimeStampAdjusted = _wayPointTime;

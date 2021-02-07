@@ -469,7 +469,7 @@
                 <!--Metadata-->
                 <StackPanel x:Name="panelMetadata" Margin="10">
                     <Label Content="Image metadata" FontSize="14" FontWeight="Bold"/>
-                    <TextBox x:Name="textMetadata" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Height="300"/>
+                    <TextBox x:Name="textMetadata" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Height="300" IsReadOnly="True"/>
                     <Button x:Name="buttonCloseMetadata" Click="OnButtonClick" Height="30" Width="30" HorizontalAlignment="Center" Margin="20" Background="{x:Null}" BorderBrush="{x:Null}">
                         <Image Source="cancel.png"/>
                     </Button>

@@ -86,6 +86,11 @@ namespace GPXManager.entities
             return TripWaypointCollection.ToList();
         }
 
+
+        public TripWaypoint GetTripWaypoint(string waypointName, int tripID)
+        {
+            return TripWaypointCollection.FirstOrDefault(t => t.WaypointName == waypointName && t.Trip.TripID == tripID);
+        }
         public TripWaypoint GetTripWaypoint(TripWaypoint tpw)
         {
             return TripWaypointCollection
