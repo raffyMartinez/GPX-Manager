@@ -451,7 +451,10 @@
                     <StackPanel Margin="3 5">
                         <Label Content="Notes"/>
                         <TextBox x:Name="textImageNotes" Height="100" VerticalAlignment="Center" AcceptsReturn="True" TextWrapping="Wrap" />
+                        <CheckBox Content="View created trip after saving" Margin="0 20 0 10" IsChecked="True" x:Name="checkViewCreatedTrip"/>
                     </StackPanel>
+                    
+                    
 
                     <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Button  Height="40" Width="40" x:Name="buttonIgnore" Margin="5 10" Click="OnButtonClick" IsEnabled="False" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}" >

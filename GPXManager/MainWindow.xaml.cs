@@ -597,9 +597,11 @@ namespace GPXManager
 
         }
 
-        private void AddSavedImageToTree(LogbookImage li, bool isRegistered = true, bool withTrack = true)
+        private void AddSavedImageToTree(LogbookImage li, bool isRegistered = true)
         {
             int index;
+            int newIndex;
+            TreeViewItem parentGPS = null;
             imagePreview.Source = null;
             if (isRegistered)
             {
@@ -612,17 +614,21 @@ namespace GPXManager
                     {
                         if (item.Header.ToString() == li.GPS.DeviceName)
                         {
-                            item.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li, FontWeight = FontWeights.Normal });
+                            parentGPS = item;
+                            //newIndex=  parentGPS.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li, FontWeight = FontWeights.Normal });
                             gpsNameFoundInTree = true;
                             break;
                         }
                     }
                     if (!gpsNameFoundInTree)
                     {
-                        TreeViewItem tvi = new TreeViewItem { Header = li.GPS.DeviceName, Tag = li.GPS, Foreground = Brushes.Gray };
-                        tvItemRegistered.Items.Add(tvi);
-                        tvi.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li,FontWeight = FontWeights.Normal });
+                        parentGPS = new TreeViewItem { Header = li.GPS.DeviceName, Tag = li.GPS, Foreground = Brushes.Gray };
+                        //parentGPS = tvi;
+                        tvItemRegistered.Items.Add(parentGPS);
+                        //newIndex= tvi.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li,FontWeight = FontWeights.Normal });
                     }
+
+                    //newIndex=  parentGPS.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li, FontWeight = FontWeights.Normal });
                 }
                 else
                 {
@@ -630,31 +636,47 @@ namespace GPXManager
                     {
                         if (item.Header.ToString() == li.GPS.DeviceName)
                         {
-                            item.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
+                            parentGPS = item;
+                            //newIndex= item.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
                             gpsNameFoundInTree = true;
                             break;
                         }
                     }
                     if (!gpsNameFoundInTree)
                     {
-                        TreeViewItem tvi = new TreeViewItem { Header = li.GPS.DeviceName, Tag = li.GPS };
-                        tvItemRegisteredNoTrack.Items.Add(tvi);
-                        tvi.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
+                        parentGPS= new TreeViewItem { Header = li.GPS.DeviceName, Tag = li.GPS };
+                        //parentGPS = tvi;
+                        tvItemRegisteredNoTrack.Items.Add(parentGPS);
+                        //newIndex= tvi.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li });
                     }
 
                 }
+                newIndex=  parentGPS.Items.Add(new TreeViewItem { Header = Path.GetFileName(li.FileName), Tag = li, FontWeight = FontWeights.Normal });
             }
             else
             {
                 var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
-                tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
+                newIndex= tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
                 index = tvItemNotRegistered.Items.IndexOf(_selected);
             }
-            if (_selected != null)
+            if (index >= 0)
             {
-                tvItemNotRegistered.Items.Remove(_selected);
-                _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
-                _selected.IsSelected = true;
+  
+                if (_selected != null)
+                {
+                    tvItemNotRegistered.Items.Remove(_selected);
+                    
+
+                    if ((bool)checkViewCreatedTrip.IsChecked)
+                    {
+                        ((TreeViewItem)parentGPS.Items[newIndex]).IsSelected = true;
+                    }
+                    else
+                    {
+                        _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
+                        _selected.IsSelected = true;
+                    }
+                }
             }
         }
         private bool RegisterLogBookImage()
@@ -1003,7 +1025,7 @@ namespace GPXManager
             MapWindowManager.MapLayersWindow?.DisableGrid();
             int h = -1;
             List<int> handles = new List<int>();
-            if (MapWindowManager.MapWindowForm == null)
+            if (MapWindowForm.Instance == null)
             {
                 MapWindowManager.OpenMapWindow(this, true);
             }
@@ -2441,7 +2463,7 @@ namespace GPXManager
 
             LayerSelector = (DataGrid)sender;
             MapWindowManager.TrackGPXFile = null;
-            if (MapWindowManager.MapWindowForm != null)
+            if (MapWindowForm.Instance != null)
             {
                 MapWindowManager.MapWindowForm.LayerSelector = LayerSelector;
             }
@@ -2456,10 +2478,11 @@ namespace GPXManager
                     {
                         _selectedTrip = (Trip)dataGridGPSSummary.SelectedItem;
                         _tripWaypoints = Entities.TripWaypointViewModel.GetAllTripWaypoints(_selectedTrip.TripID);
-                        if (dataGridGPSSummary.SelectedItems.Count == 1 && MapWindowManager.MapWindowForm != null)
+                        if (dataGridGPSSummary.SelectedItems.Count == 1 && MapWindowForm.Instance != null)
                         {
                             MapWindowManager.MapLayersHandler.ClearAllSelections();
-                            TripMappingManager.RemoveTripLayersFromMap();
+                            //TripMappingManager.RemoveTripLayersFromMap();
+                            MapWindowManager.RemoveGPSDataFromMap();
                             Entities.TripViewModel.MarkAllNotShownInMap();
                             ShowTripMap();
                         }
@@ -2475,10 +2498,11 @@ namespace GPXManager
                     buttonEditTrip.IsEnabled = true;
                     buttonDeleteTrip.IsEnabled = true;
                     _selectedTrip = (Trip)dataGridTrips.SelectedItem;
-                    if (dataGridTrips.SelectedItems.Count == 1 && MapWindowManager.MapWindowForm != null)
+                    if (dataGridTrips.SelectedItems.Count == 1 && MapWindowForm.Instance != null)
                     {
                         MapWindowManager.MapLayersHandler.ClearAllSelections();
-                        TripMappingManager.RemoveTripLayersFromMap();
+                        //TripMappingManager.RemoveTripLayersFromMap();
+                        MapWindowManager.RemoveGPSDataFromMap();
                     }
                     else if (_selectedTrip != null)
                     {
@@ -2540,6 +2564,7 @@ namespace GPXManager
                         if (MapWindowManager.MapWindowForm != null && dataGridGPXFiles.SelectedItems.Count == 1)
                         {
                             GPXMappingManager.RemoveGPXLayersFromMap();
+                            MapWindowManager.RemoveGPSDataFromMap();
                             foreach (var item in _mappedGPXFiles)
                             {
                                 item.ShownInMap = false;

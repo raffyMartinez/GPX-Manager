@@ -39,6 +39,9 @@ namespace GPXManager.views
         private DateTime? _defaultStart;
         private DateTime? _defaultEnd;
         private DateTime _wayPointTime;
+        private bool _dateArrivalSameAsDepartureDone;
+        private bool _checkBoxWasChecked;
+        private bool _formIsDirty;
 
 
         public static EditTripWindow GetInstance()
@@ -341,7 +344,7 @@ namespace GPXManager.views
                         foreach (TripWaypoint item in dataGridWaypoints.Items)
                         {
 
-                            if (item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
+                            if (item.WaypointName!=null && item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
                             {
                                 if (Entities.TripWaypointViewModel.GetTripWaypoint(item.WaypointName, item.Trip.TripID) == null)
                                 {
@@ -387,62 +390,72 @@ namespace GPXManager.views
                     ExtractTracks();
                     break;
                 case "buttonOk":
-                    if (_dateTimeDepartureArrivalChanged)
+                    if(!_formIsDirty && (!checkEditWaypoints.IsEnabled || !(bool)checkEditWaypoints.IsChecked))
                     {
-                        ExtractTracks();
+                        Close();
+                        return;
                     }
-                    if (_trip.Track.XMLString != null)
+
+                    if (_formIsDirty)
                     {
-                        Trip trip = new Trip
+                        if (_dateTimeDepartureArrivalChanged)
                         {
-                            VesselName = _trip.VesselName,
-                            OperatorID = _trip.OperatorID,
-                            DateTimeArrival = _trip.DateTimeArrival,
-                            DateTimeDeparture = _trip.DateTimeDeparture,
-                            GPS = _trip.GPS,
-                            TripID = _trip.TripID,
-                            Gear = Entities.GearViewModel.GetGear(_trip.GearCode),
-                            OtherGear = _trip.OtherGear,
-                            DeviceID = _trip.GPS.DeviceID,
-                            Track = _trip.Track,
-                            Notes = _trip.Notes,
-                            GPXFileName = _trip.Track.FileName,
-                            XML = _trip.Track.XMLString
-                        };
-                        //trip.GPS = _trip.GPS;
-                        if (trip.TripID == 0)
-                        {
-                            trip.TripID = Entities.TripViewModel.NextRecordNumber;
-                            _trip.Trip = trip;
+                            ExtractTracks();
                         }
-                        var result = Entities.TripViewModel.ValidateTrip(trip, IsNew);
-                        if (result.ErrorMessage.Length == 0)
+                        if (_trip.Track.XMLString != null)
                         {
-                            if (IsNew)
+                            Trip trip = new Trip
                             {
-                                Entities.TripViewModel.AddRecordToRepo(trip);
+                                VesselName = _trip.VesselName,
+                                OperatorID = _trip.OperatorID,
+                                DateTimeArrival = _trip.DateTimeArrival,
+                                DateTimeDeparture = _trip.DateTimeDeparture,
+                                GPS = _trip.GPS,
+                                TripID = _trip.TripID,
+                                Gear = Entities.GearViewModel.GetGear(_trip.GearCode),
+                                OtherGear = _trip.OtherGear,
+                                DeviceID = _trip.GPS.DeviceID,
+                                Track = _trip.Track,
+                                Notes = _trip.Notes,
+                                GPXFileName = _trip.Track.FileName,
+                                XML = _trip.Track.XMLString
+                            };
+                            //trip.GPS = _trip.GPS;
+                            if (trip.TripID == 0)
+                            {
+                                trip.TripID = Entities.TripViewModel.NextRecordNumber;
+                                _trip.Trip = trip;
                             }
+                            var result = Entities.TripViewModel.ValidateTrip(trip, IsNew);
+                            if (result.ErrorMessage.Length == 0)
+                            {
+                                if (IsNew)
+                                {
+                                    Entities.TripViewModel.AddRecordToRepo(trip);
+                                }
+                                else
+                                {
+                                    Entities.TripViewModel.UpdateRecordInRepo(trip);
+                                }
+
+                                //DialogResult = true;
+                                checkEditWaypoints.IsEnabled = true;
+                                _formIsDirty = false;
+                                if (_checkBoxWasChecked && !(bool)checkEditWaypoints.IsChecked)
+                                {
+                                    Close();
+                                }
+                            }
+
                             else
                             {
-                                Entities.TripViewModel.UpdateRecordInRepo(trip);
-                            }
-
-                            //DialogResult = true;
-                            checkEditWaypoints.IsEnabled = true;
-                            if(!(bool)checkEditWaypoints.IsChecked)
-                            {
-                                Close();
+                                MessageBox.Show(result.ErrorMessage, "Validation error", MessageBoxButton.OK, MessageBoxImage.Error);
                             }
                         }
-
                         else
                         {
-                            MessageBox.Show(result.ErrorMessage, "Validation error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show("Track is not defined", "Validation error", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Track is not defined", "Validation error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                     break;
                 case "buttonCancel":
@@ -461,7 +474,7 @@ namespace GPXManager.views
 
         private void OnPropertyValueChanged(object sender, PropertyValueChangedEventArgs e)
         {
-
+            _formIsDirty = true;
             ComboBox cbo = new ComboBox();
             cbo.Items.Clear();
             cbo.SelectionChanged += OnComboSelectionChanged;
@@ -472,6 +485,18 @@ namespace GPXManager.views
                 case "DateTimeDeparture":
                 case "DateTimeArrival":
                     _dateTimeDepartureArrivalChanged = (_selectedProperty.PropertyName == "DateTimeDeparture" || _selectedProperty.PropertyName == "DateTimeArrival");
+
+                    if(!_dateArrivalSameAsDepartureDone && _selectedProperty.PropertyName=="DateTimeDeparture")
+                    {
+                        _dateArrivalSameAsDepartureDone = true;
+                        foreach (PropertyItem prp in PropertyGrid.Properties)
+                        {
+                            if (prp.PropertyName == "DateTimeArrival")
+                            {
+                                prp.Value = _selectedProperty.Value;
+                            }
+                        }
+                    }
                     break;
                 case "OperatorID":
                     cbo.Tag = "vessels";
@@ -536,6 +561,11 @@ namespace GPXManager.views
 
         private void OnCheckChanged(object sender, RoutedEventArgs e)
         {
+            if(!_checkBoxWasChecked)
+            {
+                _checkBoxWasChecked = true;
+            }
+
             if ((bool)checkEditWaypoints.IsChecked)
             {
                 rowWaypoints.Height = new GridLength(1, GridUnitType.Star);

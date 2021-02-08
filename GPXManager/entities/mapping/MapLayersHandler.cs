@@ -886,7 +886,7 @@ namespace GPXManager.entities.mapping
                 RemoveLayer(layerName);
             }
             var h = _axmap.AddLayer(sf, isVisible);
-            if (h >= 0)
+             if (h >= 0)
             {
                 if (layerName.Length == 0)
                 {

@@ -71,6 +71,11 @@ namespace GPXManager.entities.mapping
         {
             RemoveLayerByKey("gpxfile_track");
             RemoveLayerByKey("gpxfile_waypoint");
+            RemoveLayerByKey("trip_track");
+            RemoveLayerByKey("trip_waypoints");
+            RemoveLayerByKey("gpx_track_vertices");
+            RemoveLayerByKey("named_points_from_gpx");
+            RemoveLayerByKey("gpx_waypoints");
             GPXMappingManager.RemoveAllFromMap();
         }
         public static string CoastLineFile
@@ -489,26 +494,8 @@ namespace GPXManager.entities.mapping
             
         }
 
-        public static int MapTripWaypoints(List<TripWaypoint>waypoints, out int shpIndex, out List<int>handles,  GPS gps, string filename,bool showInMap=true)
-        {
-            shpIndex = -1;
-            handles = new List<int>();
-            var utils = new MapWinGIS.Utils();
-            var shpfileName = "";
-            if (showInMap)
-            {
-                if (waypoints.Count > 0)
-                {
-                    Shapefile sf = null;
-                    sf = ShapefileFactory.PointsFromWayPointList(waypoints, out handles,gps.DeviceName,filename);
-                    shpfileName = "Trip waypoints";
-                    int h = MapLayersHandler.AddLayer(sf, shpfileName, uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
-                }
 
 
-            }
-            return MapLayersHandler.CurrentMapLayer.Handle;
-        }
 
         public static int MapGPX(GPXFile gpxFile,  out int shpIndex,  out List<int>handles,  bool showInMap = true)
         {

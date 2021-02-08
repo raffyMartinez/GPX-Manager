@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MapWinGIS;
+using System.Diagnostics;
 
 namespace GPXManager.entities.mapping
 {
@@ -43,8 +44,8 @@ namespace GPXManager.entities.mapping
             var sf = ShapefileFactory.TrackFromTrip(trips, out trackHandles);
             var pointSF = ShapefileFactory.PointsFromTrips(trips, out pointHandles);
 
-            MapInteractionHandler.MapLayersHandler.AddLayer(sf, "Track", uniqueLayer: true, layerKey: sf.Key);
-            MapInteractionHandler.MapLayersHandler.AddLayer(pointSF, "Waypoints", uniqueLayer: true, layerKey: sf.Key);
+            MapInteractionHandler.MapLayersHandler.AddLayer(sf, "Track", uniqueLayer: false, layerKey: sf.Key);
+            MapInteractionHandler.MapLayersHandler.AddLayer(pointSF, "Waypoints", uniqueLayer: false, layerKey: sf.Key);
             TrackShapefile = sf;
             WaypointsShapefile = pointSF;
             return sf != null;

@@ -45,6 +45,7 @@ namespace GPXManager.views
             Closing += OnWindowClosing;
         }
 
+
         public System.Windows.Controls.Control LayerSelector { get; set; }
         public MapLayer CurrentLayer { get; set; }
 
