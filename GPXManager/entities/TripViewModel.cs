@@ -132,6 +132,11 @@ namespace GPXManager.entities
             return TripCollection.ToList();
         }
 
+        public string VesselOfTrip (int tripID)
+        {
+            return TripCollection.FirstOrDefault(t => t.TripID == tripID).VesselName;
+        }
+
         public List<DateTime>GetMonthYears()
         {
             var tripMonthYears = new List<DateTime>();

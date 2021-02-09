@@ -503,6 +503,11 @@ namespace GPXManager
                 
                 if (fromImage)
                 {
+                    if(vesselName.Length==0)
+                    {
+                        vesselName = Entities.TripViewModel.VesselOfTrip(tripID);
+                    }
+
                     EditTripWindow ew = EditTripWindow.GetInstance();
                     ew.ParentWindow = this;
                     ew.IsNew = isNew;
@@ -796,6 +801,7 @@ namespace GPXManager
                         {
                             if (Entities.TripViewModel.AddRecordToRepo(trip))
                             {
+                                _selectedTrip = trip;
                                 li.Trip = trip;
                                 if (Entities.LogbookImageViewModel.AddRecordToRepo(li))
                                 {
@@ -804,6 +810,7 @@ namespace GPXManager
                                     //dtPickerStart.Value = null;
                                     dtPickerEnd.Value = null;
                                     textImageNotes.Text = "";
+                                    
                                 }
                                 success = true;
                             }
@@ -909,7 +916,8 @@ namespace GPXManager
                     }
                     break;
                 case "buttonTripOfImage":
-                    ShowEditTripWindow(isNew: false, tripID: _logbookImage.Trip.TripID, showWaypoints: true, fromImage: true);
+                    //ShowEditTripWindow(isNew: false, tripID: _logbookImage.Trip.TripID, showWaypoints: true, fromImage: true);
+                    ShowEditTripWindow(false, _selectedTrip.TripID, _selectedTrip.OperatorID);
                     break;
                 case "buttonCloseMetadata":
                     panelMetadata.Visibility = Visibility.Collapsed;
