@@ -16,7 +16,7 @@
         <StackPanel Grid.Row="1" >
             <WrapPanel Margin="5 20 0 0" VerticalAlignment="Center" Width="350">
                 <Label Content="Name of fisher" Width="100"/>
-                <TextBox x:Name="textFisherName" Width="190" />
+                <TextBox x:Name="textFisherName" Width="190" VerticalContentAlignment="Center" Height="25"/>
             </WrapPanel>
             <StackPanel Margin="10 20 0 0" HorizontalAlignment="Left" Width="350">
                 <Label Content="Names of boats"/>

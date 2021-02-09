@@ -138,10 +138,20 @@ namespace GPXManager.entities
         }
 
 
-        public bool UpdateRecordInRepo(TripWaypoint tw)
+        public bool UpdateRecordInRepo(TripWaypoint tw , bool fromGridEidtor=false)
         {
             if (tw.RowID == 0)
-                throw new Exception("Error: ID cannot be null");
+            {
+                if(fromGridEidtor)
+                {
+                    tw.RowID = NextRecordNumber;
+                }
+                else
+                {
+                    return false;
+                }
+                //throw new Exception("Error: ID cannot be null");
+            }
 
             int index = 0;
             while (index < TripWaypointCollection.Count)

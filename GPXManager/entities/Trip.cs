@@ -83,7 +83,8 @@ namespace GPXManager.entities
 
         public string XML { get; set; }
 
-        [ReadOnly(true)]
+        //[ReadOnly(true)]
+        [ItemsSource(typeof(GPSItemsSource))]
         public string DeviceID { get; set; }
         public string OtherGear { get; set; }
         [ReadOnly(true)]
@@ -92,7 +93,7 @@ namespace GPXManager.entities
         [ItemsSource(typeof(VesselNameItemsSource))]
         public string VesselName { get; set; }
 
-        [ReadOnly(true)]
+        //[ReadOnly(true)]
         public GPS GPS { get; set; }
 
         [ItemsSource(typeof(FisherItemsSource))]

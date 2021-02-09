@@ -16,7 +16,7 @@
         <StackPanel Grid.Row="1">
             <Label Content="Name of boat" Margin="10 0" x:Name="labelForEditing"/>
             <Border BorderBrush="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" BorderThickness="0.5" Margin="10 0">
-                <TextBox x:Name="textItem" Height="30"/>
+                <TextBox x:Name="textItem" Height="25" VerticalContentAlignment="Center"/>
              </Border>
         </StackPanel>
         <WrapPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right">

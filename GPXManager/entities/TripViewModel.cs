@@ -214,10 +214,17 @@ namespace GPXManager.entities
         }
         public List<Trip>LatestTripsUsingGPS(GPS gps, int countLatestTrips=5)
         {
-            return Entities.TripViewModel.TripCollection
-                .Where(t => t.GPS.DeviceID == gps.DeviceID)
-                .OrderByDescending(t => t.DateAdded)
-                .Take(countLatestTrips).ToList();
+            if (gps == null)
+            {
+                return null;
+            }
+            else
+            {
+                return Entities.TripViewModel.TripCollection
+                    .Where(t => t.GPS.DeviceID == gps.DeviceID)
+                    .OrderByDescending(t => t.DateAdded)
+                    .Take(countLatestTrips).ToList();
+            }
         }
         public List<Trip>TripsUsingGPSByMonth(GPS gps, DateTime month)
         {
@@ -294,6 +301,7 @@ namespace GPXManager.entities
 
             return _operationSucceeded;
         }
+
 
         public EntityValidationResult ValidateTrip(Trip trip, bool isNew)
         {

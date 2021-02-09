@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 namespace GPXManager.entities
 {
-    class GPSItemsSource:IItemsSource
+    class GPSItemsSource : IItemsSource
     {
         public ItemCollection GetValues()
         {
             var items = new ItemCollection();
             foreach (var item in Entities.GPSViewModel.GPSCollection)
             {
-                items.Add(item.Code,item.DeviceName);
+                items.Add(item.DeviceID, item.DeviceName);
             }
             return items;
         }

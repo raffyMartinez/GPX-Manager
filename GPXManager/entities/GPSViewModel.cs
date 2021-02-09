@@ -17,10 +17,11 @@ namespace GPXManager.entities
     {
         private bool _gpsRemovedByEject;
         private bool _addToCollectionOnly;
+        
         public ObservableCollection<GPS> GPSCollection { get; set; }
         private GPSRepository GPSes { get; set; }
 
-        
+        public bool EditSuccess { get; set; }
         
         public int ImportGPS(string xmlFile, out string message)
         {
@@ -239,6 +240,7 @@ namespace GPXManager.entities
         }
         private void GPSCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            EditSuccess = false;
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
@@ -251,7 +253,8 @@ namespace GPXManager.entities
                         }
                         else
                         {
-                            if (GPSes.Add(newGPS))
+                            EditSuccess = GPSes.Add(newGPS);
+                            if (EditSuccess)
                             {
                                 CurrentEntity = newGPS;
                             }
@@ -267,14 +270,14 @@ namespace GPXManager.entities
                         else
                         {
                             List<GPS> tempListOfRemovedItems = e.OldItems.OfType<GPS>().ToList();
-                            GPSes.Delete(tempListOfRemovedItems[0].Code);
+                            EditSuccess =  GPSes.Delete(tempListOfRemovedItems[0].Code);
                         }
                     }
                     break;
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<GPS> tempList = e.NewItems.OfType<GPS>().ToList();
-                        GPSes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        EditSuccess =  GPSes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
                     }
                     break;
             }
@@ -303,11 +306,11 @@ namespace GPXManager.entities
                 throw new ArgumentNullException("Error: The argument is Null");
             
             GPSCollection.Add(gps);
-            
-            return GPSCollection.Count > oldCount;
+
+            return EditSuccess;
         }
 
-        public void UpdateRecordInRepo(GPS gps)
+        public bool UpdateRecordInRepo(GPS gps)
         {
             if (gps.Code == null)
                 throw new Exception("Error: ID cannot be null");
@@ -322,9 +325,10 @@ namespace GPXManager.entities
                 }
                 index++;
             }
+            return EditSuccess;
         }
 
-        public void DeleteRecordFromRepo(string code)
+        public bool DeleteRecordFromRepo(string code)
         {
             if (code == null)
                 throw new Exception("Record ID cannot be null");
@@ -339,6 +343,7 @@ namespace GPXManager.entities
                 }
                 index++;
             }
+            return EditSuccess;
         }
         public EntityValidationResult ValidateGPS(GPS gps, bool isNew, 
             string oldAssignedName="", string oldCode="", bool fromImport=false, bool fromArchive=false)

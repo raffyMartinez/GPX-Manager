@@ -211,9 +211,6 @@
     <Compile Include="views\EditSingleItemDialog.xaml.cs">
       <DependentUpon>EditSingleItemDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="views\EditTripWaypointsWindow.xaml.cs">
-      <DependentUpon>EditTripWaypointsWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="views\EditTripWindow.xaml.cs">
       <DependentUpon>EditTripWindow.xaml</DependentUpon>
     </Compile>
@@ -305,10 +302,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\EditSingleItemDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="views\EditTripWaypointsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
