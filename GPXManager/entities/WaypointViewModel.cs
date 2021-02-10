@@ -25,22 +25,10 @@ namespace GPXManager.entities
         }
         public Waypoint GetWaypoint(string name, Trip trip)
         {
-            //          Waypoint wpt=null;
-            //foreach(var item in Waypoints[gps])
-            //{
-            //    var w = item.Waypoints.Where(t => t.Name == name).FirstOrDefault();
-            //    if (w!=null)
-            //    {
-            //        wpt =w;
-            //        break;
-            //    }
-            //}
-
-            //            return wpt;
-
-            return Waypoints[trip.GPS].FirstOrDefault(t => t.StartDate>= trip.DateTimeDeparture &&
-            t.StartDate < trip.DateTimeArrival && 
-            t.Waypoints.Count>0).Waypoints.FirstOrDefault(T=>T.Name==name);
+            return Waypoints[trip.GPS]
+                .FirstOrDefault(t => t.StartDate>= trip.DateTimeDeparture &&
+                                t.StartDate < trip.DateTimeArrival && 
+                                t.Waypoints.Count>0).Waypoints.FirstOrDefault(T=>T.Name==name);
         }
 
         public int Count { get { return Waypoints.Count; } }

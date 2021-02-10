@@ -244,7 +244,7 @@
                 <StackPanel Grid.Row="3">
                     <DataGrid  x:Name="dataGridGPSSummary" Visibility="Visible" Margin="10"
                           ItemsSource="{Binding}" AutoGenerateColumns="True" IsReadOnly="True" 
-                          MouseDoubleClick="OnGPSGridDoubleClick" SelectionChanged="OnDataGridSelectionChanged">
+                          MouseDoubleClick="OnGridDoubleClick" SelectionChanged="OnDataGridSelectionChanged">
                         <DataGrid.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Details" Click="OnMenuClick" x:Name="menuCalendaredTripViewGPXDetails" Visibility="Collapsed"/>
@@ -337,9 +337,6 @@
                               RowEditEnding="OnDataGridRowEditEnding" MouseDoubleClick="OnGridDoubleClick"/>
 
                         <WrapPanel HorizontalAlignment="Center" Orientation="Vertical">
-                            <Button Height="30" Width="75" x:Name="buttonAddWaypoint" Click="OnButtonClick" Content="Add" Margin="20 0 20 0" Visibility="Collapsed"/>
-                            <Button Height="30" Width="75" x:Name="buttonEditWaypoint" Click="OnButtonClick" Content="Edit" Margin="20 0 20 0" Visibility="Collapsed"/>
-                            <Button Height="30" Width="75" x:Name="buttonDeleteWaypoint" Click="OnButtonClick" Content="Delete" Margin="20 0 20 0" Visibility="Collapsed"/>
                             <CheckBox Content="Edit trip waypoints" x:Name="checkEditTripWaypoints" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange"/>
                             <Button Height="30" Width="75" x:Name="buttonSaveWaypointTripEdits" Click="OnButtonClick" Content="Save" Margin="20" IsEnabled="False"/>
                         </WrapPanel>

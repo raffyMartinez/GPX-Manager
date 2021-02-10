@@ -10,7 +10,7 @@ namespace GPXManager.entities
     {
         private bool _operationSucceeded = false;
         public ObservableCollection<Trip> TripCollection { get; set; }
-        private TripRepository Trips{ get; set; }
+        private TripRepository Trips { get; set; }
 
         public bool SetTrackOfTrip(TripEdited trip)
         {
@@ -43,7 +43,7 @@ namespace GPXManager.entities
                 if (waypoints.Count > 0)
                 {
                     var timeStamp = waypoints[0].Time.AddHours(Global.Settings.HoursOffsetGMT);
-                    if(trip.Track==null)
+                    if (trip.Track == null)
                     {
                         trip.Track = new Track();
                         trip.Track.GPS = trip.GPS;
@@ -73,11 +73,11 @@ namespace GPXManager.entities
         }
         public void Serialize(string fileName)
         {
-            List <TripEdited> trips= new List<TripEdited>();
-            foreach(var trip in TripCollection)
+            List<TripEdited> trips = new List<TripEdited>();
+            foreach (var trip in TripCollection)
             {
                 var tripWpts = new List<TripWaypointLite>();
-                foreach(var tripWpt in Entities.TripWaypointViewModel.GetAllTripWaypoints(trip.TripID))
+                foreach (var tripWpt in Entities.TripWaypointViewModel.GetAllTripWaypoints(trip.TripID))
                 {
                     tripWpts.Add(new TripWaypointLite(tripWpt));
                 }
@@ -132,18 +132,18 @@ namespace GPXManager.entities
             return TripCollection.ToList();
         }
 
-        public string VesselOfTrip (int tripID)
+        public string VesselOfTrip(int tripID)
         {
             return TripCollection.FirstOrDefault(t => t.TripID == tripID).VesselName;
         }
 
-        public List<DateTime>GetMonthYears()
+        public List<DateTime> GetMonthYears()
         {
             var tripMonthYears = new List<DateTime>();
-            foreach(Trip t in TripCollection)
+            foreach (Trip t in TripCollection)
             {
-                DateTime monthYear = new DateTime(t.DateTimeDeparture.Year ,t.DateTimeDeparture.Month,1);
-                if(!tripMonthYears.Contains(monthYear))
+                DateTime monthYear = new DateTime(t.DateTimeDeparture.Year, t.DateTimeDeparture.Month, 1);
+                if (!tripMonthYears.Contains(monthYear))
                 {
                     tripMonthYears.Add(monthYear);
                 }
@@ -177,10 +177,10 @@ namespace GPXManager.entities
         public Trip GetLastTripOfDevice(string deviceID)
         {
             return TripCollection
-                .Where(t=>t.DeviceID==deviceID)
+                .Where(t => t.DeviceID == deviceID)
                 .OrderByDescending(t => t.TripID).FirstOrDefault();
         }
-        public List<Trip>GetAllTrips(string deviceID)
+        public List<Trip> GetAllTrips(string deviceID)
         {
             return TripCollection.Where(t => t.DeviceID == deviceID).ToList();
         }
@@ -211,13 +211,18 @@ namespace GPXManager.entities
             get { return TripCollection.Count; }
         }
 
-        public List<Trip>TripsUsingGPSByDate(GPS gps, DateTime date)
+        public List<Trip> TripsUsingGPSByDate(GPS gps, DateTime date)
         {
             return Entities.TripViewModel.TripCollection
                                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
                                 .Where(t => t.DateTimeDeparture.Date == date.Date).ToList();
         }
-        public List<Trip>LatestTripsUsingGPS(GPS gps, int countLatestTrips=5)
+
+        public Trip GetLatestAdded()
+        {
+            return TripCollection.OrderByDescending(t => t.DateAdded).FirstOrDefault();
+        }
+        public List<Trip> LatestTripsUsingGPS(GPS gps, int countLatestTrips = 5)
         {
             if (gps == null)
             {
@@ -231,7 +236,7 @@ namespace GPXManager.entities
                     .Take(countLatestTrips).ToList();
             }
         }
-        public List<Trip>TripsUsingGPSByMonth(GPS gps, DateTime month)
+        public List<Trip> TripsUsingGPSByMonth(GPS gps, DateTime month)
         {
             return TripCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
@@ -241,7 +246,7 @@ namespace GPXManager.entities
         }
         public Dictionary<DateTime, List<Trip>> TripArchivesByMonth(GPS gps)
         {
-            var d =  TripCollection
+            var d = TripCollection
                 .Where(g => g.GPS.DeviceID == gps.DeviceID)
                 .OrderBy(m => m.DateTimeDeparture)
                 .GroupBy(o => o.MonthYear)
@@ -250,9 +255,39 @@ namespace GPXManager.entities
             return d;
         }
 
+        public List<Waypoint> GetWaypointSelectionForATrip(Trip trip)
+        {
+            var addHours = Global.Settings.HoursOffsetGMT;
+            var dateDeparture = trip.DateTimeDeparture;
+            var dateArrival = trip.DateTimeArrival;
+            try
+            {
+
+                var wptset = Entities.WaypointViewModel.Waypoints[trip.GPS]
+                    .Where(t => t.Waypoints.Count > 0 &&
+                            t.StartDate >= dateDeparture &&
+                            t.StartDate < dateArrival).FirstOrDefault();
+
+                if (wptset != null)
+                {
+
+                    return wptset.Waypoints.Where(t => t.Time.AddHours(addHours) >= dateDeparture &&
+                            t.Time.AddHours(addHours) < dateArrival).ToList();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+        }
         public void MarkAllNotShownInMap()
         {
-            foreach(var item in TripCollection.Where(t => t.ShownInMap))
+            foreach (var item in TripCollection.Where(t => t.ShownInMap))
             {
                 item.ShownInMap = false;
             }
@@ -312,17 +347,17 @@ namespace GPXManager.entities
         {
             EntityValidationResult evr = new EntityValidationResult();
 
-            if (trip.Operator== null || trip.Operator.Name.Length<3)
+            if (trip.Operator == null || trip.Operator.Name.Length < 3)
             {
                 evr.AddMessage("Operator name must be at least 3 letters long");
             }
 
-            if (trip.VesselName== null || trip.VesselName.Length < 3)
+            if (trip.VesselName == null || trip.VesselName.Length < 3)
             {
                 evr.AddMessage("Vessel name 3 letters long");
             }
 
-            if (trip.Gear == null && trip.OtherGear==null)
+            if (trip.Gear == null && trip.OtherGear == null)
             {
                 evr.AddMessage("Gear or gear other name cannnot be both empty");
             }
@@ -331,11 +366,11 @@ namespace GPXManager.entities
             {
                 evr.AddMessage("Date and time of departure cannot be empty and cannot be in the future");
             }
-            else if (trip.DateTimeArrival== null || trip.DateTimeArrival>DateTime.Now)
+            else if (trip.DateTimeArrival == null || trip.DateTimeArrival > DateTime.Now)
             {
                 evr.AddMessage("Date and time of arrival cannot be empty and cannot be in the future");
             }
-            else if(trip.DateTimeDeparture >= trip.DateTimeArrival)
+            else if (trip.DateTimeDeparture >= trip.DateTimeArrival)
             {
                 evr.AddMessage("Date and time of departure must be before date and time of arrival");
             }
@@ -343,8 +378,8 @@ namespace GPXManager.entities
 
             int? overlapID = null;
             foreach (var tripItem in TripCollection
-                .Where(t=>t.TripID!= trip.TripID)
-                .Where(t=>t.DeviceID==trip.DeviceID))
+                .Where(t => t.TripID != trip.TripID)
+                .Where(t => t.DeviceID == trip.DeviceID))
             {
                 if (trip.DateTimeDeparture >= tripItem.DateTimeDeparture && trip.DateTimeDeparture <= tripItem.DateTimeArrival)
                 {
@@ -362,11 +397,11 @@ namespace GPXManager.entities
                     break;
                 }
             }
-            if(overlapID!=null)
+            if (overlapID != null)
             {
                 evr.AddMessage($"This trip overlaps with trip ID {overlapID}");
             }
-            
+
 
             return evr;
         }
