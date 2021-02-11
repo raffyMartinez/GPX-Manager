@@ -26,11 +26,18 @@ namespace GPXManager.views
         {
             InitializeComponent();
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            ((MainWindow)Owner).ChildFormClosed();
         }
 
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _instance = null;
+
         }
 
         public static EditFisherWindow Instance()
@@ -53,6 +60,7 @@ namespace GPXManager.views
             {
                 case "buttonCancel":
                     Close();
+                   //((MainWindow)Owner).ChildFormClosed();
                     break;
                 case "buttonOk":
                     if(textFisherName.Text.Length>0 && listBoxBoats.Items.Count>0)
@@ -68,7 +76,7 @@ namespace GPXManager.views
                             {
 
                                 Close();
-                                ((MainWindow)Owner).Focus();
+                                //((MainWindow)Owner).ChildFormClosed();
                             }
                         }
                         else
@@ -82,7 +90,8 @@ namespace GPXManager.views
                             if (Entities.FisherViewModel.UpdateRecordInRepo(_fisher))
                             {
                                 Close();
-                                ((MainWindow)Owner).Focus();
+                                 //((MainWindow)Owner).ChildFormClosed();
+
                             }
                         }
                     }

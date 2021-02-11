@@ -16,7 +16,8 @@ namespace GPXManager.entities
         FishingGroundCode_csv,
         MajorGrid_csv,
         InlandGridCells_csv,
-        FMAID_csv
+        FMAID_csv,
+        ImportGPXfFromFolder
     }
     public static class Logger
     {
@@ -36,7 +37,9 @@ namespace GPXManager.entities
                     case LogType.Logfile:
                         _filepath = $"{AppDomain.CurrentDomain.BaseDirectory}/log.txt";
                         break;
-
+                    case LogType.ImportGPXfFromFolder:
+                        _filepath = $"{AppDomain.CurrentDomain.BaseDirectory}/import gpx log.txt";
+                        break;
                     default:
                         break;
                 }

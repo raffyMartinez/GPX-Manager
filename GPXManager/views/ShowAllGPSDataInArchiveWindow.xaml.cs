@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,13 +26,25 @@ namespace GPXManager.views
         {
             InitializeComponent();
             Loaded += OnWindowLoaded;
+            Closing += OnWindowClosing;
+        }
+
+        private void OnWindowClosing(object sender, CancelEventArgs e)
+        {
+            this.SavePlacement();
+        }
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            this.ApplyPlacement();
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
             int counter = 0;
             //foreach (var gps in Entities.GPSViewModel.GPSCollection.OrderBy(t => t.DeviceName))
-            foreach(var gps in Entities.GPSViewModel.GetAll())
+            foreach (var gps in Entities.GPSViewModel.GetAll())
             {
                 if (counter == 0)
                 {
@@ -47,7 +60,7 @@ namespace GPXManager.views
                 counter++;
             }
             counter = 0;
-            foreach(var s in Entities.DeviceGPXViewModel.GetAllMonthYear())
+            foreach (var s in Entities.DeviceGPXViewModel.GetAllMonthYear())
             {
                 if (counter == 0)
                 {
@@ -88,7 +101,7 @@ namespace GPXManager.views
                 }
             }
 
-            if(selectedGPS.Count>0 && selectedMonth.Count>0)
+            if (selectedGPS.Count > 0 && selectedMonth.Count > 0)
             {
 
                 int h = -1;
@@ -113,7 +126,7 @@ namespace GPXManager.views
         }
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonCancel":
                     Close();
@@ -128,10 +141,10 @@ namespace GPXManager.views
         private void OnCheckChecked(object sender, RoutedEventArgs e)
         {
             CheckBox chk = (CheckBox)sender;
-            switch(chk.Name)
+            switch (chk.Name)
             {
                 case "chkSelectAllGPS":
-                    foreach(CheckBox c in panelGPS.Children)
+                    foreach (CheckBox c in panelGPS.Children)
                     {
                         c.IsChecked = chk.IsChecked;
                     }

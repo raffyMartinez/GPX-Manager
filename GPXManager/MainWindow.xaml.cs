@@ -560,6 +560,7 @@ namespace GPXManager
                 }
                 else
                 {
+                    
                     using (EditTripWindow etw = new EditTripWindow
                     {
                         ParentWindow = this,
@@ -572,7 +573,9 @@ namespace GPXManager
                         GPXFile = _gpxFile
                     })
                     {
+                    
                         etw.TripID = tripID;
+                        etw.VesselName= Entities.TripViewModel.VesselOfTrip((tripID));
                         etw.Owner = this;
                         if ((bool)etw.ShowDialog())
                         {
@@ -917,6 +920,11 @@ namespace GPXManager
             MessageBox.Show(saveMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             return saveCount > 0;
         }
+
+        public void ChildFormClosed()
+        {
+            this.Focus();
+        }
         private async void OnButtonClick(object sender, RoutedEventArgs e)
         {
             switch (((Button)sender).Name)
@@ -982,6 +990,7 @@ namespace GPXManager
                     break;
                 case "buttonFishersAdd":
                     EditFisherWindow efw = EditFisherWindow.GetInstance();
+                    efw.Owner = this;
                     if (efw.Visibility == Visibility.Visible)
                     {
                         efw.BringIntoView();
@@ -989,7 +998,6 @@ namespace GPXManager
                     else
                     {
                         efw.IsNew = true;
-                        efw.Owner = this;
                         efw.Show();
                     }
                     break;
@@ -2797,7 +2805,9 @@ namespace GPXManager
 
                         if (trips.Count == 1)
                         {
-                            ShowEditTripWindow(isNew: false, tripID: trips[0].TripID, showWaypoints: true);
+                            _selectedTrip = trips[0];
+                            ShowEditTripWindow(false, _selectedTrip.TripID, _selectedTrip.OperatorID);
+                            //ShowEditTripWindow(isNew: false, tripID: trips[0].TripID,  showWaypoints: true);
                         }
                         else if (trips.Count > 1)
                         {

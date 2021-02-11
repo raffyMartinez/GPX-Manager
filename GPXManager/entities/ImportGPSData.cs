@@ -6,15 +6,17 @@ using System.Linq;
 using System.Text;
 using System;
 using System.Threading.Tasks;
-
+using System.Diagnostics;
 namespace GPXManager.entities
 {
     public static class ImportGPSData
     {
         private static int _count;
+        private static int _gpxCount;
         public static string ImportMessage { get; internal set; }
         public static int ImportCount { get; private set; }
 
+        public static int GPXCount { get { return _gpxCount; } }
         public static int? StartGPSNumbering { get; set; }
 
         public static int? EndGPSNumbering { get; set; }
@@ -48,7 +50,7 @@ namespace GPXManager.entities
                     ((int)EndGPSNumbering) >= 0 &&
                     GPSNameStart.Length>0)
                 {
-                    await ImportGPXByFolderAsync(vfbd.SelectedPath);
+                    await ImportGPXByFolderAsync(vfbd.SelectedPath,first:true);
                     ImportCount = _count;
                 }
                 else
@@ -95,6 +97,7 @@ namespace GPXManager.entities
                 importEvent(null, e);
             }
             await Task.Run(() => ImportGPXByFolder(folder, in_gps, first,yearStartProcess));
+            Logger.LogType = LogType.Logfile;
         }
         private static int ImportGPXByFolder(string folder, GPS in_gps = null,  bool? first=false, int yearStartProcess = 2019 )
         {
@@ -103,10 +106,13 @@ namespace GPXManager.entities
 
             if ((bool)first)
             {
+                Logger.LogType = LogType.ImportGPXfFromFolder;
                 _count = 0;
+                _gpxCount = 0;
             }
             GPS gps = null;
             GPS current_gps = null;
+            //Logger.Log($"processing folder: {folder}");
             var files = Directory.GetFiles(folder).Select(s => new FileInfo(s));
             if (files.Any())
             {
@@ -149,6 +155,7 @@ namespace GPXManager.entities
 
                         if (current_gps != null)
                         {
+                            _gpxCount++;
                             GPXFile g = new GPXFile(file);
                             g.GPS = current_gps;
                             if (g.ComputeStats())
@@ -168,6 +175,7 @@ namespace GPXManager.entities
                                     };
 
                                     string fileProcessed = $@"{current_gps.DeviceName}:{file.FullName}";
+
 
                                     DeviceGPX saved = Entities.DeviceGPXViewModel.GetDeviceGPX(d);
                                     if (saved == null)
@@ -196,15 +204,44 @@ namespace GPXManager.entities
                                     {
                                         if (saved.MD5 != d.MD5 && d.TimeRangeEnd > saved.TimeRangeEnd)
                                         {
-                                            Entities.DeviceGPXViewModel.UpdateRecordInRepo(d);
+                                            if(Entities.DeviceGPXViewModel.UpdateRecordInRepo(d))
+                                            {
+                                                EventHandler<ImportGPXEventArg> importEvent = ImportGPXEvent;
+                                                if (importEvent != null)
+                                                {
+                                                    ImportGPXEventArg e = new ImportGPXEventArg
+                                                    {
+                                                        Intent = "gpx file modified",
+                                                        GPS = current_gps,
+                                                        ImportedCount = _count,
+                                                        GPXFileName = file.Name
+                                                    };
+
+                                                    importEvent(null, e);
+                                                }
+                                            }
                                             fileProcessed += " (MODIFIED ADDED)";
                                         }
                                         else
                                         {
+                                            EventHandler<ImportGPXEventArg> importEvent = ImportGPXEvent;
+                                            if (importEvent != null)
+                                            {
+                                                ImportGPXEventArg e = new ImportGPXEventArg
+                                                {
+                                                    Intent = "gpx file duplicate",
+                                                    GPS = current_gps,
+                                                    ImportedCount = _count,
+                                                    GPXFileName = file.Name
+                                                };
+
+                                                importEvent(null, e);
+                                            }
                                             fileProcessed += "  (DUPLICATE)";
                                         }
                                     }
-                                    Console.WriteLine(fileProcessed);
+                                    //Console.WriteLine(fileProcessed);
+                                    Logger.Log(fileProcessed);
                                 }
                                 else
                                 {
@@ -258,7 +295,7 @@ namespace GPXManager.entities
             if(numericPart.Length>0)
             {
                 int n = int.Parse(numericPart);
-                if (n >= ImportGPSData.StartGPSNumbering && n < ImportGPSData.EndGPSNumbering)
+                if (n >= ImportGPSData.StartGPSNumbering && n <= ImportGPSData.EndGPSNumbering)
                 {
                     return n.ToString();
                 }

@@ -231,29 +231,52 @@ namespace GPXManager.entities
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;
                 cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                try
+                {
+                    cmd.ExecuteNonQuery();
 
-
-
-                sql = @"CREATE INDEX GPSIDIndex
+                    sql = @"CREATE INDEX GPSIDIndex
                         ON logbook_image(GPSID) WITH DISALLOW NULL";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
 
-                sql = @"CREATE INDEX GearIndex
+                    sql = @"CREATE INDEX GearIndex
                         ON logbook_image(GearID)";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
 
-                sql = @"CREATE INDEX DateStartIndex
+                    sql = @"CREATE INDEX DateStartIndex
                         ON logbook_image(DateStart)";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
 
-                sql = @"CREATE INDEX DateEndIndex
+                    sql = @"CREATE INDEX DateEndIndex
                         ON logbook_image(DateStart)";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+
+                }
+                catch(OleDbException dbex)
+                {
+                    if(dbex.ErrorCode == -2147217900)
+                    {
+                        //ignore
+                    }
+                    else
+                    {
+                        Logger.Log(dbex);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+
+
+
+
+
+
 
                 sql = @"CREATE TABLE logbook_image_ignore
                                 (
@@ -262,7 +285,26 @@ namespace GPXManager.entities
                                 DateAdded DateTime
                                 )";
                 cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch(OleDbException dbex1)
+                {
+                    if (dbex1.ErrorCode == -2147217900)
+                    {
+                        //ignore
+                    }
+                    else
+                    {
+                        Logger.Log(dbex1);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    Logger.Log(ex);
+                }
 
 
                 cmd.Connection.Close();

@@ -161,15 +161,27 @@ namespace GPXManager.entities
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;
                 cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
 
-                sql = "ALTER TABLE trips ALTER COLUMN NameOfOperator INT";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                try
+                {
+                    cmd.ExecuteNonQuery();
 
-                sql = "ALTER TABLE trips ADD CONSTRAINT fisherID_FK FOREIGN KEY (NameOfOperator) REFERENCES fishers(FisherID)";
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
+                    sql = "ALTER TABLE trips ALTER COLUMN NameOfOperator INT";
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+
+                    sql = "ALTER TABLE trips ADD CONSTRAINT fisherID_FK FOREIGN KEY (NameOfOperator) REFERENCES fishers(FisherID)";
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+                }
+                catch(OleDbException)
+                {
+                    //ignore
+                }
+                catch(Exception ex)
+                {
+                    Logger.Log(ex);
+                }
 
                 cmd.Connection.Close();
                 conn.Close();

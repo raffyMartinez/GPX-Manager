@@ -78,9 +78,20 @@ namespace GPXManager.views
 
                     progressBar.IsIndeterminate = false;
 
+                    
                     if (!_proceed)
                     {
-                        MessageBox.Show("Please fill up all fields correctly", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        if (ImportGPSData.GPXCount == 0)
+                        {
+                            MessageBox.Show("Please fill up all fields correctly", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                $"{ImportGPSData.GPXCount} gpx files were detected.\r\n\r\n" +
+                                "All of them are already saved in the database\r\n" +
+                                "0 were imported", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                     }
                     else
                     {
@@ -115,6 +126,17 @@ namespace GPXManager.views
                         }
                      ), null);
 
+                    break;
+                default:
+                    statusLabel.Dispatcher.BeginInvoke
+                    (
+                        DispatcherPriority.Normal, new DispatcherOperationCallback(delegate
+                        {
+                            statusLabel.Content = $"File found in {e.GPS.DeviceName} - {e.Intent}";
+                            //do what you need to do on UI Thread
+                            return null;
+                        }
+                     ), null);
                     break;
             }
         }
