@@ -29,6 +29,7 @@ namespace GPXManager.entities
     }
     public class TripWaypoint
     {
+        //public bool IsNew { get; set; }
         private string _wayPointName;
         public DateTime? _timeStamp;
         public  Trip Trip{get;set;}

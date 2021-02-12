@@ -91,11 +91,20 @@ namespace GPXManager.entities
         {
             return TripWaypointCollection.FirstOrDefault(t => t.WaypointName == waypointName && t.Trip.TripID == tripID);
         }
+
         public TripWaypoint GetTripWaypoint(TripWaypoint tpw)
         {
-            return TripWaypointCollection
-                .Where(t => t.Trip.GPS.DeviceID == tpw.Trip.GPS.DeviceID)
-                .Where(t => t.WaypointName == tpw.WaypointName).FirstOrDefault();
+            if (tpw.WaypointName.Length == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return TripWaypointCollection
+                    .Where(t => t.Trip.GPS.DeviceID == tpw.Trip.GPS.DeviceID &&
+                    t.Trip.TripID == tpw.Trip.TripID &&
+                    t.WaypointName == tpw.WaypointName).FirstOrDefault();
+            }
         }
         public int NextRecordNumber
         {
@@ -186,7 +195,12 @@ namespace GPXManager.entities
             return _operationSucceeded;
         }
 
-        public EntityValidationResult ValidateTrip(TripWaypoint tw, bool isNew, Waypoint oldWaypoint=null)
+        public int LastRecordNumber
+        {
+            get { return TripWaypointCollection.OrderByDescending(t => t.RowID).FirstOrDefault().RowID; }
+        }
+
+        public EntityValidationResult ValidateTripWaypoint(TripWaypoint tw, bool isNew, Waypoint oldWaypoint=null)
         {
             EntityValidationResult evr = new EntityValidationResult();
 
@@ -195,13 +209,20 @@ namespace GPXManager.entities
                 evr.AddMessage("Waypoint name must be at least 1 character long");
             }
 
-            var wptAdjustedTime = ((DateTime)tw.TimeStamp).AddHours(Global.Settings.HoursOffsetGMT);
-            if(wptAdjustedTime <= tw.Trip.DateTimeDeparture || wptAdjustedTime >= tw.Trip.DateTimeArrival)
+            if (tw.TimeStamp == null)
             {
-                evr.AddMessage("Waypoint timestamp must be within departure and arrival time of trip");
+                evr.AddMessage("Waypoint timestamp cannot be emppty");
+            }
+            else
+            {
+                var wptAdjustedTime = ((DateTime)tw.TimeStamp).AddHours(Global.Settings.HoursOffsetGMT);
+                if (wptAdjustedTime <= tw.Trip.DateTimeDeparture || wptAdjustedTime >= tw.Trip.DateTimeArrival)
+                {
+                    evr.AddMessage("Waypoint timestamp must be within departure and arrival time of trip");
+                }
             }
 
-            if (tw.WaypointType == null || tw.WaypointType.Length < 3)
+            if (tw.WaypointType == null || tw.WaypointType != "Set" && tw.WaypointType != "Haul")
             {
                 evr.AddMessage("Waypoint type is not valid");
             }
@@ -211,7 +232,7 @@ namespace GPXManager.entities
                 evr.AddMessage("Set number is not valid");
             }
 
-            if(!isNew && tw.Waypoint.Name != oldWaypoint.Name)
+            if(!isNew && oldWaypoint !=null &&  tw.Waypoint.Name != oldWaypoint.Name)
             {
                 if(GetTripWaypoint(tw)!=null)
                 {

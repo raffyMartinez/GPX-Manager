@@ -574,21 +574,41 @@ namespace GPXManager.views
             }
 
         }
+        private DateTime GetTimeofWaypoint(string wpt)
+        {
 
+            return Entities.WaypointViewModel.GetWaypoint(wpt, _trip.Trip).Time;
+
+        }
         private void OnGridRowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
         {
-            if (_wptName != null && _wptName.Length > 0)
+            TripWaypoint tw = e.Row.Item as TripWaypoint;
+            tw.Trip = _trip.Trip;
+            var cbo = ((ComboBox)dataGridWaypoints.GetCell(e.Row.GetIndex(), 0).Content);
+            tw.WaypointName = cbo.SelectedItem?.ToString() == null ? "" : cbo.SelectedItem.ToString();
+            cbo = ((ComboBox)dataGridWaypoints.GetCell(e.Row.GetIndex(), 1).Content);
+            tw.WaypointType = cbo.SelectedItem?.ToString() == null ? "" : cbo.SelectedItem.ToString();
+            var setNumber = ((TextBlock)dataGridWaypoints.GetCell(e.Row.GetIndex(), 2).Content).Text;
+            if (int.TryParse(setNumber, out int v))
             {
-                ((TripWaypoint)e.Row.Item).Waypoint = _waypoints.FirstOrDefault(t => t.Name == _wptName);
-                ((TripWaypoint)e.Row.Item).TimeStampAdjusted = _wayPointTime;
-                ((TripWaypoint)e.Row.Item).TimeStamp = _wayPointTime.AddHours(Global.Settings.HoursOffsetGMT * -1);
-                ((TripWaypoint)e.Row.Item).Trip = _trip.Trip;
-                if (GPXFile != null)
-                {
-                    ((TripWaypoint)e.Row.Item).WaypointGPXFileName = GPXFile.FileName;
-                }
-                _formIsDirty = true;
+                tw.SetNumber = v;
             }
+            if (tw.WaypointName.Length > 0)
+            {
+                tw.TimeStamp = GetTimeofWaypoint(tw.WaypointName);
+            }
+
+            var result = Entities.TripWaypointViewModel.ValidateTripWaypoint(tw, tw.RowID == 0);
+            if (result.ErrorMessage.Length == 0)
+            {
+                tw.Waypoint = _waypoints.FirstOrDefault(t => t.Name == tw.WaypointName);
+            }
+            else
+            {
+                e.Cancel = true;
+                MessageBox.Show(result.ErrorMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
     }
 }

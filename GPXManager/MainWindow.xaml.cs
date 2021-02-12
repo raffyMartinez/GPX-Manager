@@ -62,7 +62,7 @@ namespace GPXManager
         private BitmapImage _src;
         private FileInfo _fileSelectedLogBookImage;
         private LogbookImage _logbookImage;
-        private TreeViewItem _selected;
+        private TreeViewItem _selectedTreeViewItem;
         public DataGrid CurrentDataGrid { get; set; }
 
         public MainWindow()
@@ -462,7 +462,7 @@ namespace GPXManager
 
         private void ShowEditTripWindow(bool isNew, int tripID, int? operatorID = null,
             string vesselName = "", string gearCode = "", bool showWaypoints = false, bool fromImage = false,
-            Trip lastTripOfGPS=null)
+            Trip lastTripOfGPS = null)
         {
 
             if (operatorID != null)
@@ -489,30 +489,30 @@ namespace GPXManager
                     {
                         dataGridGPXFiles.Items.Refresh();
                         var currentTreeItem = (TreeViewItem)treeCalendar.SelectedItem;
-                        
+
                         TreeViewItem tv = new TreeViewItem { Header = Entities.TripViewModel.GetLastTripOfDevice(_gps.DeviceID).DateTimeDeparture.ToString("MMM-yyyy"), Tag = "month_archive" };
-                        TreeViewItem gpsNode=null;
-                        switch(currentTreeItem.Tag.GetType().Name)
+                        TreeViewItem gpsNode = null;
+                        switch (currentTreeItem.Tag.GetType().Name)
                         {
                             case "GPS":
                                 gpsNode = currentTreeItem;
                                 break;
                             case "String":
-                                 gpsNode= currentTreeItem.Parent as TreeViewItem;
+                                gpsNode = currentTreeItem.Parent as TreeViewItem;
                                 break;
                         }
 
                         bool exists = false;
-                        for(int x=0; x<gpsNode.Items.Count;x++)
+                        for (int x = 0; x < gpsNode.Items.Count; x++)
                         {
-                            if(((TreeViewItem)gpsNode.Items[x]).Header.ToString()==tv.Header.ToString())
+                            if (((TreeViewItem)gpsNode.Items[x]).Header.ToString() == tv.Header.ToString())
                             {
                                 exists = true;
                                 break;
                             }
                         }
 
-                        if(!exists)
+                        if (!exists)
                         {
                             gpsNode.Items.Add(tv);
                         }
@@ -529,10 +529,10 @@ namespace GPXManager
                     operatorID = Entities.TripViewModel.GetFisherOfTrip(tripID).FisherID;
                 }
 
-                
+
                 if (fromImage)
                 {
-                    if(vesselName.Length==0)
+                    if (vesselName.Length == 0)
                     {
                         vesselName = Entities.TripViewModel.VesselOfTrip(tripID);
                     }
@@ -560,7 +560,7 @@ namespace GPXManager
                 }
                 else
                 {
-                    
+
                     using (EditTripWindow etw = new EditTripWindow
                     {
                         ParentWindow = this,
@@ -573,9 +573,9 @@ namespace GPXManager
                         GPXFile = _gpxFile
                     })
                     {
-                    
+
                         etw.TripID = tripID;
-                        etw.VesselName= Entities.TripViewModel.VesselOfTrip((tripID));
+                        etw.VesselName = Entities.TripViewModel.VesselOfTrip((tripID));
                         etw.Owner = this;
                         if ((bool)etw.ShowDialog())
                         {
@@ -584,17 +584,21 @@ namespace GPXManager
                     }
                 }
             }
+
+            ConfigureTripWaypointsGrid();
+            ShowTripWaypoints(fromGPSSummary: true);
+
         }
 
- 
+
 
         private void AddTrip()
         {
 
-            var lastTripOfGPS = Entities.TripViewModel.GetLastTripOfDevice(_gpsid==null? _gps.DeviceID : _gpsid);
+            var lastTripOfGPS = Entities.TripViewModel.GetLastTripOfDevice(_gpsid == null ? _gps.DeviceID : _gpsid);
             if (lastTripOfGPS != null)
             {
-                ShowEditTripWindow(isNew: true, Entities.TripViewModel.NextRecordNumber, lastTripOfGPS.OperatorID, lastTripOfGPS.VesselName, lastTripOfGPS.Gear.Code,lastTripOfGPS:lastTripOfGPS);
+                ShowEditTripWindow(isNew: true, Entities.TripViewModel.NextRecordNumber, lastTripOfGPS.OperatorID, lastTripOfGPS.VesselName, lastTripOfGPS.Gear.Code, lastTripOfGPS: lastTripOfGPS);
             }
             else
             {
@@ -638,7 +642,7 @@ namespace GPXManager
             if (isRegistered)
             {
                 bool gpsNameFoundInTree = false;
-                index = tvItemNotRegistered.Items.IndexOf(_selected);
+                index = tvItemNotRegistered.Items.IndexOf(_selectedTreeViewItem);
                 if (li.TripWithTrack)
                 {
 
@@ -689,14 +693,14 @@ namespace GPXManager
             {
                 var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
                 newIndex = tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
-                index = tvItemNotRegistered.Items.IndexOf(_selected);
+                index = tvItemNotRegistered.Items.IndexOf(_selectedTreeViewItem);
             }
             if (index >= 0)
             {
 
-                if (_selected != null)
+                if (_selectedTreeViewItem != null)
                 {
-                    tvItemNotRegistered.Items.Remove(_selected);
+                    tvItemNotRegistered.Items.Remove(_selectedTreeViewItem);
 
 
                     if ((bool)checkViewCreatedTrip.IsChecked)
@@ -705,8 +709,8 @@ namespace GPXManager
                     }
                     else
                     {
-                        _selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
-                        _selected.IsSelected = true;
+                        _selectedTreeViewItem = ((TreeViewItem)tvItemNotRegistered.Items[index]);
+                        _selectedTreeViewItem.IsSelected = true;
                     }
                 }
             }
@@ -828,7 +832,7 @@ namespace GPXManager
                                     //dtPickerStart.Value = null;
                                     dtPickerEnd.Value = null;
                                     textImageNotes.Text = "";
-                                    
+
                                 }
                                 success = true;
                             }
@@ -872,52 +876,103 @@ namespace GPXManager
             }
         }
 
+
+
+        public static bool ValidateTripWaypointsFromDataGrid(DataGrid dg)
+        {
+            Dictionary<int, string> rowErrors = new Dictionary<int, string>();
+            foreach (TripWaypoint trip in dg.Items)
+            {
+                string rowError = "";
+                if (trip.WaypointName.Length == 0)
+                {
+                    rowError += "Waypoint name cannot be empty\r\n";
+                }
+                if (trip.WaypointType.Length == 0)
+                {
+                    rowError += "Waypoint type cannot be empty\r\n";
+                }
+                if (trip.SetNumber == 0)
+                {
+                    rowError += "Set number cannot be zero\r\n";
+                }
+            }
+
+
+            return rowErrors.Count == 0;
+        }
+
         public static bool SaveTripWaypointsFromDataGrid(DataGrid dg)
         {
             int saveCount = 0;
 
             try
             {
-                foreach (TripWaypoint item in dg.Items)
+                //validate all trips in the datagrid and only proceed if there are no error messages
+                string errorMessage = "";
+                try
                 {
-
-                    if (item.WaypointName != null && item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
+                    foreach (TripWaypoint item in dg.Items)
                     {
-                        if (Entities.TripWaypointViewModel.GetTripWaypoint(item.WaypointName, item.Trip.TripID) == null)
+                        if (item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
                         {
-                            item.RowID = Entities.TripWaypointViewModel.NextRecordNumber;
-                            if (Entities.TripWaypointViewModel.AddRecordToRepo(item))
-                            {
-                                saveCount++;
-                            }
-                        }
-                        else
-                        {
-                            if (Entities.TripWaypointViewModel.UpdateRecordInRepo(item, fromGridEidtor: true))
-                            {
-                                saveCount++;
-                            }
+                            var result = Entities.TripWaypointViewModel.ValidateTripWaypoint(item, item.RowID == 0);
+                            errorMessage += result.ErrorMessage;
                         }
                     }
+                }
+                catch (InvalidCastException)
+                {
+                    //ignore
+                }
 
+                if (errorMessage.Length == 0)
+                {
+                    try
+                    {
+                        foreach (TripWaypoint item in dg.Items)
+                        {
+
+                            if (item.WaypointName != null && item.WaypointName.Length > 0 && item.WaypointType.Length > 0)
+                            {
+                                if (Entities.TripWaypointViewModel.GetTripWaypoint(item.WaypointName, item.Trip.TripID) == null)
+                                {
+                                    item.RowID = Entities.TripWaypointViewModel.NextRecordNumber;
+                                    if (Entities.TripWaypointViewModel.AddRecordToRepo(item))
+                                    {
+                                        saveCount++;
+                                    }
+                                }
+                                else
+                                {
+                                    if (Entities.TripWaypointViewModel.UpdateRecordInRepo(item, fromGridEidtor: true))
+                                    {
+                                        saveCount++;
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    catch(InvalidCastException)
+                    {
+                        //ignore
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(errorMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
-            catch (InvalidCastException)
+            catch (Exception ex )
             {
-                //ignore
+                Logger.Log(ex);
             }
 
-            string saveMessage = "";
             if (saveCount > 0)
             {
-                saveMessage = $"Saved {saveCount} trip waypoints";
-
+                MessageBox.Show($"Saved {saveCount} trip waypoints", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            else
-            {
-                saveMessage = "Was not able to save waypoints";
-            }
-            MessageBox.Show(saveMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
             return saveCount > 0;
         }
 
@@ -940,7 +995,6 @@ namespace GPXManager
                     }
                     break;
                 case "buttonTripOfImage":
-                    //ShowEditTripWindow(isNew: false, tripID: _logbookImage.Trip.TripID, showWaypoints: true, fromImage: true);
                     ShowEditTripWindow(false, _selectedTrip.TripID, _selectedTrip.OperatorID);
                     break;
                 case "buttonCloseMetadata":
@@ -955,13 +1009,6 @@ namespace GPXManager
                         {
                             AddSavedImageToTree(li, false);
                         }
-                        //imagePreview.Source = null;
-                        //var ignoredImage = Entities.LogbookImageViewModel.CurrentEntity;
-                        //tvItemIgnored.Items.Add(new TreeViewItem { Header = Path.GetFileName(ignoredImage.FileName), Tag = ignoredImage });
-                        //int index = tvItemNotRegistered.Items.IndexOf(_selected);
-                        //tvItemNotRegistered.Items.Remove(_selected);
-                        //_selected = ((TreeViewItem)tvItemNotRegistered.Items[index]);
-                        //_selected.IsSelected = true;
                     }
                     break;
                 case "buttonMetadata":
@@ -1387,10 +1434,10 @@ namespace GPXManager
             {
                 //if (Entities.GPSViewModel.RemoveByEject(_detectedDevice.GPS))
                 //{
-                    TreeViewItem tvi = treeDevices.SelectedItem as TreeViewItem;
-                    tvi.IsSelected = false;
-                    tvi.Items.Clear();
-                    ((TreeViewItem)treeDevices.Items[0]).Items.Remove(tvi);
+                TreeViewItem tvi = treeDevices.SelectedItem as TreeViewItem;
+                tvi.IsSelected = false;
+                tvi.Items.Clear();
+                ((TreeViewItem)treeDevices.Items[0]).Items.Remove(tvi);
                 //}
             }
             MessageBox.Show(outMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -2168,6 +2215,11 @@ namespace GPXManager
             CurrentDataGrid = dataGridTrips;
         }
 
+        
+        public void ShowTripWaypoints(List<TripWaypoint>tripWaypoints)
+        {
+
+        }
         private void ShowTripWaypoints(bool fromGPSSummary = false)
         {
             if (fromGPSSummary)
@@ -2822,7 +2874,7 @@ namespace GPXManager
             }
         }
 
-        
+
         private void OnDataGridMouseUp(object sender, MouseButtonEventArgs e)
         {
             //switch(((DataGrid)sender).Name)
@@ -3051,7 +3103,7 @@ namespace GPXManager
 
         private void OnImageTreeSelectionChnaged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            _selected = e.NewValue as TreeViewItem;
+            _selectedTreeViewItem = e.NewValue as TreeViewItem;
             _fileSelectedLogBookImage = null;
             _logbookImage = null;
             _src = null;
@@ -3060,16 +3112,16 @@ namespace GPXManager
             dtPickerStart.Value = null;
             dtPickerEnd.Value = null;
 
-            if (_selected.Tag.ToString() != "main")
+            if (_selectedTreeViewItem.Tag.ToString() != "main")
             {
                 buttonIgnore.IsEnabled = true;
                 buttonRegister.IsEnabled = true;
                 buttonTripOfImage.Visibility = Visibility.Collapsed;
 
-                switch (_selected.Tag.GetType().Name)
+                switch (_selectedTreeViewItem.Tag.GetType().Name)
                 {
                     case "FileInfo":
-                        _fileSelectedLogBookImage = _selected.Tag as FileInfo;
+                        _fileSelectedLogBookImage = _selectedTreeViewItem.Tag as FileInfo;
                         Entities.LogbookImageViewModel.AddImageCommentToMetadata(_fileSelectedLogBookImage.FullName);
 
                         _src = new BitmapImage(uriSource: new Uri(_fileSelectedLogBookImage.FullName));
@@ -3078,10 +3130,10 @@ namespace GPXManager
                         break;
                     case "LogbookImage":
 
-                        _logbookImage = _selected.Tag as LogbookImage;
+                        _logbookImage = _selectedTreeViewItem.Tag as LogbookImage;
                         _src = new BitmapImage(uriSource: new Uri(_logbookImage.FileName));
 
-                        var parentHeader = ((TreeViewItem)_selected.Parent).Tag;
+                        var parentHeader = ((TreeViewItem)_selectedTreeViewItem.Parent).Tag;
                         switch (parentHeader.GetType().Name)
                         {
                             case "GPS":
@@ -3102,7 +3154,7 @@ namespace GPXManager
 
                                 break;
                             case "String":
-                                if (((TreeViewItem)_selected.Parent).Header.ToString() == "Ignored")
+                                if (((TreeViewItem)_selectedTreeViewItem.Parent).Header.ToString() == "Ignored")
                                 {
                                     comboFisher.Text = "";
                                     comboVessel.Text = "";
@@ -3152,8 +3204,8 @@ namespace GPXManager
 
         private List<Waypoint> _waypoints;
         private List<TripWaypoint> _tripwaypointsCopy = new List<TripWaypoint>();
-        private string _wptName;
-        private DateTime _wayPointTime;
+        //private string _wptName;
+        //private DateTime _wayPointTime;
         private bool ConfigureTripWaypointsGrid(bool forEdit = false)
         {
             bool configured = true;
@@ -3193,26 +3245,15 @@ namespace GPXManager
                             configured = false;
                         }
                     }
-                    catch(NullReferenceException)
+                    catch (NullReferenceException)
                     {
                         //ignore
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Logger.Log(ex);
                     }
 
-                    //foreach (var item in Entities.WaypointViewModel.Waypoints[Entities.GPSViewModel.CurrentEntity])
-                    //{
-                    //    foreach (var wpt in item.Waypoints
-                    //        .Where(t => t.Time.AddHours(Global.Settings.HoursOffsetGMT) > Entities.TripViewModel.CurrentEntity.DateTimeDeparture)
-                    //        .Where(t => t.Time.AddHours(Global.Settings.HoursOffsetGMT) < Entities.TripViewModel.CurrentEntity.DateTimeArrival)
-                    //       )
-                    //    {
-                    //        _waypoints.Add(wpt);
-                    //        comboWaypoints.Add(wpt.Name);
-                    //    }
-                    //}
                 }
 
 
@@ -3248,9 +3289,6 @@ namespace GPXManager
             }
             else
             {
-                //setup trip waypoints data grid
-                //dataGridTripWaypoints.AutoGenerateColumns = false;
-                //dataGridTripWaypoints.Columns.Add(new DataGridTextColumn { Header = "Row ID", Binding = new Binding("RowID") });
                 dataGridTripWaypoints.Columns.Add(new DataGridTextColumn { Header = "Waypoint", Binding = new Binding("WaypointName") });
                 dataGridTripWaypoints.Columns.Add(new DataGridTextColumn { Header = "Type of waypoint", Binding = new Binding("WaypointType") });
                 dataGridTripWaypoints.Columns.Add(new DataGridTextColumn { Header = "Set #", Binding = new Binding("SetNumber") });
@@ -3279,7 +3317,14 @@ namespace GPXManager
             {
                 case "checkEditTripWaypoints":
 
-                    dataGridTripWaypoints.CanUserAddRows = false;
+                    try
+                    {
+                        dataGridTripWaypoints.CanUserAddRows = false;
+                    }
+                    catch(Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
                     dataGridTripWaypoints.IsReadOnly = true;
                     buttonSaveWaypointTripEdits.IsEnabled = false;
                     if ((bool)chk.IsChecked)
@@ -3313,7 +3358,7 @@ namespace GPXManager
                         {
                             checkEditTripWaypoints.IsChecked = false;
                             MessageBox.Show("There are no waypoints for the current trip", "GPX-Manager", MessageBoxButton.OK, MessageBoxImage.Information);
-                            
+
                         }
                     }
                     else
@@ -3332,14 +3377,16 @@ namespace GPXManager
 
         private void OnDataGridCellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
+            string wptName;
+            DateTime wayPointTime;
             switch (e.Column.Header)
             {
                 case "Waypoint":
-                    _wptName = ((ComboBox)e.EditingElement).Text;
-                    if (_wptName.Length > 0)
+                    wptName = ((ComboBox)e.EditingElement).Text;
+                    if (wptName.Length > 0)
                     {
-                        _wayPointTime = GetAdjustedTimeofWaypoint(_wptName);
-                        dataGridTripWaypoints.GetCell(e.Row.GetIndex(), 3).Content = _wayPointTime;
+                        wayPointTime = GetAdjustedTimeofWaypoint(wptName);
+                        dataGridTripWaypoints.GetCell(e.Row.GetIndex(), 3).Content = wayPointTime;
                     }
                     break;
             }
@@ -3350,22 +3397,43 @@ namespace GPXManager
             return Entities.WaypointViewModel.GetWaypoint(wpt, _selectedTrip).Time.AddHours(Global.Settings.HoursOffsetGMT);
 
         }
+
+        private DateTime GetTimeofWaypoint(string wpt)
+        {
+
+            return Entities.WaypointViewModel.GetWaypoint(wpt, _selectedTrip).Time;
+
+        }
         private void OnDataGridRowEditEnding(object sender, DataGridRowEditEndingEventArgs e)
         {
             _tripWaypointsDirty = true;
             buttonSaveWaypointTripEdits.IsEnabled = true;
-            if (_wptName != null && _wptName.Length > 0)
+            TripWaypoint tw = e.Row.Item as TripWaypoint;
+            tw.Trip = _selectedTrip;
+            var cbo = ((ComboBox)dataGridTripWaypoints.GetCell(e.Row.GetIndex(), 0).Content);
+            tw.WaypointName = cbo.SelectedItem?.ToString() == null ? "" : cbo.SelectedItem.ToString();
+            cbo = ((ComboBox)dataGridTripWaypoints.GetCell(e.Row.GetIndex(), 1).Content);
+            tw.WaypointType = cbo.SelectedItem?.ToString() == null ? "" : cbo.SelectedItem.ToString();
+            var setNumber = ((TextBlock)dataGridTripWaypoints.GetCell(e.Row.GetIndex(), 2).Content).Text;
+            if (int.TryParse(setNumber, out int v))
             {
-                ((TripWaypoint)e.Row.Item).Waypoint = _waypoints.FirstOrDefault(t => t.Name == _wptName);
-                ((TripWaypoint)e.Row.Item).TimeStampAdjusted = _wayPointTime;
-                ((TripWaypoint)e.Row.Item).TimeStamp = _wayPointTime.AddHours(Global.Settings.HoursOffsetGMT * -1);
-                ((TripWaypoint)e.Row.Item).Trip = _selectedTrip;
-                //if (GPXFile != null)
-                //{
-                //    ((TripWaypoint)e.Row.Item).WaypointGPXFileName = GPXFile.FileName;
-                //}
+                tw.SetNumber = v;
+            }
+            if (tw.WaypointName.Length > 0)
+            {
+                tw.TimeStamp = GetTimeofWaypoint(tw.WaypointName);
             }
 
+            var result = Entities.TripWaypointViewModel.ValidateTripWaypoint(tw, tw.RowID == 0);
+            if (result.ErrorMessage.Length == 0)
+            {
+                tw.Waypoint = _waypoints.FirstOrDefault(t => t.Name == tw.WaypointName);
+            }
+            else
+            {
+                e.Cancel = true;
+                MessageBox.Show(result.ErrorMessage, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
