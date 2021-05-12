@@ -24,7 +24,7 @@ namespace GPXManager.views
     /// <summary>
     /// Interaction logic for SettingsWindow.xaml
     /// </summary>
-    public partial class SettingsWindow : Window,IDisposable
+    public partial class SettingsWindow : Window, IDisposable
     {
         public SettingsWindow()
         {
@@ -54,7 +54,13 @@ namespace GPXManager.views
                 textLatestTripCount.Text = Global.Settings.LatestTripCount.ToString();
                 textLatestGPXFileCount.Text = Global.Settings.LatestGPXFileCount.ToString();
                 textLogImageFolder.Text = Global.Settings.LogImagesFolder.ToString();
-                
+                textBoxCTXBackupPath.Text = Global.Settings.CTXBackupFolder;
+                textBoxCTXDownloadFolder.Text = Global.Settings.CTXDownloadFolder;
+                if (Global.Settings.PathToCybertrackerExe != null)
+                {
+                    textBoxCybertrackerPath.Text = Global.Settings.PathToCybertrackerExe;
+                }
+
             }
             else
             {
@@ -70,7 +76,14 @@ namespace GPXManager.views
         }
         public bool Validate()
         {
-            if(textBoxBackendPath.Text.Length>0 && textBoxGPXFolder.Text.Length>0 && textBoxGPXFolderDevice.Text.Length>0 && textLogImageFolder.Text.Length>0)
+            if (
+                textBoxBackendPath.Text.Length > 0 &&
+                textBoxGPXFolder.Text.Length > 0 &&
+                textBoxGPXFolderDevice.Text.Length > 0 &&
+                textLogImageFolder.Text.Length > 0 &&
+                textBoxCTXBackupPath.Text.Length > 0 &&
+                textBoxCTXDownloadFolder.Text.Length > 0 &&
+                textBoxCybertrackerPath.Text.Length > 0)
             {
                 return int.TryParse(textBoxHoursOffsetGMT.Text, out int v);
             }
@@ -79,7 +92,7 @@ namespace GPXManager.views
         public MainWindow ParentWindow { get; set; }
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonOk":
                     if (Validate())
@@ -92,24 +105,55 @@ namespace GPXManager.views
                           textBoxBingAPIKey.Text,
                           int.Parse(textLatestTripCount.Text),
                           int.Parse(textLatestGPXFileCount.Text),
-                          textLogImageFolder.Text
+                          textLogImageFolder.Text,
+                          textBoxCybertrackerPath.Text,
+                          textBoxCTXBackupPath.Text,
+                          textBoxCTXDownloadFolder.Text
                           );
 
                         DialogResult = true;
                     }
                     else
                     {
-                        MessageBox.Show("Required fields* should be answered with the expected values", "Validation error",MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show("Required fields* should be answered with the expected values", "Validation error", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
 
- 
+
+                    break;
+                case "buttonLocateCTXDownloadFolder":
+                    VistaFolderBrowserDialog fbd = new VistaFolderBrowserDialog();
+                    fbd.UseDescriptionForTitle = true;
+                    fbd.Description = "Locate downloaad folder for CTX files";
+                    if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
+                    {
+                        textBoxCTXDownloadFolder.Text = fbd.SelectedPath;
+                    }
+                    break;
+                case "buttonLocateCTXBackup":
+                    fbd = new VistaFolderBrowserDialog();
+                    fbd.UseDescriptionForTitle = true;
+                    fbd.Description = "Locate backup folder for CTX files";
+                    if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
+                    {
+                        textBoxCTXBackupPath.Text = fbd.SelectedPath;
+                    }
                     break;
                 case "buttonCancel":
                     DialogResult = false;
                     break;
-
+                case "buttonLocateCybertracker":
+                    OpenFileDialog ofd = new OpenFileDialog();
+                    ofd.Title = "Locate Cybertracker executable file (ct3.exe)";
+                    ofd.Filter = "ct3 exe file(*.exe)|*.exe|All file types (*.*)|*.*";
+                    ofd.FilterIndex = 1;
+                    ofd.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    if ((bool)ofd.ShowDialog() && File.Exists(ofd.FileName))
+                    {
+                        textBoxCybertrackerPath.Text = System.IO.Path.GetDirectoryName(ofd.FileName);
+                    }
+                    break;
                 case "buttonLocate":
-                    VistaFolderBrowserDialog fbd = new VistaFolderBrowserDialog();
+                    fbd = new VistaFolderBrowserDialog();
                     fbd.UseDescriptionForTitle = true;
                     fbd.Description = "Locate GPX folder in computer";
                     if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
@@ -127,7 +171,7 @@ namespace GPXManager.views
                     }
                     break;
                 case "buttonLocateBackend":
-                    OpenFileDialog ofd = new OpenFileDialog();
+                    ofd = new OpenFileDialog();
                     ofd.Title = "Locate backend database for GPS data";
                     ofd.Filter = "MDB file(*.mdb)|*.mdb|All file types (*.*)|*.*";
                     ofd.FilterIndex = 1;

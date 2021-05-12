@@ -92,6 +92,9 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="WinSCPnet, Version=1.7.2.11087, Culture=neutral, PublicKeyToken=2271ec4a3c56d0bf, processorArchitecture=MSIL">
+      <HintPath>..\packages\WinSCP.5.17.10\lib\net40\WinSCPnet.dll</HintPath>
+    </Reference>
     <Reference Include="Xceed.Wpf.AvalonDock, Version=4.0.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
       <HintPath>..\packages\Extended.Wpf.Toolkit.4.0.2\lib\net40\Xceed.Wpf.AvalonDock.dll</HintPath>
     </Reference>
@@ -116,18 +119,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="entities\CTXFIle.cs" />
+    <Compile Include="entities\CTXFileRepository.cs" />
+    <Compile Include="entities\CTXFileViewModel.cs" />
     <Compile Include="entities\DetectDeviceEventArg.cs" />
     <Compile Include="entities\EntitiesChangedEventArg.cs" />
     <Compile Include="entities\FileSizeFormatExtension.cs" />
     <Compile Include="entities\Fisher.cs" />
+    <Compile Include="entities\FisherDeviceAssignment.cs" />
+    <Compile Include="entities\FisherDeviceAssignmentViewModel.cs" />
+    <Compile Include="entities\FisherDeviceAssignmentRepository.cs" />
     <Compile Include="entities\FisherItemsSource.cs" />
     <Compile Include="entities\FisherRepository.cs" />
     <Compile Include="entities\FisherViewModel.cs" />
+    <Compile Include="entities\GPSDataSummary.cs" />
     <Compile Include="entities\GridUpdateCellHelper.cs" />
     <Compile Include="entities\ImageMetadata.cs" />
     <Compile Include="entities\ImportGPSData.cs" />
     <Compile Include="entities\ImportGPXEventArg.cs" />
     <Compile Include="entities\JpegMetadataAdapter.cs" />
+    <Compile Include="entities\LandingSite.cs" />
+    <Compile Include="entities\LandingSiteViewModel.cs" />
     <Compile Include="entities\LogbookImage.cs" />
     <Compile Include="entities\LogBookImageRepository.cs" />
     <Compile Include="entities\LogbookImageViewModel.cs" />
@@ -180,11 +192,14 @@
     </Compile>
     <Compile Include="entities\NotepadHelper.cs" />
     <Compile Include="entities\PrettyXML.cs" />
+    <Compile Include="entities\LandingSiteRepository.cs" />
     <Compile Include="entities\SerializeGear.cs" />
     <Compile Include="entities\SerializeGPS.cs" />
     <Compile Include="entities\SerializeTrackToGPX.cs" />
     <Compile Include="entities\SerializeTrips.cs" />
     <Compile Include="entities\SerializeWindowState.cs" />
+    <Compile Include="entities\Sighting.cs" />
+    <Compile Include="entities\SightingAttributes.cs" />
     <Compile Include="entities\Track.cs" />
     <Compile Include="entities\TrackViewModel.cs" />
     <Compile Include="entities\Trip.cs" />
@@ -226,6 +241,9 @@
     <Compile Include="views\ImportGPXByLGUFolderWindow.xaml.cs">
       <DependentUpon>ImportGPXByLGUFolderWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\LandingSiteEditWindow.xaml.cs">
+      <DependentUpon>LandingSiteEditWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\MapWindowForm.IconInfo.cs">
       <DependentUpon>MapWindowForm.xaml</DependentUpon>
     </Compile>
@@ -235,11 +253,17 @@
     <Compile Include="views\PathWindow.xaml.cs">
       <DependentUpon>PathWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\SelectGearWindow.xaml.cs">
+      <DependentUpon>SelectGearWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\ShowAllGPSDataInArchiveWindow.xaml.cs">
       <DependentUpon>ShowAllGPSDataInArchiveWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\SplashWindow.xaml.cs">
+      <DependentUpon>SplashWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\ZoomBorder.cs" />
     <Page Include="entities\mapping\Views\AOIWindow.xaml">
@@ -325,6 +349,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\LandingSiteEditWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\MapWindowForm.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -333,11 +361,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\SelectGearWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\SettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\ShowAllGPSDataInArchiveWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\SplashWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -626,5 +662,21 @@
   <ItemGroup>
     <Resource Include="ok2.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ftp_folder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ctx_folder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="station.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\packages\WinSCP.5.17.10\build\WinSCP.targets" Condition="Exists('..\packages\WinSCP.5.17.10\build\WinSCP.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\WinSCP.5.17.10\build\WinSCP.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\WinSCP.5.17.10\build\WinSCP.targets'))" />
+  </Target>
 </Project>

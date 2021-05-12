@@ -422,6 +422,9 @@ namespace GPXManager.entities.mapping.Views
             }
         }
 
+        private void OnMenuClick(object sender, RoutedEventArgs e)
+        {
 
+        }
     }
 }

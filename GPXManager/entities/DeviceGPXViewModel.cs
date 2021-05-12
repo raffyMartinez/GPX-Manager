@@ -19,9 +19,50 @@ namespace GPXManager.entities
         private bool _editSuccess;
         private int _count;
         public ObservableCollection<DeviceGPX> DeviceGPXCollection { get; set; }
-        private DeviceGPXRepository DeviceWaypointGPXes{ get; set; }
+        private DeviceGPXRepository DeviceWaypointGPXes { get; set; }
+
+        public List<GPSDataSummary> GetGPSDataSummaries()
+        {
+            var list = new List<GPSDataSummary>();
+            var gpsUnits = Entities.GPSViewModel.GetAll();
+            foreach (var item in Entities.GPSViewModel.GetAll())
+            {
+                int count500 = 0;
+                int countLess500 = 0;
+                var listTracks = DeviceGPXCollection
+                    .Where(t => t.GPS.DeviceID == item.DeviceID && t.GPXType == "track")
+                    .ToList();
+
+                foreach (var deviceGPX in listTracks)
+                {
+                    foreach (var track in Entities.TrackViewModel.ReadTracksFromXML(deviceGPX))
+                    {
+                        if (track.Statistics.Length <= 0.5)
+                        {
+                            ++countLess500;
+                        }
+                        else
+                        {
+                            ++count500;
+                        }
+                    }
+
+                }
+
+                var listWpts = DeviceGPXCollection
+                    .Where(t => t.GPS.DeviceID == item.DeviceID && t.GPXType == "waypoint")
+                    .ToList();
 
 
+
+                var summaryItem = new GPSDataSummary { GPS = item, NumberOfSavedTracks = listTracks.Count, NumberOfSavedWaypoints = listWpts.Count,NumberTrackLength500m=count500,NumberTrackLengthLess500m=countLess500 };
+
+
+                list.Add(summaryItem);
+            }
+
+            return list;
+        }
 
         public Dictionary<GPS, List<GPXFile>> ArchivedGPXFiles { get; private set; } = new Dictionary<GPS, List<GPXFile>>();
         public DeviceGPXViewModel()
@@ -32,7 +73,7 @@ namespace GPXManager.entities
             ConvertDeviceGPXInArchiveToGPXFile();
             GPXBackupFolder = "GPXBackup";
         }
-        
+
         /// <summary>
         /// checks if the backup location exists. It not, it will create one.
         /// </summary>
@@ -63,15 +104,15 @@ namespace GPXManager.entities
             while (earliest <= latest)
             {
                 dates.Add(new DateTime(earliest.Year, earliest.Month, 1));
-                earliest= earliest.AddMonths(1);
+                earliest = earliest.AddMonths(1);
             }
             return dates;
 
         }
 
-        public List<GPXFile>GetDeviceGPX(GPS gps, GPXFileType gpxType, DateTime monthYear)
+        public List<GPXFile> GetDeviceGPX(GPS gps, GPXFileType gpxType, DateTime monthYear)
         {
-            return ArchivedGPXFiles[gps].Where(t => t.GPXFileType == gpxType && t.MonthYear == monthYear).ToList();  
+            return ArchivedGPXFiles[gps].Where(t => t.GPXFileType == gpxType && t.MonthYear == monthYear).ToList();
         }
         public string GPXBackupFolder { get; private set; }
         public int BackupGPXToDrive()
@@ -81,15 +122,15 @@ namespace GPXManager.entities
             DirectoryInfo backupDir;
             DirectoryInfo gpsBackupDir;
             DirectoryInfo gpsBackupDirMonth;
-            if(!Directory.Exists($@"{folderForBackup}\{GPXBackupFolder}"))
+            if (!Directory.Exists($@"{folderForBackup}\{GPXBackupFolder}"))
             {
-                backupDir =  Directory.CreateDirectory($@"{folderForBackup}\{GPXBackupFolder}");
+                backupDir = Directory.CreateDirectory($@"{folderForBackup}\{GPXBackupFolder}");
             }
             else
             {
                 backupDir = new DirectoryInfo(($@"{folderForBackup}\{GPXBackupFolder}"));
             }
-            foreach(var gps in Entities.GPSViewModel.GPSCollection.OrderBy(t=>t.DeviceName))
+            foreach (var gps in Entities.GPSViewModel.GPSCollection.OrderBy(t => t.DeviceName))
             {
 
                 string gpsDirectory = $@"{backupDir.FullName}\{gps.DeviceName}";
@@ -108,7 +149,7 @@ namespace GPXManager.entities
                     {
                         var fileTimeStart = gpxFile.DateRangeStart;
                         var monthYear = new DateTime(fileTimeStart.Year, fileTimeStart.Month, 1).ToString("MMM-yyyy");
-                        if(Directory.Exists($@"{gpsBackupDir.FullName}\{monthYear}"))
+                        if (Directory.Exists($@"{gpsBackupDir.FullName}\{monthYear}"))
                         {
                             gpsBackupDirMonth = new DirectoryInfo($@"{gpsBackupDir.FullName}\{monthYear}");
                         }
@@ -120,11 +161,11 @@ namespace GPXManager.entities
                         string fileToBackup = $@"{gpsBackupDirMonth.FullName}\{gpxFile.FileName}";
                         if (File.Exists(fileToBackup))
                         {
-                            if(CreateMD5(gpxFile.XML) != CreateMD5( File.OpenText(fileToBackup).ReadToEnd()))
+                            if (CreateMD5(gpxFile.XML) != CreateMD5(File.OpenText(fileToBackup).ReadToEnd()))
                             {
                                 var pattern = (Path.GetFileNameWithoutExtension(fileToBackup) + "*.gpx");
-                                var files = Directory.GetFiles(gpsBackupDirMonth.FullName,pattern );
-                                string versionedFile = $@"{Path.ChangeExtension(fileToBackup, null)}_{((int)(DateTime.Now.ToOADate()*1000)).ToString()}.gpx";
+                                var files = Directory.GetFiles(gpsBackupDirMonth.FullName, pattern);
+                                string versionedFile = $@"{Path.ChangeExtension(fileToBackup, null)}_{((int)(DateTime.Now.ToOADate() * 1000)).ToString()}.gpx";
                                 using (StreamWriter sw = File.CreateText(versionedFile))
                                 {
                                     sw.Write(gpxFile.XML);
@@ -146,10 +187,10 @@ namespace GPXManager.entities
             return count;
         }
 
-        public List<GPXFile>GetGPXFiles(List<GPS>selectedGPS, List<DateTime>selectedDates )
+        public List<GPXFile> GetGPXFiles(List<GPS> selectedGPS, List<DateTime> selectedDates)
         {
             var list = new List<GPXFile>();
-            foreach(var gps in selectedGPS)
+            foreach (var gps in selectedGPS)
             {
                 if (ArchivedGPXFiles.Keys.Contains(gps))
                 {
@@ -170,7 +211,7 @@ namespace GPXManager.entities
         }
 
 
-        
+
         public void RefreshArchivedGPXCollection(GPS gps)
         {
             ConvertDeviceGPXInArchiveToGPXFile(gps); ;
@@ -178,9 +219,9 @@ namespace GPXManager.entities
 
         public void MarkAllNotShownInMap()
         {
-            foreach(GPS gps in ArchivedGPXFiles.Keys)
+            foreach (GPS gps in ArchivedGPXFiles.Keys)
             {
-                foreach(GPXFile file in ArchivedGPXFiles[gps])
+                foreach (GPXFile file in ArchivedGPXFiles[gps])
                 {
                     file.ShownInMap = false;
                 }
@@ -199,11 +240,11 @@ namespace GPXManager.entities
             else
             {
                 List<GPXFile> gpxFiles = new List<GPXFile>();
-                if (ArchivedGPXFiles.Keys.Contains(gps)&& ArchivedGPXFiles[gps].Count > 0)
+                if (ArchivedGPXFiles.Keys.Contains(gps) && ArchivedGPXFiles[gps].Count > 0)
                 {
-                   gpxFiles = ArchivedGPXFiles[gps];
+                    gpxFiles = ArchivedGPXFiles[gps];
                 }
-                foreach (var item in DeviceGPXCollection.Where(t=>t.GPS.DeviceID==gps.DeviceID))
+                foreach (var item in DeviceGPXCollection.Where(t => t.GPS.DeviceID == gps.DeviceID))
                 {
                     var gpxFile = Entities.GPXFileViewModel.ConvertToGPXFile(item);
                     if (!gpxFiles.Contains(gpxFile))
@@ -225,27 +266,27 @@ namespace GPXManager.entities
                 ArchivedGPXFiles[gps].Add(gpxFile);
             }
         }
-        
-        public List<WaypointLocalTime>GetWaypoints(GPXFile wayppointFile)
+
+        public List<WaypointLocalTime> GetWaypoints(GPXFile wayppointFile)
         {
-            if(wayppointFile.TrackCount==0 && wayppointFile.NamedWaypointsInLocalTime.Count>0)
+            if (wayppointFile.TrackCount == 0 && wayppointFile.NamedWaypointsInLocalTime.Count > 0)
             {
                 return wayppointFile.NamedWaypointsInLocalTime;
             }
             return null;
         }
-        public List<WaypointLocalTime>GetWaypointsMatch(GPXFile trackFile, out List<GPXFile> gpxFiles)
+        public List<WaypointLocalTime> GetWaypointsMatch(GPXFile trackFile, out List<GPXFile> gpxFiles)
         {
             gpxFiles = new List<GPXFile>();
             var thisList = new List<WaypointLocalTime>();
-            foreach(var g in  ArchivedGPXFiles[trackFile.GPS].Where(t=>t.GPXFileType==GPXFileType.Waypoint))
+            foreach (var g in ArchivedGPXFiles[trackFile.GPS].Where(t => t.GPXFileType == GPXFileType.Waypoint))
             {
-                foreach(var wpt in g.NamedWaypointsInLocalTime)
+                foreach (var wpt in g.NamedWaypointsInLocalTime)
                 {
-                    if(wpt.Time >= trackFile.DateRangeStart && wpt.Time <= trackFile.DateRangeEnd)
+                    if (wpt.Time >= trackFile.DateRangeStart && wpt.Time <= trackFile.DateRangeEnd)
                     {
                         thisList.Add(wpt);
-                        if(!gpxFiles.Contains(g))
+                        if (!gpxFiles.Contains(g))
                         {
                             gpxFiles.Add(g);
                         }
@@ -261,24 +302,24 @@ namespace GPXManager.entities
             return DeviceGPXCollection.Where(t => t.RowID == id).FirstOrDefault();
         }
 
-        public DeviceGPX GetDeviceGPX (DeviceGPX deviceGPX)
+        public DeviceGPX GetDeviceGPX(DeviceGPX deviceGPX)
         {
             return DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == deviceGPX.GPS.DeviceID)
                 .Where(t => t.Filename == deviceGPX.Filename)
                 .FirstOrDefault();
         }
-        
+
         public DeviceGPX GetDeviceGPX(GPS gps, string fileName)
         {
-            var g =  DeviceGPXCollection
+            var g = DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
-                .Where(t=>t.Filename==Path.GetFileName( fileName))
+                .Where(t => t.Filename == Path.GetFileName(fileName))
                 .FirstOrDefault();
 
             return g;
         }
-        
+
         public List<GPXFile> ArchivedFilesByGPSByMonth(GPS gps, DateTime month)
         {
             return ArchivedGPXFiles[gps]
@@ -296,7 +337,7 @@ namespace GPXManager.entities
         }
         public List<GPS> GetAllGPS()
         {
-            return DeviceGPXCollection.GroupBy(t => t.GPS).Select(g => g.First().GPS).OrderBy(t=>t.DeviceName).ToList();
+            return DeviceGPXCollection.GroupBy(t => t.GPS).Select(g => g.First().GPS).OrderBy(t => t.DeviceName).ToList();
         }
         public DeviceGPX GetDeviceGPX(GPS gps, DateTime month_year)
         {
@@ -309,7 +350,7 @@ namespace GPXManager.entities
         {
             return DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
-                .OrderBy(t=>t.TimeRangeStart)
+                .OrderBy(t => t.TimeRangeStart)
                 .GroupBy(t => t.TimeRangeStart.ToString("MMM-yyyy"))
                 .Select(g => g.First().TimeRangeStart)
                 .ToList();
@@ -323,7 +364,7 @@ namespace GPXManager.entities
 
         public List<DeviceGPX> GetAllDeviceWaypointGPX(GPS gps)
         {
-            return DeviceGPXCollection.Where(t=>t.GPS.DeviceID==gps.DeviceID).ToList();
+            return DeviceGPXCollection.Where(t => t.GPS.DeviceID == gps.DeviceID).ToList();
         }
 
         public DeviceGPX CurrentEntity { get; set; }
@@ -352,7 +393,7 @@ namespace GPXManager.entities
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<DeviceGPX> tempList = e.NewItems.OfType<DeviceGPX>().ToList();
-                        _editSuccess =  DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        _editSuccess = DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
                     }
                     break;
             }
@@ -376,12 +417,12 @@ namespace GPXManager.entities
             if (_editSuccess)
             {
                 GPXFile gpxFile = Entities.GPXFileViewModel.GetFile(gpx.GPS, gpx.Filename);
-                if(gpxFile==null)
+                if (gpxFile == null)
                 {
-                    gpxFile = new GPXFile(gpx.Filename) { GPS = gpx.GPS,XML = gpx.GPX };
+                    gpxFile = new GPXFile(gpx.Filename) { GPS = gpx.GPS, XML = gpx.GPX };
                     gpxFile.ComputeStats(gpx);
 
-                    
+
                     Entities.GPXFileViewModel.Add(gpxFile);
                 }
 
@@ -410,19 +451,19 @@ namespace GPXManager.entities
 
         private string AddGPSSourceToGPX(string gpx, GPS gps)
         {
-            bool hasGPS=false;
+            bool hasGPS = false;
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(gpx);
             var nd = doc.GetElementsByTagName("gpx");
-            foreach(XmlNode child in nd[0].ChildNodes)
+            foreach (XmlNode child in nd[0].ChildNodes)
             {
                 hasGPS = child.Name == "gps";
-                if(hasGPS)
+                if (hasGPS)
                 {
                     break;
                 }
             }
-            if(!hasGPS)
+            if (!hasGPS)
             {
                 XmlElement gpsChild = doc.CreateElement("gps", doc.DocumentElement.NamespaceURI);
                 gpsChild.InnerText = gps.DeviceID;
@@ -440,20 +481,20 @@ namespace GPXManager.entities
         public bool SaveDeviceGPXToRepository(DetectedDevice device)
         {
             bool successSave = false;
-            foreach(var file in Entities.GPXFileViewModel.GetGPXFilesFromGPS(device))
+            foreach (var file in Entities.GPXFileViewModel.GetGPXFilesFromGPS(device))
             {
                 string content;
                 using (StreamReader sr = File.OpenText(file.FullName))
                 {
                     content = sr.ReadToEnd();
-                    content =  AddGPSSourceToGPX(content,device.GPS);
+                    content = AddGPSSourceToGPX(content, device.GPS);
                     var gpxFileName = Path.GetFileName(file.FullName);
                     var dwg = GetDeviceGPX(device.GPS, gpxFileName);
                     GPXFile gpxFile = Entities.GPXFileViewModel.GetFile(device.GPS, gpxFileName);
                     var gpxType = gpxFile.GPXFileType == GPXFileType.Track ? "track" : "waypoint";
                     if (dwg == null)
                     {
-                        successSave= AddRecordToRepo(
+                        successSave = AddRecordToRepo(
                             new DeviceGPX
                             {
                                 GPS = device.GPS,
@@ -465,14 +506,14 @@ namespace GPXManager.entities
                                 TimeRangeStart = gpxFile.DateRangeStart,
                                 TimeRangeEnd = gpxFile.DateRangeEnd
                             }
-                        ) ;
+                        );
                     }
                     else
                     {
                         var deviceMD5 = CreateMD5(content);
                         if (CreateMD5(dwg.GPX) != deviceMD5)
                         {
-                            successSave= UpdateRecordInRepo(new DeviceGPX
+                            successSave = UpdateRecordInRepo(new DeviceGPX
                             {
                                 GPS = dwg.GPS,
                                 GPX = content,
@@ -491,7 +532,7 @@ namespace GPXManager.entities
         }
         public void SaveDeviceGPXToRepository()
         {
-            foreach(var device in Entities.DetectedDeviceViewModel.DetectedDeviceCollection)
+            foreach (var device in Entities.DetectedDeviceViewModel.DetectedDeviceCollection)
             {
                 if (device.GPS != null)
                 {

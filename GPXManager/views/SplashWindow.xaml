@@ -1,0 +1,23 @@
+﻿<Window x:Class="GPXManager.views.SplashWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="SplashWindow" Height="319.6" Width="309.259" WindowStartupLocation="CenterScreen" ShowInTaskbar="False" WindowStyle="None" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Label Content="GPX Manager" Margin="0 20" FontSize="24" FontWeight="Bold"/>
+            <Image Source="/GPXManager;component/gpx_icon.ico" Width="100" Margin="0 0 0 0"/>
+
+        </StackPanel>
+        <ProgressBar Grid.Row="1" Width="250" Height="15" x:Name="UpdateProgressBar"/>
+        <Label Grid.Row="2" Content="Loading entity" HorizontalContentAlignment="Center" x:Name="LabelProgress"/>
+    </Grid>
+</Window>

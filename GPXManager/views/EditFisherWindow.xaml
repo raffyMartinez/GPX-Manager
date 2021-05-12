@@ -5,43 +5,72 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
-        Title="Manage fisher" Height="434.967" Width="381.069" ResizeMode="NoResize">
+        Title="Manage fisher" Height="548.567" Width="389.869" ResizeMode="NoResize">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
             <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
             <RowDefinition/>
             <RowDefinition Height="70"/>
         </Grid.RowDefinitions>
-        <Label Content="Manage a fisher" x:Name="labelTitle" VerticalAlignment="Center" Margin="10 0" FontSize="14" FontWeight="Bold"/>
-        <StackPanel Grid.Row="1" >
-            <WrapPanel Margin="5 20 0 0" VerticalAlignment="Center" Width="350">
-                <Label Content="Name of fisher" Width="100"/>
-                <TextBox x:Name="textFisherName" Width="190" VerticalContentAlignment="Center" Height="25"/>
-            </WrapPanel>
-            <StackPanel Margin="10 20 0 0" HorizontalAlignment="Left" Width="350">
-                <Label Content="Names of boats"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="40"/>
-                    </Grid.ColumnDefinitions>
-                    <ListBox Height="190" Width="300" x:Name="listBoxBoats" MouseDoubleClick="OnListDoubleClick" HorizontalAlignment="Left"/>
-                    <StackPanel Grid.Column="1">
-                        <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDelete" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                            <Image Source="delete.png"/>
-                        </Button>
-                        <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAdd" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                            <Image Source="add.png"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
-
-
-
-
-            </StackPanel>
+        <Label Content="Manage a fisher" x:Name="labelTitle" VerticalAlignment="Center" Margin="10 0" FontSize="14" FontWeight="Bold" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
+        <Label Content="Name of fisher" Width="100" Grid.Row="1" VerticalAlignment="Center"/>
+        <TextBox x:Name="textFisherName" Width="220" VerticalContentAlignment="Center" Height="25" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left"/>
+        <Label Grid.RowSpan="2" Content="Device" VerticalAlignment="Center" Grid.Row="2"/>
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal" Grid.Column="1" Grid.Row="2" >
+            <RadioButton Content="None" Margin="6 0" x:Name="rbNone" Checked="OnCheckChanged" />
+            <RadioButton Content="GPS" Margin=" 6 0" x:Name="rbGPS" Checked="OnCheckChanged" />
+            <RadioButton Content="Phone" Margin="6 0" x:Name="rbPhone" Checked="OnCheckChanged" />
         </StackPanel>
-        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <ComboBox x:Name="cboDevice" Width="220" Height="25"  Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left"  Margin="0 5 0 0" VerticalAlignment="Top"/>
+        <Label Content="Landing site" Width="100" Grid.Row="4" VerticalAlignment="Center"/>
+        <ComboBox x:Name="cboLandingSite" Width="220" VerticalContentAlignment="Center" Height="25" Grid.Row="4" Grid.Column="1" HorizontalAlignment="Left" />
+        <Label Content="Names of boats" VerticalAlignment="Center" Grid.Row="5"/>
+
+        <Grid Grid.Row="5" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <ListBox Width="220" Height="100" x:Name="listBoxBoats" MouseDoubleClick="OnListDoubleClick"  Margin="0,0,0,0" HorizontalAlignment="Left"/>
+            <StackPanel Grid.Column="1" Grid.Row="1">
+                <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDeleteBoat" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                    <Image Source="delete.png"/>
+                </Button>
+                <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAddBoat" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                    <Image Source="add.png"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+        <Label Content="Gears"  VerticalAlignment="Center" Grid.Row="6"/>
+        <Grid Grid.Row="6" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="50"/>
+            </Grid.ColumnDefinitions>
+            <ListBox Grid.Row="3" Width="220" Height="100" x:Name="listBoxGears" HorizontalAlignment="Left"/>
+            <StackPanel Grid.Row="3" Grid.Column="1">
+                <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDeleteGears" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                    <Image Source="delete.png"/>
+                </Button>
+                <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAddGears" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
+                    <Image Source="add.png"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+
+
+
+        <WrapPanel Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.ColumnSpan="2">
             <Button x:Name="buttonCancel"  Click="OnButtonClick" Height="40" Width="40" Margin="10 0"  BorderBrush="{x:Null}" Background="{x:Null}">
                 <Image Source="cancel.png"/>
             </Button>

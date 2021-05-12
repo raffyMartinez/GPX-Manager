@@ -109,49 +109,94 @@ namespace GPXManager.entities
                 Logger.LogType = LogType.ImportGPXfFromFolder;
                 _count = 0;
                 _gpxCount = 0;
+
             }
+
             GPS gps = null;
             GPS current_gps = null;
+
+            if(in_gps!=null)
+            {
+                gps = in_gps;
+                current_gps = in_gps;
+            }
             //Logger.Log($"processing folder: {folder}");
+
+            var folderName = System.IO.Path.GetFileName(folder);
+            //if (ImportGPSData.GPSNameStart.Length > 0)
+            //{
+
+                string result = GetNumericPartOfFolderName(folderName);
+                if (result.Length > 0)
+                {
+                    int numericPart = int.Parse(result);
+                    if (numericPart >= ImportGPSData.StartGPSNumbering && numericPart <= ImportGPSData.EndGPSNumbering)
+                    {
+                        gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                //int numericPart = int.Parse(GetNumericPartOfFolderName(folderName));
+
+            //}
+            //else
+            //{
+            //    gps = Entities.GPSViewModel.GetGPSByName(folderName);
+            //}
+
+            if (gps != null)
+            {
+                current_gps = gps;
+            }
+            else if (gps == null && in_gps != null)
+            {
+                current_gps = in_gps;
+            }
+
+
             var files = Directory.GetFiles(folder).Select(s => new FileInfo(s));
+
             if (files.Any())
             {
                 foreach (var file in files)
                 {
                     if (file.Extension.ToLower() == ".gpx")
                     {
-                        var folderName = System.IO.Path.GetFileName(folder);
-                        if(ImportGPSData.GPSNameStart.Length>0)
-                        {
+                        //var folderName = System.IO.Path.GetFileName(folder);
+                        //if(ImportGPSData.GPSNameStart.Length>0)
+                        //{
 
-                            string result = GetNumericPartOfFolderName(folderName);
-                            if (result.Length > 0)
-                            {
-                                int numericPart = int.Parse(result);
-                                if (numericPart >= ImportGPSData.StartGPSNumbering && numericPart <= ImportGPSData.EndGPSNumbering)
-                                {
-                                    gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
-                                }
-                                else
-                                {
-                                    return 0;
-                                }
-                            }
-                            //int numericPart = int.Parse(GetNumericPartOfFolderName(folderName));
+                        //    string result = GetNumericPartOfFolderName(folderName);
+                        //    if (result.Length > 0)
+                        //    {
+                        //        int numericPart = int.Parse(result);
+                        //        if (numericPart >= ImportGPSData.StartGPSNumbering && numericPart <= ImportGPSData.EndGPSNumbering)
+                        //        {
+                        //            gps = Entities.GPSViewModel.GetGPS($"{ImportGPSData.GPSNameStart} {GetNumericPartOfFolderName(folderName)}");
+                        //        }
+                        //        else
+                        //        {
+                        //            return 0;
+                        //        }
+                        //    }
+                        //    //int numericPart = int.Parse(GetNumericPartOfFolderName(folderName));
 
-                        }
-                        else {
-                            gps = Entities.GPSViewModel.GetGPSByName(folderName);
-                        }
+                        //}
+                        //else {
+                        //    gps = Entities.GPSViewModel.GetGPSByName(folderName);
+                        //}
 
-                        if (gps != null)
-                        {
-                            current_gps = gps;
-                        }
-                        else if (gps == null && in_gps != null)
-                        {
-                            current_gps = in_gps;
-                        }
+                        //if (gps != null)
+                        //{
+                        //    current_gps = gps;
+                        //}
+                        //else if (gps == null && in_gps != null)
+                        //{
+                        //    current_gps = in_gps;
+                        //}
 
                         if (current_gps != null)
                         {

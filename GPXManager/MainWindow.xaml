@@ -57,6 +57,11 @@
             <!--for image manager grid-->
             <RowDefinition x:Name="parentGridRowClientLogbookImages" Height="0"/>
 
+            <!--for FTP folder-->
+            <RowDefinition x:Name="parentGridRowFTPFolder" Height="0"/>
+
+            <RowDefinition x:Name="parentGridRowLandingSite" Height="0"/>
+
             <!--Holds the status bar -->
             <RowDefinition Height="35"/>
         </Grid.RowDefinitions>
@@ -136,6 +141,14 @@
                     <Image Source="person.png" OpacityMask="White" />
 
                 </Button>
+                <Button x:Name="buttonLandingSite" Click="OnToolbarButtonClick" ToolTip="Manage landing sites">
+                    <Image Source="station.png" OpacityMask="White" />
+
+                </Button>
+
+                <Button x:Name="buttonCybertracker" Click="OnToolbarButtonClick" ToolTip="CyberTracker">
+                    <Image Source="ctx_folder.png" OpacityMask="White" />
+                </Button>
 
                 <Button x:Name="buttonImage" Click="OnToolbarButtonClick" ToolTip="Manage logbook image">
                     <Image Source="file image.png" OpacityMask="White" />
@@ -198,6 +211,7 @@
                     <RowDefinition x:Name="gridRowGPXFiles" Height="*"/>
                     <RowDefinition x:Name="gridRowTrips" Height="*"/>
                     <RowDefinition x:Name="gridRowTripWaypoints" Height="*"/>
+                    <RowDefinition x:Name="gridRowGPXSummaryGrid" Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!--container for header-->
@@ -262,7 +276,7 @@
                         <Button x:Name="buttonDeleteTrip1" Content="Delete" Height="30" Width="50" Margin="10 0" Click="OnButtonClick"/>
                         <Button x:Name="buttonEditTrip1" Content="Edit" Height="30" Width="50" Margin="10 0" Click="OnButtonClick"/>
                         <Button x:Name="buttonAddTrip1" Content="Add" Height="30" Width="50" Margin="10 0" Click="OnButtonClick"/>
-                        
+
                     </WrapPanel>
                 </StackPanel>
 
@@ -343,6 +357,12 @@
                     </StackPanel>
                 </ScrollViewer>
 
+                <!--container for datagrid  of summary archived GPX files -->
+                <DataGrid Grid.Row="7" x:Name="dataGridGPXSummary" Visibility="Collapsed" Margin="10" 
+                          ItemsSource="{Binding}" AutoGenerateColumns="False" IsReadOnly="True"
+                          SelectionMode="Single" SelectionUnit="FullRow" 
+                          MouseDoubleClick="OnGridDoubleClick" SelectedCellsChanged="OnDatagGridSelectedCellChanged"/>
+
             </Grid>
 
         </Grid>
@@ -354,7 +374,7 @@
                 <RowDefinition/>
                 <RowDefinition Height="60"/>
             </Grid.RowDefinitions>
-            <Label Content="This is the label for the fisher grid" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <Label Content="Fishers" HorizontalAlignment="Left" VerticalAlignment="Center"/>
             <DataGrid Grid.Row="1" x:Name="dataGridFishers" ItemsSource="{Binding}" Margin="10 5" 
                       SelectionChanged="OnDataGridSelectionChanged" IsReadOnly="True" MouseDoubleClick="OnGridDoubleClick"/>
             <WrapPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -499,10 +519,83 @@
             </StackPanel>
         </Grid>
 
+        <!--cybertracker-->
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <TreeView x:Name="treeViewCybertracker" SelectedItemChanged="OnCybertrackerTreeItemChanged">
+                <TreeViewItem Header="Connect to server" />
+                <TreeViewItem Header="Users"/>
+                <TreeViewItem Header="Tools"/>
+            </TreeView>
+
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Visible">
+                <StackPanel x:Name="cybertrackerPanelFTP"  Margin="20">
+
+                    <WrapPanel Margin="10">
+                        <Label Content="Server name" Width="80"/>
+                        <TextBox x:Name="cybertrackerTextBoxFolderName" Height="30" Width="700" Margin="20 0" VerticalContentAlignment="Center" FontSize="14" />
+                    </WrapPanel>
+                    <WrapPanel Margin="10">
+                        <Label Content="User name" Width="80"/>
+                        <TextBox x:Name="cybertrackerTextBoxUserName" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
+                        <Label Content="Password"/>
+                        <PasswordBox x:Name="cybertrackerTextBoxPassword" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
+                        <Button Content="Connect" x:Name="buttonConnectFTP" Margin="20 0" Height="30" Width="80" Click="OnButtonClick" />
+                    </WrapPanel>
+
+
+
+                    <StackPanel x:Name="cybertrackerPanelGridFilesAvailable" Visibility="Collapsed" Grid.Column="1" Margin="20 30 0 0">
+                        <Label Content="Files in the server" />
+                        <DataGrid ItemsSource="{Binding}" x:Name="cybertrackerGridAvailableFiles"/>
+                        <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Height="60" Margin="0 20 0 0">
+                            <Button Content="Check all" x:Name="buttonCheckAll" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                            <Button Content="Download" x:Name="buttonDownloadSelected" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                        </WrapPanel>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel x:Name="cybertrackerPanelGrid" Grid.Column="1" Margin="20">
+                <DataGrid x:Name="cybertrackerDataGrid" CanUserAddRows ="False"/>
+            </StackPanel>
+
+            <StackPanel x:Name="cybertrackerPanelTools" Grid.Column="1" Margin="20">
+                <WrapPanel Orientation="Vertical" >
+                    <Label Content="Backup cybertracker data downloaded from the server"/>
+                    <Button Content="Backup" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonBackupCTXFiles" Click="OnButtonClick"/>
+                </WrapPanel>
+            </StackPanel>
+
+        </Grid>
+
+        <!--landing sites-->
+        <Grid Grid.Row="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition/>
+                <RowDefinition Height="60"/>
+            </Grid.RowDefinitions>
+            <Label Content="Landing sites" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+            <DataGrid Grid.Row="1" x:Name="dataGridLandingSites" ItemsSource="{Binding}" Margin="10 5" 
+                      SelectionChanged="OnDataGridSelectionChanged" IsReadOnly="True" MouseDoubleClick="OnGridDoubleClick"/>
+            <WrapPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="buttonLandingSiteDelete" Height="30" Width="80" Content="Delete" Margin="10 0" IsEnabled="False" Click="OnButtonClick"/>
+                <Button x:Name="buttonLandingSiteEdit" Height="30" Width="80" Content="Edit" Margin="10 0" IsEnabled="False" Click="OnButtonClick"/>
+                <Button x:Name="buttonLandingSiteAdd" Height="30" Width="80" Content="Add" Margin="10 0" Click="OnButtonClick"/>
+
+            </WrapPanel>            
+        </Grid>
 
         <!--status bar-->
-        <StatusBar Grid.Row="5" Grid.ColumnSpan="3">
-            <Label x:Name="statusLabel" Content="This is a status label" MouseDoubleClick="OnStatusLabelDoubleClick"/>
+        <StatusBar Grid.Row="7" Grid.ColumnSpan="3">
+            <Label x:Name="statusLabel" Content="This is a status label" MouseDoubleClick="OnStatusLabelDoubleClick" FontFamily="Arial"/>
+            <ProgressBar x:Name="statusProgress" Width="300" Height="15" Visibility="Collapsed" Margin="10 0 0 0"/>
         </StatusBar>
     </Grid>
 

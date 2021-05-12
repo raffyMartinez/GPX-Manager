@@ -55,6 +55,11 @@
                   dd:DragDrop.IsDropTarget="True"
                   dd:DragDrop.DropHandler="{Binding}">
 
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Properties" Click="OnMenuClick"/>
+                </ContextMenu>
+            </DataGrid.ContextMenu>    
         </DataGrid>
 
     </Grid>

@@ -23,6 +23,10 @@ namespace GPXManager.entities
 
         public bool EditSuccess { get; set; }
         
+        //public List<GPS>GetAvailableGPS()
+        //{
+
+        //}
         public int ImportGPS(string xmlFile, out string message)
         {
             GPS gps = null;
@@ -43,7 +47,7 @@ namespace GPXManager.entities
                     {
                         
 
-                        if (reader.Name == "GPS")
+                        if (reader.Name == "GPSEdited")
                         {
                             gps = new GPS();
                             gps.Folder = "";

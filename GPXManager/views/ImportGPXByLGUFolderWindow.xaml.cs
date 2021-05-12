@@ -83,6 +83,7 @@ namespace GPXManager.views
                     {
                         if (ImportGPSData.GPXCount == 0)
                         {
+                            panelStatus.Visibility = Visibility.Collapsed;
                             MessageBox.Show("Please fill up all fields correctly", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         else

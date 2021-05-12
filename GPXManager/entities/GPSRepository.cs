@@ -9,12 +9,17 @@ namespace GPXManager.entities
 {
     public class GPSRepository
     {
+        private List<GPS> gpsList = new List<GPS>();
         public List<GPS> GPSes { get; set; }
 
         public GPSRepository()
         {
             //UpdateTable();
             GPSes = getGPSes();
+            if(gpsList.Count>0)
+            {
+                GPSes = gpsList;
+            }
         }
 
         private List<GPS> getGPSes()
@@ -26,7 +31,7 @@ namespace GPXManager.entities
                 try
                 {
                     conection.Open();
-                    string query = $"Select * from devices";
+                    string query = $"Select * from devices where isPhone=false";
 
 
                     var adapter = new OleDbDataAdapter(query, conection);
@@ -49,13 +54,28 @@ namespace GPXManager.entities
                         }
                     }
                 }
+                catch(OleDbException dbex)
+                {
+                    switch(dbex.ErrorCode)
+                    {
+                        case -2147217904:
+                            //ModifyGPSTable();
+                            if(UpdateTable())
+                            {
+                                gpsList = getGPSes();
+                            }
+                        //No value given for one or more required parameters.
+                        break;
+                    }
+                }
                 catch (Exception ex)
                 {
                     Logger.Log(ex);
 
                 }
-                return listGPS;
+                
             }
+            return listGPS;
         }
 
         public bool Add(GPS gps)
@@ -65,7 +85,7 @@ namespace GPXManager.entities
             {
                 conn.Open();
                 //var sql = $@"Insert into devices(Code,DeviceName,Brand,Model,DeviceID,Folder,DateAdded,PNPDeviceID,VolumeName)
-                  var sql = $@"Insert into devices(Code,DeviceName,Brand,Model,DeviceID,Folder,DateAdded)
+                  var sql = $@"Insert into devices(Code,DeviceName,Brand,Model,DeviceID,Folder,DateAdded,isPhone)
                            Values (
                             '{gps.Code}',
                             '{gps.DeviceName}', 
@@ -73,7 +93,8 @@ namespace GPXManager.entities
                             '{gps.Model}',
                             '{gps.DeviceID}',
                             '{gps.Folder}',
-                            '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}'
+                            '{DateTime.Now.ToString("dd-MMMM-yyyyy HH:mm:ss")}',
+                            false    
                            )";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
@@ -123,20 +144,25 @@ namespace GPXManager.entities
                     }
             }
 
-            if(!columns.Contains("PNPDeviceID"))
+            if(!columns.Contains("isPhone"))
             {
-               if(AddColumn("PNPDeviceID", "TEXT", 150))
-                {
-                    AddColumn("VolumeName", "TEXT", 100);
-                }
+               updated =  AddColumn("isPhone", "bool");
 
             }
             return updated;
         }
 
-        private bool AddColumn(string colName, string type, int length)
+        private bool AddColumn(string colName, string type, int? length = null)
         {
-            string sql = $"ALTER TABLE devices ADD COLUMN {colName} {type}({length})";
+            string sql = "";
+            if (type == "bool")
+            {
+                 sql = $"ALTER TABLE devices ADD COLUMN {colName} BIT DEFAULT 0";
+            }
+            else
+            {
+                sql = $"ALTER TABLE devices ADD COLUMN {colName} {type}({length})";
+            }
             using (var con = new OleDbConnection(Global.ConnectionString))
             {
                 con.Open();

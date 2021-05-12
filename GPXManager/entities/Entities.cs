@@ -41,7 +41,13 @@ namespace GPXManager.entities
 
         public static LogbookImageViewModel LogbookImageViewModel { get; set; }
 
+        public static LandingSiteViewModel LandingSiteViewModel { get; set; }
+
         public static FisherViewModel FisherViewModel { get; set; }
+
+        public static CTXFileViewModel CTXFileViewModel { get; set; }
+
+        public static FisherDeviceAssignmentViewModel FisherDeviceAssignmentViewModel { get; set; }
         
 
 

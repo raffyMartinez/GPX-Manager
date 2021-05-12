@@ -30,6 +30,7 @@ namespace GPXManager.entities
             }
             return max_rec_no;
         }
+
         private List<Fisher> getFishers()
         {
             var thisList = new List<Fisher>();
@@ -41,7 +42,6 @@ namespace GPXManager.entities
                     conection.Open();
                     string query = $"Select * from fishers";
 
-
                     var adapter = new OleDbDataAdapter(query, conection);
                     adapter.Fill(dt);
                     if (dt.Rows.Count > 0)
@@ -52,27 +52,61 @@ namespace GPXManager.entities
                             Fisher item = new Fisher();
                             item.FisherID = int.Parse(dr["FisherID"].ToString());
                             item.Name = dr["FisherName"].ToString();
-                            item.Vessels = dr["Boats"].ToString().Split('|').ToList();
+                            if (dr["Boats"].ToString() != "")
+                            {
+                                item.Vessels = dr["Boats"].ToString().Split('|').ToList();
+                            }
+                            item.DeviceIdentifier = dr["DeviceID"].ToString();
+                            if (dr["GearCodes"].ToString() != "")
+                            {
+                                item.GearCodes = dr["GearCodes"].ToString().Split('|').ToList();
+                            }
+                            if (dr["LandingSite"].ToString()!="" )
+                            {
+                                item.LandingSite = Entities.LandingSiteViewModel.GetLandingSite((int)dr["LandingSite"]);
+                            }
+                            if(dr["DeviceType"]==null || dr["DeviceType"].ToString()=="")
+                            {
+                                item.DeviceType = DeviceType.DeviceTypeNone;
+                            }
+                            else
+                            {
+                                item.DeviceType = (DeviceType)Enum.Parse(typeof(DeviceType), dr["DeviceType"].ToString());
+                            }
                             thisList.Add(item);
                         }
                     }
                 }
                 catch (OleDbException dbex)
                 {
-                    if (dbex.ErrorCode == -2147217865)
+                    switch (dbex.ErrorCode)
                     {
-                        //table not found so we create one
-                        CreateTable();
+                        case -2147217865:
+                            CreateTable();
+                            break;
+                        default:
+                            Logger.Log(dbex);
+                            break;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(ex);
+                    switch (ex.HResult)
+                    {
+                        case -2147024809:
+                            MakeAdditionalTableFields();
+                            return getFishers();
+                            //break;
+                        default:
+                            Logger.Log(ex);
+                            break;
+                    }
                 }
             }
 
             return thisList;
         }
+
 
         public bool Add(Fisher fisher)
         {
@@ -107,7 +141,10 @@ namespace GPXManager.entities
                 conn.Open();
                 var sql = $@"Update fishers set
                             FisherName = '{fisher.Name}',
-                            Boats ='{fisher.VesselList}'
+                            Boats ='{fisher.VesselList}',
+                            DeviceType = {(int)fisher.DeviceType},
+                            LandingSite = {fisher.LandingSite.ID},
+                            GearCodes = '{fisher.CSV}'
                             WHERE FisherID = {fisher.FisherID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -145,7 +182,67 @@ namespace GPXManager.entities
             return success;
 
         }
+        private void MakeAdditionalTableFields()
+        {
+            using (var conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+                string sql = @"ALTER TABLE fishers ADD COLUMN GearCodes VarChar(255)";
+                OleDbCommand cmd = new OleDbCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = sql;
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
 
+                sql = @"ALTER TABLE fishers ADD COLUMN GPSID VarChar(20)";
+                cmd = new OleDbCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = sql;
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+
+                sql = @"ALTER TABLE fishers ADD COLUMN LandingSite Int";
+                cmd = new OleDbCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = sql;
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+
+                sql = @"ALTER TABLE fishers ADD COLUMN DeviceType Int";
+                cmd = new OleDbCommand();
+                cmd.Connection = conn;
+                cmd.CommandText = sql;
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+
+                cmd.Connection.Close();
+                conn.Close();
+            }
+        }
         public static void CreateTable()
         {
             using (var conn = new OleDbConnection(Global.ConnectionString))
@@ -174,11 +271,11 @@ namespace GPXManager.entities
                     cmd.CommandText = sql;
                     cmd.ExecuteNonQuery();
                 }
-                catch(OleDbException)
+                catch (OleDbException)
                 {
                     //ignore
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logger.Log(ex);
                 }

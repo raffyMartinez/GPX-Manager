@@ -1,0 +1,42 @@
+﻿<Window x:Class="GPXManager.views.LandingSiteEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="Edit landing site" Height="359.6" Width="374.009" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="60"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.ColumnSpan="2" Content="Landing site" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="14"/>
+        <Label Grid.Row="1" Content="Identifier" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <Label Grid.Row="2" Content="Name" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <Label Grid.Row="3" Content="Municipality" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <Label Grid.Row="4" Content="Province" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <Label Grid.Row="5" Content="Latitude" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <Label Grid.Row="6" Content="Longitude" HorizontalContentAlignment="Right" Margin="0 0 10 0" VerticalAlignment="Center"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Height="30" Width="100" HorizontalAlignment="Left" x:Name="textID" VerticalContentAlignment="Center" IsEnabled="False"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Height="30" Width="250" HorizontalAlignment="Left" x:Name="textName" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Row="3" Grid.Column="1" Height="30" Width="250" HorizontalAlignment="Left" x:Name="textMunicipality" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Row="4" Grid.Column="1" Height="30" Width="250" HorizontalAlignment="Left" x:Name="textProvince" VerticalContentAlignment="Center"/>
+        <TextBox Grid.Row="5" Grid.Column="1" Height="30" Width="250" HorizontalAlignment="Left" x:Name="textLatitude" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+        <TextBox Grid.Row="6" Grid.Column="1" Height="30" Width="250" HorizontalAlignment="Left" x:Name="textLongitude" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+        <WrapPanel Grid.Row="7" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Content="Cancel" Height="25" Width="50" Margin="5" Click="OnButtonClicked" x:Name="buttonCancel"/>
+            <Button Content="Ok" Height="25" Width="50" Margin="5 0 20 0" Click="OnButtonClicked" x:Name="buttonOk"/>
+        </WrapPanel>
+    </Grid>
+</Window>

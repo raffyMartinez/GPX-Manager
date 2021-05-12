@@ -7,7 +7,7 @@ namespace GPXManager.entities
 {
     public class GearViewModel
     {
-        private bool _operationSucceeded = false;
+        private bool _editSucceeded;
         public ObservableCollection<Gear> GearCollection { get; set; }
         private GearRepository Gears { get; set; }
 
@@ -25,6 +25,7 @@ namespace GPXManager.entities
 
         private void Gears_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            _editSucceeded = false;
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
@@ -34,7 +35,7 @@ namespace GPXManager.entities
                         if (Gears.Add(newGear))
                         {
                             CurrentEntity = newGear;
-                            _operationSucceeded = true;
+                            _editSucceeded = true;
                         }
                     }
                     break;
@@ -42,14 +43,14 @@ namespace GPXManager.entities
                 case NotifyCollectionChangedAction.Remove:
                     {
                         List<Gear> tempListOfRemovedItems = e.OldItems.OfType<Gear>().ToList();
-                        _operationSucceeded = Gears.Delete(tempListOfRemovedItems[0].Code);
+                        _editSucceeded = Gears.Delete(tempListOfRemovedItems[0].Code);
                     }
                     break;
 
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<Gear> tempList = e.NewItems.OfType<Gear>().ToList();
-                        _operationSucceeded = Gears.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        _editSucceeded = Gears.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
                     }
                     break;
             }
@@ -99,7 +100,7 @@ namespace GPXManager.entities
 
             GearCollection.Add(gear);
 
-            return _operationSucceeded;
+            return _editSucceeded;
         }
 
         public bool UpdateRecordInRepo(Gear gear)
@@ -118,7 +119,7 @@ namespace GPXManager.entities
                 index++;
             }
 
-            return _operationSucceeded;
+            return _editSucceeded;
         }
 
         public bool DeleteRecordFromRepo(string code)
@@ -137,7 +138,7 @@ namespace GPXManager.entities
                 index++;
             }
 
-            return _operationSucceeded;
+            return _editSucceeded;
         }
     }
 }

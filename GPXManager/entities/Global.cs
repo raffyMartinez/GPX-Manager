@@ -25,7 +25,27 @@ namespace GPXManager.entities
             "\\Settings\\UserSettings\\" +
             UserSettingsFilename;
 
-
+        public static string IsValidXML(string xml)
+        {
+            
+            using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
+            {
+                try
+                {
+                    var result = reader.Read();
+                }
+                catch (XmlException)
+                {
+                    return "Invalid XML";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    return ex.Message;
+                }
+                return "Valid XML";
+            }
+        }
         public static string IsValidXMLFile(string xmlFile)
         {
             string xml = File.OpenText(xmlFile).ReadToEnd();
@@ -101,7 +121,8 @@ namespace GPXManager.entities
 
         public static bool SetSettings(string computerGPXFolder, string deviceGPXFolder, 
               string backendPath, int hoursGMTOffset, string bingAPIKey, int countLatestTrip,
-              int countLatestGPXFiles, string logImagesFolder)
+              int countLatestGPXFiles, string logImagesFolder, string pathToCyertrackerExe, 
+              string ctxBackupPath, string ctxDownloadFolder)
         {
             Settings = new Settings
             {
@@ -112,7 +133,10 @@ namespace GPXManager.entities
                 BingAPIKey = bingAPIKey,
                 LatestTripCount = countLatestTrip,
                 LatestGPXFileCount = countLatestGPXFiles,
-                LogImagesFolder = logImagesFolder
+                LogImagesFolder = logImagesFolder,
+                PathToCybertrackerExe = pathToCyertrackerExe,
+                CTXBackupFolder = ctxBackupPath,
+                CTXDownloadFolder = ctxDownloadFolder
             };
 
             SaveGlobalSettings();

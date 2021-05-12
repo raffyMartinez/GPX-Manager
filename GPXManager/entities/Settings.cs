@@ -47,8 +47,11 @@ namespace GPXManager.entities
         public string MDBPath { get; set; }
         public string ComputerGPXFolder { get; set; }
 
+        public string CTXBackupFolder { get; set; }
         public string LogImagesFolder { get; set; }
         public string DeviceGPXFolder { get; set; }
+        public string CTXDownloadFolder { get; set; }
+        public string PathToCybertrackerExe { get; set; }
 
         public int HoursOffsetGMT { get; set; }
         //public List<string> Setting2 { get; set; }

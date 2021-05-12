@@ -22,11 +22,20 @@ namespace GPXManager.views
     {
         private Fisher _fisher;
         private static EditFisherWindow _instance;
+        private List<Gear> _gears = new List<Gear>();
         public EditFisherWindow()
         {
             InitializeComponent();
             Closing += OnWindowClosing;
             Closed += OnWindowClosed;
+            Loaded += OnWindowLoaded;
+        }
+
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+
+            //rbNone.IsChecked = true;
+            cboLandingSite.ItemsSource = Entities.LandingSiteViewModel.GetAll();
         }
 
         private void OnWindowClosed(object sender, EventArgs e)
@@ -53,62 +62,114 @@ namespace GPXManager.views
             if (_instance == null) _instance = new EditFisherWindow();
             return _instance;
         }
-
+        public List<Gear> Gears
+        {
+            get { return _gears; }
+            set
+            {
+                _gears = value;
+                listBoxGears.Items.Clear();
+                foreach (Gear g in _gears)
+                {
+                    listBoxGears.Items.Add(g.ToString());
+                }
+            }
+        }
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonCancel":
                     Close();
-                   //((MainWindow)Owner).ChildFormClosed();
+                    //((MainWindow)Owner).ChildFormClosed();
                     break;
                 case "buttonOk":
-                    if(textFisherName.Text.Length>0 && listBoxBoats.Items.Count>0)
+                    if (textFisherName.Text.Length > 0 &&
+                        listBoxBoats.Items.Count > 0 &&
+                        listBoxGears.Items.Count > 0 &&
+                        cboLandingSite.Text.Length > 0)
                     {
-                        if (IsNew)
+                        bool proceed = true;
+                        if ((bool)rbPhone.IsChecked || (bool)rbGPS.IsChecked)
                         {
-                            Fisher f = new Fisher { Name = textFisherName.Text, FisherID = Entities.FisherViewModel.NextRecordNumber() };
-                            foreach (string item in listBoxBoats.Items)
-                            {
-                                f.Vessels.Add(item);
-                            }
-                            if (Entities.FisherViewModel.AddRecordToRepo(f))
-                            {
+                            proceed = cboDevice.Text.Length > 0;
+                        }
 
-                                Close();
-                                //((MainWindow)Owner).ChildFormClosed();
+                        if (proceed)
+                        {
+                            if (IsNew)
+                            {
+                                Fisher f = new Fisher { Name = textFisherName.Text, FisherID = Entities.FisherViewModel.NextRecordNumber() };
+                                f.Gears = _gears;
+                                foreach (string item in listBoxBoats.Items)
+                                {
+                                    f.Vessels.Add(item);
+                                }
+                                if (Entities.FisherViewModel.AddRecordToRepo(f))
+                                {
+
+                                    Close();
+                                    //((MainWindow)Owner).ChildFormClosed();
+                                }
+                            }
+                            else
+                            {
+                                _fisher.Name = textFisherName.Text;
+                                _fisher.Vessels.Clear();
+                                foreach (string item in listBoxBoats.Items)
+                                {
+                                    _fisher.Vessels.Add(item);
+                                }
+                                if (Entities.FisherViewModel.UpdateRecordInRepo(_fisher))
+                                {
+                                    Close();
+
+                                }
                             }
                         }
                         else
                         {
-                            _fisher.Name = textFisherName.Text;
-                            _fisher.Vessels.Clear();
-                            foreach (string item in listBoxBoats.Items)
-                            {
-                                _fisher.Vessels.Add(item);
-                            }
-                            if (Entities.FisherViewModel.UpdateRecordInRepo(_fisher))
-                            {
-                                Close();
-                                 //((MainWindow)Owner).ChildFormClosed();
-
-                            }
+                            MessageBox.Show("Please provide identifier of device assigned to fisher","GPX Manager",MessageBoxButton.OK,MessageBoxImage.Information);
                         }
+
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("Please provide all the information that are asked", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     break;
-                case "buttonDelete":
+                case "buttonDeleteGears":
+                    if(listBoxGears.SelectedItems.Count==1)
+                    {
+                        var g = _gears.FirstOrDefault(t => t.ToString() == listBoxGears.SelectedItem.ToString());
+                        _gears.Remove(g);
+                        listBoxGears.Items.Remove(listBoxGears.SelectedItem);
+
+                    }
                     break;
-                case "buttonAdd":
+                case "buttonAddGears":
+                    EditFisherBoat(_gears); 
+                    break;
+                case "buttonDeleteBoat":
+                    break;
+                case "buttonAddBoat":
                     EditSingleItemDialog esd = new EditSingleItemDialog();
                     esd.ItemType = "name of boat";
-                    if((bool)esd.ShowDialog())
+                    if ((bool)esd.ShowDialog())
                     {
                         listBoxBoats.Items.Add(esd.ItemForEditing);
                     }
                     break;
             }
         }
-
+        private void EditFisherBoat(List<Gear>gears = null)
+        {
+            SelectGearWindow sgw = new SelectGearWindow();
+            sgw.Gears = gears;
+            sgw.Owner = this;
+            sgw.ShowDialog();
+        }
         public Fisher Fisher
         {
             get { return _fisher; }
@@ -117,31 +178,88 @@ namespace GPXManager.views
                 IsNew = false;
                 _fisher = value;
                 textFisherName.Text = _fisher.Name;
-                foreach(var boat  in _fisher.Vessels)
+                foreach (var boat in _fisher.Vessels)
                 {
                     listBoxBoats.Items.Add(boat);
+                }
+                switch(_fisher.DeviceType)
+                {
+                    case DeviceType.DeviceTypeNone:
+                        rbNone.IsChecked = true;
+                        break;
+                    case DeviceType.DeviceTypeGPS:
+                        rbGPS.IsChecked = true;
+                        if(_fisher.GPS!=null)
+                        {
+                            cboDevice.SelectedItem = _fisher.GPS;
+                        }
+                        break;
+                    case DeviceType.DeviceTypePhone:
+                        rbPhone.IsChecked = true;
+                        break;
+                }
+                if(_fisher.LandingSite!=null)
+                {
+                    cboLandingSite.SelectedItem = _fisher.LandingSite;
                 }
             }
         }
 
         private void OnListDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            EditSingleItemDialog esd = new EditSingleItemDialog();
-            string copyOfItemToEdit = listBoxBoats.SelectedItems[0].ToString();
-            esd.ItemForEditing = listBoxBoats.SelectedItems[0].ToString();
-            esd.ItemType = "name of boat";
-            if ((bool)esd.ShowDialog())
+            switch (((ListBox)sender).Name)
             {
-                foreach(var item in listBoxBoats.Items)
-                {
-                    if(item.ToString()==copyOfItemToEdit)
+                case "listBoxBoats":
+                    EditSingleItemDialog esd = new EditSingleItemDialog();
+                    string copyOfItemToEdit = listBoxBoats.SelectedItems[0].ToString();
+                    esd.ItemForEditing = listBoxBoats.SelectedItems[0].ToString();
+                    esd.ItemType = "name of boat";
+                    if ((bool)esd.ShowDialog())
                     {
-                        listBoxBoats.Items.Remove(item);
-                        break;
+                        foreach (var item in listBoxBoats.Items)
+                        {
+                            if (item.ToString() == copyOfItemToEdit)
+                            {
+                                listBoxBoats.Items.Remove(item);
+                                break;
+                            }
+                        }
+                        listBoxBoats.Items.Add(esd.ItemForEditing);
                     }
-                }
-                listBoxBoats.Items.Add(esd.ItemForEditing);
+                    break;
+                case "listBoxGears":
+
+                    break;
             }
+
+        }
+
+        private void OnCheckChanged(object sender, RoutedEventArgs e)
+        {
+            cboDevice.IsEnabled = false;    
+            cboDevice.Items.Clear();
+
+
+            if ((bool)rbGPS.IsChecked)
+            {
+                foreach (var gps in Entities.GPSViewModel.GPSCollection.OrderBy(t => t.DeviceName))
+                {
+                    cboDevice.Items.Add(gps);
+                }
+                cboDevice.IsEnabled = true;
+
+            }
+            else if ((bool)rbPhone.IsChecked)
+            {
+                foreach (var name in Entities.CTXFileViewModel.GetUserNames())
+                {
+                    cboDevice.Items.Add(name);
+                }
+                cboDevice.IsEnabled = true;
+            }
+       
+
+
         }
     }
 }
