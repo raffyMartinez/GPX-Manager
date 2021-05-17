@@ -37,13 +37,13 @@
         <ToolBarTray Grid.Row="1" Height="34">
             <ToolBar Height="32" Width="Auto" >
                 <Button x:Name="buttonAdd" Click="OnToolbarButtonClick" ToolTip="Layers">
-                    <Image Source="layers new.png" />
+                    <Image Source="pack://application:,,,/Resources/layers new.png" />
                 </Button>
                 <Button x:Name="buttonRemove" Click="OnToolbarButtonClick" ToolTip="Layers">
-                    <Image Source="layer remove.png" />
+                    <Image Source="pack://application:,,,/Resources/layer remove.png" />
                 </Button>
                 <Button x:Name="buttonAttributes" Click="OnToolbarButtonClick" ToolTip="Layers">
-                    <Image Source="/GPXManager;component/views/table1.png" />
+                    <Image Source="pack://application:,,,/Resources/table1.png" />
                 </Button>
             </ToolBar>
         </ToolBarTray>

@@ -92,7 +92,14 @@ namespace GPXManager.entities
                 Settings = Settings.Read(_DefaultSettingspath);
             }
 
-
+            if(Settings.SpeedThresholdForRetrieving==null)
+            {
+                Settings.SpeedThresholdForRetrieving = 50;
+            }
+            if(Settings.GearRetrievingMinLength==null)
+            {
+                Settings.GearRetrievingMinLength = 500;
+            }
             DoAppProceed();
 
 
@@ -106,6 +113,8 @@ namespace GPXManager.entities
                 Settings.ComputerGPXFolder != null &&
                 Settings.ComputerGPXFolder.Length > 0 &&
                 Directory.Exists(Settings.ComputerGPXFolder) &&
+                Directory.Exists(Settings.CTXDownloadFolder) &&
+                Directory.Exists(Settings.CTXBackupFolder) &&
                 Settings.DeviceGPXFolder !=null && 
                 Settings.DeviceGPXFolder.Length > 0;    
             if (AppProceed)
@@ -122,7 +131,7 @@ namespace GPXManager.entities
         public static bool SetSettings(string computerGPXFolder, string deviceGPXFolder, 
               string backendPath, int hoursGMTOffset, string bingAPIKey, int countLatestTrip,
               int countLatestGPXFiles, string logImagesFolder, string pathToCyertrackerExe, 
-              string ctxBackupPath, string ctxDownloadFolder)
+              string ctxBackupPath, string ctxDownloadFolder, int speedThreshold, int MinGearRetrievingLength)
         {
             Settings = new Settings
             {
@@ -136,7 +145,9 @@ namespace GPXManager.entities
                 LogImagesFolder = logImagesFolder,
                 PathToCybertrackerExe = pathToCyertrackerExe,
                 CTXBackupFolder = ctxBackupPath,
-                CTXDownloadFolder = ctxDownloadFolder
+                CTXDownloadFolder = ctxDownloadFolder,
+                SpeedThresholdForRetrieving = speedThreshold,
+                GearRetrievingMinLength = MinGearRetrievingLength,
             };
 
             SaveGlobalSettings();

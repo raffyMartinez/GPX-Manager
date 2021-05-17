@@ -43,10 +43,10 @@
             <ListBox Width="220" Height="100" x:Name="listBoxBoats" MouseDoubleClick="OnListDoubleClick"  Margin="0,0,0,0" HorizontalAlignment="Left"/>
             <StackPanel Grid.Column="1" Grid.Row="1">
                 <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDeleteBoat" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                    <Image Source="delete.png"/>
+                    <Image Source="pack://application:,,,/Resources/delete.png"/>
                 </Button>
                 <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAddBoat" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                    <Image Source="add.png"/>
+                    <Image Source="pack://application:,,,/Resources/add.png"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -59,10 +59,10 @@
             <ListBox Grid.Row="3" Width="220" Height="100" x:Name="listBoxGears" HorizontalAlignment="Left"/>
             <StackPanel Grid.Row="3" Grid.Column="1">
                 <Button  Height="25" Width="25" Margin="0 5" x:Name="buttonDeleteGears" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                    <Image Source="delete.png"/>
+                    <Image Source="pack://application:,,,/Resources/delete.png"/>
                 </Button>
                 <Button Height="25" Width="25" Margin="0 5" x:Name="buttonAddGears" Click="OnButtonClick" FontSize="16" FontWeight="Bold" BorderBrush="{x:Null}" Background="{x:Null}">
-                    <Image Source="add.png"/>
+                    <Image Source="pack://application:,,,/Resources/add.png"/>
                 </Button>
             </StackPanel>
         </Grid>
@@ -72,10 +72,10 @@
 
         <WrapPanel Grid.Row="7" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.ColumnSpan="2">
             <Button x:Name="buttonCancel"  Click="OnButtonClick" Height="40" Width="40" Margin="10 0"  BorderBrush="{x:Null}" Background="{x:Null}">
-                <Image Source="cancel.png"/>
+                <Image Source="pack://application:,,,/Resources/cancel.png"/>
             </Button>
             <Button x:Name="buttonOk" Click="OnButtonClick" Height="40" Width="40" Margin="10 0 25 0" BorderBrush="{x:Null}" Background="{x:Null}">
-                <Image Source="ok.png"/>
+                <Image Source="pack://application:,,,/Resources/ok2.png"/>
             </Button>
         </WrapPanel>
     </Grid>

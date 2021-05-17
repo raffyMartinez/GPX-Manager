@@ -15,6 +15,8 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>false</Deterministic>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -29,8 +31,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -119,9 +119,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="entities\CTXFIle.cs" />
+    <Compile Include="entities\CTXFile.cs" />
     <Compile Include="entities\CTXFileRepository.cs" />
     <Compile Include="entities\CTXFileViewModel.cs" />
+    <Compile Include="entities\CTXUserSummary.cs" />
     <Compile Include="entities\DetectDeviceEventArg.cs" />
     <Compile Include="entities\EntitiesChangedEventArg.cs" />
     <Compile Include="entities\FileSizeFormatExtension.cs" />
@@ -163,6 +164,7 @@
     <Compile Include="entities\mapping\extension.cs" />
     <Compile Include="entities\mapping\globalMapping.cs" />
     <Compile Include="entities\mapping\GPXMappingManager.cs" />
+    <Compile Include="entities\mapping\Grid25.cs" />
     <Compile Include="entities\mapping\LabelProperty.cs" />
     <Compile Include="entities\mapping\LayerEventArg.cs" />
     <Compile Include="entities\mapping\LineWidthFix.cs" />
@@ -175,6 +177,7 @@
     <Compile Include="entities\mapping\PointLayerSymbologyHandler.cs" />
     <Compile Include="entities\mapping\ShapefileAttributeTableManager.cs" />
     <Compile Include="entities\mapping\ShapefileFactory.cs" />
+    <Compile Include="entities\mapping\ShapefileFieldSummary.cs" />
     <Compile Include="entities\mapping\ShapefileLabelHandler.cs" />
     <Compile Include="entities\mapping\ShapefileLayerHelper.cs" />
     <Compile Include="entities\mapping\TripMappingManager.cs" />
@@ -183,6 +186,9 @@
     </Compile>
     <Compile Include="entities\mapping\Views\MapLayersWindow.xaml.cs">
       <DependentUpon>MapLayersWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="entities\mapping\Views\SelectedGridRowsSummaryWindow.xaml.cs">
+      <DependentUpon>SelectedGridRowsSummaryWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="entities\mapping\Views\SelectTileProviderWindow.xaml.cs">
       <DependentUpon>SelectTileProviderWindow.xaml</DependentUpon>
@@ -216,6 +222,9 @@
     <Compile Include="entities\WaypointViewModel.cs" />
     <Compile Include="views\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\CTXFileDetailsWindow.xaml.cs">
+      <DependentUpon>CTXFileDetailsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\EditBrandModelWindow.xaml.cs">
       <DependentUpon>EditBrandModelWindow.xaml</DependentUpon>
@@ -274,6 +283,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="entities\mapping\Views\SelectedGridRowsSummaryWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="entities\mapping\Views\SelectTileProviderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -314,6 +327,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="views\AboutWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\CTXFileDetailsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -406,10 +423,18 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="gpx_icon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\gpx_icon.ico" />
+    <Resource Include="Resources\add.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\delete.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\gpx_icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\upload_cloud.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -447,229 +472,185 @@
     <Folder Include="Images\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\layers.png" />
+    <Resource Include="Resources\layers.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\new layer.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\layers new.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="zoom+.bmp" />
+    <Resource Include="Resources\layers new.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\zoom+.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\gps2.png" />
+    <Resource Include="Resources\gps2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\layers.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\layers new.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\zoom+.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\zoom-.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\move.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\table.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\gps2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\select.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\select_none.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\select_none1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\select_none1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\select1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\table1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\layers new1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\layers1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\layers-new1.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\track.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\ruler.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\archive.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\calendar.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\upload to cloud.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\gears.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\exit.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\calendar2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="exit.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="gears.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="upload to cloud.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="calendar2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="uisb.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="archive.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="handheld gps.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="map screen.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="globe.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="views\data screen.png" />
+    <Resource Include="Resources\select_none1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="entities\mapping\Views\layers new.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="entities\mapping\Views\layer remove.png" />
+    <Resource Include="Resources\gpx_logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="map itenerary.png" />
+    <Resource Include="Resources\select1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\map screen grey.png" />
+    <Resource Include="Resources\table1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="calendar3.png" />
+    <Resource Include="Resources\track.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="eject usb.png" />
+    <Resource Include="Resources\zoom-.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="entities\mapping\Views\move to right.png" />
+    <Resource Include="Resources\zoom+.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="entities\mapping\Views\move to left.png" />
+    <Resource Include="Resources\map screen grey.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="question.png" />
+    <Resource Include="Resources\move.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\gpx_logo.png" />
+    <Resource Include="Resources\ruler.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\gpx_logo.png" />
+    <Resource Include="Resources\exit.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="navigation path.png" />
+    <Resource Include="Resources\map screen.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="file image.png" />
+    <Resource Include="Resources\archive.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\rotate left.png" />
+    <Resource Include="Resources\ctx_folder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\rotate right.png" />
+    <Resource Include="Resources\eject usb.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\flip vertical.png" />
+    <Resource Include="Resources\rotate left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="person.png" />
+    <Resource Include="Resources\rotate right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\add.png" />
+    <Resource Include="Resources\station.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\delete.png" />
+    <Resource Include="Resources\uisb.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\cancel.png" />
+    <Resource Include="Resources\calendar3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\ok.png" />
+    <Resource Include="Resources\person.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\tags.png" />
+    <Resource Include="Resources\file image.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="views\tags gray.png" />
+    <Resource Include="Resources\gears.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="rotate left.png" />
+    <Resource Include="Resources\question.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="rotate right.png" />
+    <Resource Include="Resources\openfolder.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="flip vertical.png" />
+    <Resource Include="Resources\flip vertical.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="tags gray.png" />
+    <Resource Include="Resources\tags gray.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="cancel.png" />
+    <Resource Include="Resources\prevent2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="openfolder.png" />
+    <Resource Include="Resources\ok2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="prevent.png" />
+    <Resource Include="Resources\navigation path.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="prevent2.png" />
+    <Resource Include="Resources\cancel.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="ok2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="ftp_folder.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="ctx_folder.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="station.png" />
+    <Resource Include="Resources\layer remove.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\WinSCP.5.17.10\build\WinSCP.targets" Condition="Exists('..\packages\WinSCP.5.17.10\build\WinSCP.targets')" />

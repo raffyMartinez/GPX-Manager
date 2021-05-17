@@ -9,7 +9,7 @@
     <Grid>
         <StackPanel>
             <Label Content="GPX Manager" HorizontalAlignment="Center" Margin="0,50,0 20" FontSize="28" FontWeight="Bold"/>
-            <Image Height="100" Width="100" Source="gpx_logo.png" />
+            <Image Height="100" Width="100" Source="pack://application:,,,/Resources/gpx_logo.png" />
             <Label Content="Written by:" HorizontalAlignment="Center" FontSize="14" Margin="0 20 0 0"/>
             <Label Content="Rafael Martinez" HorizontalAlignment="Center" FontSize="16" FontWeight="Bold"/>
             <Label Content="raffy.martinez@gmail.com" HorizontalAlignment="Center" FontSize="14" Margin="0" Height="30"/>

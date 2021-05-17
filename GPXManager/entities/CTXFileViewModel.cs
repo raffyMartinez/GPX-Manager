@@ -17,16 +17,16 @@ namespace GPXManager.entities
         public delegate void XMLFileFromCTX(CTXFileViewModel s, TransferEventArgs e);
         public event XMLFileFromCTX XMLFileFromCTXCreated;
         private Dictionary<string, string> _sightingAttributesDictionary = new Dictionary<string, string>();
-        public ObservableCollection<CTXFIle> CTXFileCollection { get; set; }
+        public ObservableCollection<CTXFile> CTXFileCollection { get; set; }
         private CTXFileRepository ctxFileRepo { get; set; }
         public CTXFileViewModel()
         {
             ctxFileRepo = new CTXFileRepository();
-            CTXFileCollection = new ObservableCollection<CTXFIle>(ctxFileRepo.CTXFiles);
+            CTXFileCollection = new ObservableCollection<CTXFile>(ctxFileRepo.CTXFiles);
             CTXFileCollection.CollectionChanged += CTXFileCollection_CollectionChanged;
         }
 
-        public CTXFIle CurrentEntity { get; set; }
+        public CTXFile CurrentEntity { get; set; }
 
         private void CTXFileCollection_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -36,7 +36,7 @@ namespace GPXManager.entities
                 case NotifyCollectionChangedAction.Add:
                     {
                         int newIndex = e.NewStartingIndex;
-                        CTXFIle newItem = CTXFileCollection[newIndex];
+                        CTXFile newItem = CTXFileCollection[newIndex];
                         if (ctxFileRepo.Add(newItem))
                         {
                             CurrentEntity = newItem;
@@ -47,14 +47,14 @@ namespace GPXManager.entities
 
                 case NotifyCollectionChangedAction.Remove:
                     {
-                        List<CTXFIle> tempListOfRemovedItems = e.OldItems.OfType<CTXFIle>().ToList();
+                        List<CTXFile> tempListOfRemovedItems = e.OldItems.OfType<CTXFile>().ToList();
                         _editSucceeded = ctxFileRepo.Delete(tempListOfRemovedItems[0].RowID);
                     }
                     break;
 
                 case NotifyCollectionChangedAction.Replace:
                     {
-                        List<CTXFIle> tempList = e.NewItems.OfType<CTXFIle>().ToList();
+                        List<CTXFile> tempList = e.NewItems.OfType<CTXFile>().ToList();
                         _editSucceeded = ctxFileRepo.Update(tempList[0]);
                     }
                     break;
@@ -66,11 +66,33 @@ namespace GPXManager.entities
             return ctxFileRepo.LastError;
         }
 
+
+
+        public List<CTXFileSummaryView> GetCTXFilesSummaryView(DateTime downloadDate)
+        {
+            List<CTXFileSummaryView> files = new List<CTXFileSummaryView>();
+            foreach (var item in CTXFileCollection
+                .Where(t => t.DateAdded > downloadDate && t.DateAdded < downloadDate.AddDays(1))
+                .OrderBy(t => t.DateAdded))
+            {
+                files.Add(new CTXFileSummaryView(item));
+            }
+            return files;
+        }
+        public List<string> GetCTXDownloadMonthYear()
+        {
+            HashSet<string> list = new HashSet<string>();
+            foreach (var item in CTXFileCollection.OrderBy(t => t.DateAdded))
+            {
+                list.Add(item.DateAdded.ToString("MMM-dd-yyyy"));
+            }
+            return list.ToList();
+        }
         public List<string> GetUserNames()
         {
             var grouped = CTXFileCollection
                 .OrderBy(t => t.UserName)
-                .Where(t => t.UserName.Length > 0)
+                .Where(t => t.UserName != null && t.UserName.Length > 0)
                 .GroupBy(t => t.UserName)
                 .Select(g => new { user = g.Key });
 
@@ -81,7 +103,7 @@ namespace GPXManager.entities
             }
             return list;
         }
-        public List<CTXFIle> FilesInServer { get; private set; }
+        public List<CTXFile> FilesInServer { get; private set; }
 
         public async Task<bool> GetFileListInServerAsync(string url, string user, string pwd)
         {
@@ -100,11 +122,11 @@ namespace GPXManager.entities
         }
 
 
-        public async Task DownloadFromServerAsync(List<CTXFIle> filesToDownload, string downloadlocation)
+        public async Task DownloadFromServerAsync(List<CTXFile> filesToDownload, string downloadlocation)
         {
             await Task.Run(() => DownloadFromServer(filesToDownload, downloadlocation));
         }
-        private void DownloadFromServer(List<CTXFIle> filesToDownload, string downloadlocation)
+        private void DownloadFromServer(List<CTXFile> filesToDownload, string downloadlocation)
         {
             ctxFileRepo.XMLFileFromCTXCreated += CtxFileRepo_XMLFileFromCTXCreated;
             ctxFileRepo.DownloadFromServer(filesToDownload, downloadlocation);
@@ -135,6 +157,55 @@ namespace GPXManager.entities
             }
         }
 
+        public List<CTXFileSummaryView>LatestTripsOfUser(string userName)
+        {
+            var list = new List<CTXFileSummaryView>();
+            if (Global.Settings.LatestTripCount != null)
+            {
+                foreach (var item in CTXFileCollection.Where(t=>t.UserName==userName).OrderByDescending(t => t.DateStart).Take((int)Global.Settings.LatestTripCount).ToList())
+                {
+                    list.Add(new CTXFileSummaryView(item));
+                }
+            }
+            else
+            {
+                foreach(var item in CTXFileCollection.Where(t=>t.UserName==userName).OrderByDescending(t => t.DateStart).Take(5).ToList())
+                {
+                    list.Add(new CTXFileSummaryView(item));
+                }
+            }
+            return list;
+        }
+
+        public List<CTXUserSummary> GetUserSummary()
+        {
+            var userSummaries = new List<CTXUserSummary>();
+            var grouped = CTXFileCollection
+                .OrderBy(t => t.UserName)
+                .Where(t => t.UserName != null && t.UserName.Length > 0)
+                .GroupBy(t => t.UserName)
+                .Select(g => new { user = g.Key });
+
+            foreach (var item in grouped)
+            {
+                var list = CTXFileCollection.Where(t => t.UserName == item.user).ToList(); ;
+
+                if(item.user=="EBM 3")
+                {
+
+                }
+                CTXUserSummary summ = new CTXUserSummary
+                {
+                    DateOfFirstTrip = (DateTime)list.Min(t => t.DateStart).Value,
+                    DateOfLatestTrip = (DateTime)list.Max(t => t.DateStart).Value,
+                    User = item.user,
+                    TotalNumberOfTrips = list.Count
+                };
+                userSummaries.Add(summ);
+            }
+
+            return userSummaries;
+        }
         private SightingAttributes GetAttributes(string xml)
         {
             SightingAttributes sa = new SightingAttributes();
@@ -160,13 +231,14 @@ namespace GPXManager.entities
             sa.DeviceID = doc.SelectSingleNode("//A[@N='DeviceId']").Attributes["V"].Value;
             if (departure != null)
             {
-                var departureDate = departure.ParentNode.SelectSingleNode("//A[@N='Date']").Attributes["V"].Value;
-                var departureDTime = departure.ParentNode.SelectSingleNode("//A[@N='Time']").Attributes["V"].Value;
+                var departureDate = departure.ParentNode.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                var departureDTime = departure.ParentNode.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
 
-                sa.User = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode("//A[@N='SelectedUser']").Attributes["V"].Value];
-                sa.LandingSite = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode("//A[@N='SelectedLandingSite']").Attributes["V"].Value];
-                sa.Gear = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode("//A[@N='Selected gear']").Attributes["V"].Value];
+                sa.User = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode(".//A[@N='SelectedUser']").Attributes["V"].Value];
+                sa.LandingSite = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode(".//A[@N='SelectedLandingSite']").Attributes["V"].Value];
+                sa.Gear = _sightingAttributesDictionary[departure.ParentNode.SelectSingleNode(".//A[@N='Selected gear']").Attributes["V"].Value];
                 sa.Start = DateTime.Parse(departureDate) + DateTime.Parse(departureDTime).TimeOfDay;
+                sa.NumberOfTrips = doc.SelectNodes($"//A[@V='{departureKey}']").Count;
                 if (doc.SelectSingleNode("//A[@N='AppVersion']") != null)
                 {
                     sa.AppVersion = doc.SelectSingleNode("//A[@N='AppVersion']").Attributes["V"].Value;
@@ -178,37 +250,40 @@ namespace GPXManager.entities
 
                 if (sa.LandingSite.Contains("Other"))
                 {
-                    sa.LandingSite = departure.ParentNode.SelectSingleNode("//A[@N='OtherLandingSite']").Attributes["V"].Value;
+                    sa.LandingSite = departure.ParentNode.SelectSingleNode(".//A[@N='OtherLandingSite']").Attributes["V"].Value;
                 }
 
                 if (sa.Gear.Contains("Other"))
                 {
-                    sa.Gear = departure.ParentNode.SelectSingleNode("//A[@N='OtherGear']").Attributes["V"].Value;
+                    sa.Gear = departure.ParentNode.SelectSingleNode(".//A[@N='OtherGear']").Attributes["V"].Value;
                 }
 
                 if (sa.User.Contains("Other"))
                 {
-                    sa.User = departure.ParentNode.SelectSingleNode("//A[@N='OtherUser']").Attributes["V"].Value;
+                    sa.User = departure.ParentNode.SelectSingleNode(".//A[@N='OtherUser']").Attributes["V"].Value;
                 }
 
 
                 if (returnHome != null)
                 {
-                    string returnDate = "";
-                    string returnTime = "";
+                    //string returnDate = "";
+                    //string returnTime = "";
 
-                    foreach (XmlNode node in returnHome.ParentNode.ChildNodes)
-                    {
-                        if (node.OuterXml.Contains("Date"))
-                        {
-                            returnDate = node.Attributes["V"].Value;
-                        }
+                    var returnDate = returnHome.ParentNode.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                    var returnTime = returnHome.ParentNode.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
 
-                        if (node.OuterXml.Contains("Time"))
-                        {
-                            returnTime = node.Attributes["V"].Value;
-                        }
-                    }
+                    //foreach (XmlNode node in returnHome.ParentNode.ChildNodes)
+                    //{
+                    //    if (node.OuterXml.Contains("Date"))
+                    //    {
+                    //        returnDate = node.Attributes["V"].Value;
+                    //    }
+
+                    //    if (node.OuterXml.Contains("Time"))
+                    //    {
+                    //        returnTime = node.Attributes["V"].Value;
+                    //    }
+                    //}
                     sa.End = DateTime.Parse(returnDate) + DateTime.Parse(returnTime).TimeOfDay;
                 }
 
@@ -227,18 +302,20 @@ namespace GPXManager.entities
                 string ptTime = "";
                 string ptDate = "";
 
-                foreach (XmlNode nd in tracknodes[0].ChildNodes)
-                {
-                    if (nd.OuterXml.Contains("Date"))
-                    {
-                        ptDate = nd.Attributes["V"].Value;
-                    }
+                ptDate = tracknodes[0].SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                ptTime = tracknodes[0].SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
+                //foreach (XmlNode nd in tracknodes[0].ChildNodes)
+                //{
+                //    if (nd.OuterXml.Contains("Date"))
+                //    {
+                //        ptDate = nd.Attributes["V"].Value;
+                //    }
 
-                    if (nd.OuterXml.Contains("Time"))
-                    {
-                        ptTime = nd.Attributes["V"].Value;
-                    }
-                }
+                //    if (nd.OuterXml.Contains("Time"))
+                //    {
+                //        ptTime = nd.Attributes["V"].Value;
+                //    }
+                //}
 
                 sa.TrackTimeStampStart = DateTime.Parse(ptDate) + DateTime.Parse(ptTime).TimeOfDay;
 
@@ -246,18 +323,20 @@ namespace GPXManager.entities
                 if (sa.TrackPointCount > 1)
                 {
 
-                    foreach (XmlNode nd in tracknodes[tracknodes.Count - 1].ChildNodes)
-                    {
-                        if (nd.OuterXml.Contains("Date"))
-                        {
-                            ptDate = nd.Attributes["V"].Value;
-                        }
+                    //foreach (XmlNode nd in tracknodes[tracknodes.Count - 1].ChildNodes)
+                    //{
+                    //    if (nd.OuterXml.Contains("Date"))
+                    //    {
+                    //        ptDate = nd.Attributes["V"].Value;
+                    //    }
 
-                        if (nd.OuterXml.Contains("Time"))
-                        {
-                            ptTime = nd.Attributes["V"].Value;
-                        }
-                    }
+                    //    if (nd.OuterXml.Contains("Time"))
+                    //    {
+                    //        ptTime = nd.Attributes["V"].Value;
+                    //    }
+                    //}
+                    ptDate = tracknodes[tracknodes.Count-1].SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                    ptTime = tracknodes[tracknodes.Count-1].SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
                     sa.TrackTimeStampEnd = DateTime.Parse(ptDate) + DateTime.Parse(ptTime).TimeOfDay;
                 }
             }
@@ -273,7 +352,7 @@ namespace GPXManager.entities
                 {
                     string xml = sr.ReadToEnd();
                     var sa = GetAttributes(xml);
-                    CTXFIle f = new CTXFIle
+                    CTXFile f = new CTXFile
                     {
                         RowID = NextRecordNumber,
                         CTXFileName = Path.GetFileName(e.FileName),
@@ -288,6 +367,7 @@ namespace GPXManager.entities
                         LandingSite = sa.LandingSite,
                         DateStart = sa.Start,
                         DateEnd = sa.End,
+                        NumberOfTrips = sa.NumberOfTrips,
                         TrackPtCount = sa.TrackPointCount,
                         TrackTimeStampStart = sa.TrackTimeStampStart,
                         TrackTimeStampEnd = sa.TrackTimeStampEnd,
@@ -303,7 +383,7 @@ namespace GPXManager.entities
             }
         }
 
-        public bool AddRecordToRepo(CTXFIle f)
+        public bool AddRecordToRepo(CTXFile f)
         {
             if (f == null)
                 throw new ArgumentNullException("Error: The argument is Null");
@@ -313,7 +393,7 @@ namespace GPXManager.entities
             return _editSucceeded;
         }
 
-        public bool UpdateRecordInRepo(CTXFIle f)
+        public bool UpdateRecordInRepo(CTXFile f)
         {
             if (f == null)
                 throw new Exception("Error: The argument is Null");

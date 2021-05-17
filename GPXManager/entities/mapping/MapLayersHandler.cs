@@ -35,9 +35,28 @@ namespace GPXManager.entities.mapping
         private PointLayerSymbologyHandler _sfSymbologyHandler;
 
         private bool _tilesVisible = false;
+        private List<int> _selectedShapeIndexes;
 
 
+        public List<int> SelectedShapesIndexes()
+        {
+            if (_currentMapLayer.LayerType == "ShapefileClass")
+            {
+                _selectedShapeIndexes = new List<int>();
+                var sf = (Shapefile)_currentMapLayer.LayerObject;
+                for (int x = 0; x < sf.NumShapes; x++)
+                {
+                    if (sf.ShapeSelected[x])
+                    {
+                        _selectedShapeIndexes.Add(x);
+                    }
+                }
+                return _selectedShapeIndexes;
+            }
 
+            return null;
+
+        }
         public bool TilesVisible
         {
             get { return _tilesVisible; }
@@ -81,7 +100,7 @@ namespace GPXManager.entities.mapping
         public delegate void LayerVisibilityChanged(MapLayersHandler s, LayerEventArg e);
         public event LayerNameUpdate OnLayerVisibilityChanged;
 
-        
+
         public void UpdateCurrentLayerName(string layerName)
         {
             if (OnLayerNameUpdate != null)
@@ -124,7 +143,7 @@ namespace GPXManager.entities.mapping
             _axmap.Redraw();
         }
 
-        public List<MapLayer>MapLayers
+        public List<MapLayer> MapLayers
         {
             get { return MapLayerDictionary.Values.OrderBy(t => t.LayerPosition).ToList(); }
         }
@@ -285,12 +304,12 @@ namespace GPXManager.entities.mapping
         {
             get
             {
-                foreach(var item in MapLayerDictionary.Values)
+                foreach (var item in MapLayerDictionary.Values)
                 {
-                    if(item.LayerType=="ShapefileClass")
+                    if (item.LayerType == "ShapefileClass")
                     {
                         var sf = item.LayerObject as Shapefile;
-                        if(sf.NumSelected>0)
+                        if (sf.NumSelected > 0)
                         {
                             return true;
                         }
@@ -544,7 +563,7 @@ namespace GPXManager.entities.mapping
         /// Remove a layer using layer name
         /// </summary>
         /// <param name="layerName"></param>
-        public bool  RemoveLayer(string layerName)
+        public bool RemoveLayer(string layerName)
         {
             foreach (var item in MapLayerDictionary)
             {
@@ -561,7 +580,7 @@ namespace GPXManager.entities.mapping
         {
             if (LayerDictionary.Count > 0)
             {
-                List<int> layerHandles= new List<int>();
+                List<int> layerHandles = new List<int>();
                 int counter = 0;
                 foreach (var item in LayerDictionary.Values)
                 {
@@ -585,9 +604,9 @@ namespace GPXManager.entities.mapping
                         LayerRemoved(this, lp);
                     }
                     counter++;
-                    
+
                 }
-                
+
 
                 if (counter > 0)
                 {
@@ -632,9 +651,9 @@ namespace GPXManager.entities.mapping
             }
         }
 
-        public void LayersSequence(List<MapLayerSequence>layersSequnce)
+        public void LayersSequence(List<MapLayerSequence> layersSequnce)
         {
-            foreach(MapLayerSequence mls in layersSequnce)
+            foreach (MapLayerSequence mls in layersSequnce)
             {
                 MapControl.MoveLayer(MapControl.get_LayerPosition(mls.MapLayer.Handle), mls.Sequence);
                 MapLayerDictionary.Values.Where(t => t.Handle == mls.MapLayer.Handle).FirstOrDefault().LayerPosition = mls.Sequence;
@@ -733,7 +752,7 @@ namespace GPXManager.entities.mapping
                                     shapefile = sf;
                                 }
                             }
-                            if (AddLayer(shapefile, layerName, layerKey:layerkey) < 0)
+                            if (AddLayer(shapefile, layerName, layerKey: layerkey) < 0)
                             {
                                 success = false;
                                 errMsg = "Failed to add layer to map";
@@ -754,7 +773,7 @@ namespace GPXManager.entities.mapping
                             success = image != null;
                             if (success)
                             {
-                                if (AddLayer(image,layerKey:layerkey) < 0)
+                                if (AddLayer(image, layerKey: layerkey) < 0)
                                 {
                                     success = false;
                                     errMsg = "Failed to add layer to map";
@@ -773,7 +792,7 @@ namespace GPXManager.entities.mapping
                         success = grid.Open(fileName, GridDataType.DoubleDataType, false, GridFileType.UseExtension, null);
                         if (success)
                         {
-                            AddLayer(grid, Path.GetFileName(fileName), true, true,layerKey:layerkey);
+                            AddLayer(grid, Path.GetFileName(fileName), true, true, layerKey: layerkey);
                         }
                     }
                 }
@@ -872,10 +891,10 @@ namespace GPXManager.entities.mapping
         /// </summary>
         /// <param name="sf"></param>
         /// <returns></returns>
-        public int AddLayer(Shapefile sf, string layerName = "", bool isVisible = true, bool uniqueLayer = false, 
-            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey="", bool rejectIfExisting=false)
+        public int AddLayer(Shapefile sf, string layerName = "", bool isVisible = true, bool uniqueLayer = false,
+            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey = "", bool rejectIfExisting = false)
         {
-            if(rejectIfExisting && layerName.Length>0 &&  Exists(layerName))
+            if (rejectIfExisting && layerName.Length > 0 && Exists(layerName))
             {
                 var handle = get_MapLayer(layerName).Handle;
                 MapLayerDictionary[handle].LayerObject = sf;
@@ -886,7 +905,7 @@ namespace GPXManager.entities.mapping
                 RemoveLayer(layerName);
             }
             var h = _axmap.AddLayer(sf, isVisible);
-             if (h >= 0)
+            if (h >= 0)
             {
                 if (layerName.Length == 0)
                 {
@@ -895,7 +914,7 @@ namespace GPXManager.entities.mapping
                 _axmap.set_LayerName(h, layerName);
                 _axmap.set_LayerKey(h, layerKey);
                 _currentMapLayer = SetMapLayer(h, layerName, isVisible, true, sf.GeoProjection, "ShapefileClass", sf.Filename);
-                _currentMapLayer.LayerKey = layerKey; 
+                _currentMapLayer.LayerKey = layerKey;
                 _currentMapLayer.MappingMode = mappingMode;
 
 
@@ -943,7 +962,7 @@ namespace GPXManager.entities.mapping
         /// </summary>
         /// <param name="image"></param>
         /// <returns></returns>
-        public int AddLayer(MapWinGIS.Image image, string layerName = "", bool isVisible = true, string layerKey="")
+        public int AddLayer(MapWinGIS.Image image, string layerName = "", bool isVisible = true, string layerKey = "")
         {
             var h = _axmap.AddLayer(image, isVisible);
             if (h >= 0)
@@ -975,8 +994,8 @@ namespace GPXManager.entities.mapping
         /// <param name="showInLayerUI"></param>
         /// <param name="layerHandle"></param>
         /// <returns></returns>
-        public int AddLayer(object layer, string layerName, bool visible, bool showInLayerUI, string fileName = "", 
-            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey="",bool rejectIfExisting=false)
+        public int AddLayer(object layer, string layerName, bool visible, bool showInLayerUI, string fileName = "",
+            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey = "", bool rejectIfExisting = false)
         {
 
             if (rejectIfExisting && layerName.Length > 0 && Exists(layerName))
@@ -1174,7 +1193,7 @@ namespace GPXManager.entities.mapping
 
         public void MakeLayerSelected(MapLayer mapLayer)
         {
-            switch(mapLayer.LayerType)
+            switch (mapLayer.LayerType)
             {
                 case "ShapefileClass":
                     Shapefile currentShapefile = (Shapefile)mapLayer.LayerObject;
@@ -1183,7 +1202,7 @@ namespace GPXManager.entities.mapping
                     currentShapefile.SelectionDrawingOptions.PointSize = 12;
                     currentShapefile.SelectionDrawingOptions.PointShape = tkPointShapeType.ptShapeCircle;
                     currentShapefile.SelectAll();
-                    
+
                     break;
 
             }

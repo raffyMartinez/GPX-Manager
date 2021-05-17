@@ -79,14 +79,14 @@
                 </MenuItem>
                 <MenuItem Header="Close" x:Name="menuCloseApp" Click="OnMenuClick" >
                     <MenuItem.Icon>
-                        <Image Source="exit.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/exit.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="Edit">
                 <MenuItem Header="Scan USB storage" x:Name="menuScanDevices" Click="OnMenuClick">
                     <MenuItem.Icon>
-                        <Image Source="uisb.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/uisb.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Browse GPX folder in device" x:Name="menuGPXFolder" Click="OnMenuClick" Visibility="Collapsed"/>
@@ -94,77 +94,81 @@
                 <MenuItem Header="GPS models" x:Name="menuGPSModels" Click="OnMenuClick" Visibility="Collapsed"/>
                 <MenuItem Header="Trip calendar" x:Name="menuTripCalendar" Click="OnMenuClick" Visibility="Visible">
                     <MenuItem.Icon>
-                        <Image Source="calendar3.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/calendar3.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Archive" x:Name="menuArchive" Click="OnMenuClick" Visibility="Visible">
                     <MenuItem.Icon>
-                        <Image Source="archive.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/archive.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Settings" x:Name="menuOptions" Click="OnMenuClick" Visibility="Visible">
                     <MenuItem.Icon>
-                        <Image Source="gears.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/gears.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Clear tables" x:Name="menuClearTables" Click="OnMenuClick" Visibility="Collapsed"/>
                 <MenuItem Header="Map" x:Name="menuMapper" Click="OnMenuClick" Visibility="Visible">
                     <MenuItem.Icon>
-                        <Image Source="map screen.png" OpacityMask="White" />
+                        <Image Source="pack://application:,,,/Resources/map screen.png" OpacityMask="White" />
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="Help">
-                <MenuItem Header="About" x:Name="menuHelpAbout" Click="OnMenuClick"/>
+                <MenuItem Header="About" x:Name="menuHelpAbout" Click="OnMenuClick">
+                    <MenuItem.Icon>
+                        <Image Source="pack://application:,,,/Resources/question.png" OpacityMask="White" />
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
         </Menu>
 
         <!--Toolbar row -->
         <ToolBarTray Grid.Row="1" Height="34">
             <ToolBar Height="32" Width="Auto" >
-                <Button x:Name="buttonMap" Click="OnToolbarButtonClick" ToolTip="Open map">
-                    <Image Source="map screen.png" OpacityMask="White" />
+                <Button x:Name="buttonMap" Click="OnToolbarButtonClick" ToolTip="Open map" >
+                    <Image Source="pack://application:,,,/Resources/map screen.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonUSB" Click="OnToolbarButtonClick" ToolTip="Scan USB storage">
-                    <Image Source="uisb.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/uisb.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonEjectUSB" Click="OnToolbarButtonClick" ToolTip="Scan USB storage" Visibility="Collapsed">
-                    <Image Source="eject usb.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/eject usb.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonCalendar" Click="OnToolbarButtonClick" ToolTip="Trip calendar">
-                    <Image Source="calendar3.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/calendar3.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonArchive" Click="OnToolbarButtonClick" ToolTip="Archive">
-                    <Image Source="archive.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/archive.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonPerson" Click="OnToolbarButtonClick" ToolTip="Manage fishers">
-                    <Image Source="person.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/person.png" OpacityMask="White" />
 
                 </Button>
                 <Button x:Name="buttonLandingSite" Click="OnToolbarButtonClick" ToolTip="Manage landing sites">
-                    <Image Source="station.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/station.png" OpacityMask="White" />
 
                 </Button>
 
                 <Button x:Name="buttonCybertracker" Click="OnToolbarButtonClick" ToolTip="CyberTracker">
-                    <Image Source="ctx_folder.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/ctx_folder.png" OpacityMask="White" />
                 </Button>
 
                 <Button x:Name="buttonImage" Click="OnToolbarButtonClick" ToolTip="Manage logbook image">
-                    <Image Source="file image.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/file image.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonUploadCloud" Click="OnToolbarButtonClick" ToolTip="Upload to cloud">
-                    <Image Source="upload to cloud.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/upload_cloud.png" OpacityMask="White" />
                 </Button>
 
                 <Button x:Name="buttonSettings" Click="OnToolbarButtonClick" ToolTip="Settings">
-                    <Image Source="gears.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/gears.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonAbout" Click="OnToolbarButtonClick" ToolTip="About this software">
-                    <Image Source="question.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/question.png" OpacityMask="White" />
                 </Button>
                 <Button x:Name="buttonExit" Click="OnToolbarButtonClick" ToolTip="Close">
-                    <Image Source="exit.png" OpacityMask="White" />
+                    <Image Source="pack://application:,,,/Resources/exit.png" OpacityMask="White" />
                 </Button>
 
             </ToolBar>
@@ -265,7 +269,7 @@
                                 <MenuItem Header="View GPX file" Click="OnMenuClick" x:Name="menuCalendaredTripViewGPX" Visibility="Visible"/>
                                 <MenuItem Header="Show in map" Click="OnMenuClick" x:Name="menuCalendaredTripMap" Visibility="Visible">
                                     <MenuItem.Icon>
-                                        <Image Source="map screen.png" OpacityMask="White" />
+                                        <Image Source="pack://application:,,,/Resources/map screen.png" OpacityMask="White" />
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>
@@ -296,7 +300,7 @@
                                     <MenuItem Header="Locate track GPX" Checked="OnMenuClick" x:Name="menuGPXFileLocateTrack" Visibility="Visible"/>
                                     <MenuItem Header="Show in map" Click="OnMenuClick" x:Name="menuGPXMap" Visibility="Visible">
                                         <MenuItem.Icon>
-                                            <Image Source="map screen.png" OpacityMask="White" />
+                                            <Image Source="pack://application:,,,/Resources/map screen.png" OpacityMask="White" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem Header="Center in map" Click="OnMenuClick" x:Name="menuGPXCenterInMap" Visibility="Collapsed"/>
@@ -324,7 +328,7 @@
                                     <MenuItem Header="View GPX" Click="OnMenuClick" x:Name="menuViewTripGPX" Visibility="Visible"/>
                                     <MenuItem Header="Show in map" Click="OnMenuClick" x:Name="menuTripMap" Visibility="Visible">
                                         <MenuItem.Icon>
-                                            <Image Source="map screen.png" OpacityMask="White" />
+                                            <Image Source="pack://application:,,,/Resources/map screen.png" OpacityMask="White" />
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </ContextMenu>
@@ -406,7 +410,7 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Button  Height="40" Width="40" Click="OnButtonClick" x:Name="buttonSelectFolder" Margin="0 10" Background="{x:Null}" BorderBrush="{x:Null}">
-                    <Image Source="openfolder.png"/>
+                    <Image Source="pack://application:,,,/Resources/openfolder.png"/>
                 </Button>
                 <TreeView x:Name="treeImages" SelectedItemChanged="OnImageTreeSelectionChnaged" Grid.Row="1" Margin="3 5">
                     <TreeViewItem Header="Not registered" Tag="top" x:Name="tvItemNotRegistered" FontWeight="Bold" Background="{x:Null}" Foreground="#FFEA8918"/>
@@ -429,16 +433,16 @@
                 </local2:ZoomBorder>
                 <WrapPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Button Height="30" Width="30" Margin="10 0" x:Name="buttonRotateLeft" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}" Background="{x:Null}">
-                        <Image Source="rotate left.png"/>
+                        <Image Source="pack://application:,,,/Resources/rotate left.png"/>
                     </Button>
                     <Button Height="30" Width="30" Margin="10 0" x:Name="buttonRotateRight" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}" Background="{x:Null}">
-                        <Image Source="rotate right.png"/>
+                        <Image Source="pack://application:,,,/Resources/rotate right.png"/>
                     </Button>
                     <Button Height="30" Width="30" Margin="10 0" x:Name="buttonFlipVertical" Click="OnButtonClick" Visibility="Visible" BorderBrush="{x:Null}" Background="{x:Null}">
-                        <Image Source="flip vertical.png"/>
+                        <Image Source="pack://application:,,,/Resources/flip vertical.png"/>
                     </Button>
                     <Button  Height="30" Width="30" Margin="10 0" Visibility="Visible" x:Name="buttonMetadata"  Click="OnButtonClick" BorderBrush="{x:Null}" Background="{x:Null}">
-                        <Image Source="tags gray.png"/>
+                        <Image Source="pack://application:,,,/Resources/tags gray.png"/>
                     </Button>
                 </WrapPanel>
             </Grid>
@@ -495,13 +499,13 @@
 
                     <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Button  Height="40" Width="40" x:Name="buttonIgnore" Margin="5 10" Click="OnButtonClick" IsEnabled="False" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}" >
-                            <Image Source="prevent2.png" Style="{StaticResource ImageEnabled}"/>
+                            <Image Source="pack://application:,,,/Resources/prevent2.png" Style="{StaticResource ImageEnabled}"/>
                         </Button>
                         <Button  Height="40" Width="40" x:Name="buttonRegister" Margin="5 10" Click="OnButtonClick" IsEnabled="False" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}">
-                            <Image Source="ok2.png" Style="{StaticResource ImageEnabled}"/>
+                            <Image Source="pack://application:,,,/Resources/ok2.png" Style="{StaticResource ImageEnabled}"/>
                         </Button>
                         <Button  Height="40" Width="40" x:Name="buttonTripOfImage" Margin="5 10" Click="OnButtonClick" Visibility="Collapsed" Background="{x:Null}" BorderBrush="{x:Null}" Style="{StaticResource ButtonEnabled}">
-                            <Image Source="navigation path.png" Style="{StaticResource ImageEnabled}"/>
+                            <Image Source="pack://application:,,,/Resources/navigation path.png" Style="{StaticResource ImageEnabled}"/>
                         </Button>
                     </WrapPanel>
                 </StackPanel>
@@ -511,7 +515,7 @@
                     <Label Content="Image metadata" FontSize="14" FontWeight="Bold"/>
                     <TextBox x:Name="textMetadata" AcceptsReturn="true" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Height="300" IsReadOnly="True"/>
                     <Button x:Name="buttonCloseMetadata" Click="OnButtonClick" Height="30" Width="30" HorizontalAlignment="Center" Margin="20" Background="{x:Null}" BorderBrush="{x:Null}">
-                        <Image Source="cancel.png"/>
+                        <Image Source="pack://application:,,,/Resources/cancel.png"/>
                     </Button>
                 </StackPanel>
 
@@ -527,9 +531,11 @@
             </Grid.ColumnDefinitions>
 
             <TreeView x:Name="treeViewCybertracker" SelectedItemChanged="OnCybertrackerTreeItemChanged">
-                <TreeViewItem Header="Connect to server" />
-                <TreeViewItem Header="Users"/>
-                <TreeViewItem Header="Tools"/>
+                <TreeViewItem Header="Connect to server" x:Name="cybertrackerTreeItemConnect"/>
+                <TreeViewItem Header="Download history" x:Name="cybertrackerTreeItemHistory"/>
+                <TreeViewItem Header="Users" x:Name="cybertrackerTreeItemUsers" Tag="UsersSummary"/>
+                <!--<TreeViewItem Header="Devices" x:Name="cybertrackerTreeItemDevices" Tag="Devices"/>-->
+                <TreeViewItem Header="Tools" x:Name="cybertrackerTreeItemTools"/>
             </TreeView>
 
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Visible">
@@ -562,7 +568,16 @@
             </ScrollViewer>
 
             <StackPanel x:Name="cybertrackerPanelGrid" Grid.Column="1" Margin="20">
-                <DataGrid x:Name="cybertrackerDataGrid" CanUserAddRows ="False"/>
+                <DataGrid x:Name="cybertrackerDataGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True"
+                          SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
+            </StackPanel>
+
+            <!--<StackPanel x:Name="cybertrackerPanelDevices" Grid.Column="1" Margin="20">
+                <DataGrid x:Name="cybertrackerDeviceGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True" SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
+            </StackPanel>-->
+
+            <StackPanel x:Name="cybertrackerPanelHistory" Grid.Column="1" Margin="20">
+                <DataGrid x:Name="cybertrackerHistoryGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True" SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
             </StackPanel>
 
             <StackPanel x:Name="cybertrackerPanelTools" Grid.Column="1" Margin="20">
@@ -589,7 +604,7 @@
                 <Button x:Name="buttonLandingSiteEdit" Height="30" Width="80" Content="Edit" Margin="10 0" IsEnabled="False" Click="OnButtonClick"/>
                 <Button x:Name="buttonLandingSiteAdd" Height="30" Width="80" Content="Add" Margin="10 0" Click="OnButtonClick"/>
 
-            </WrapPanel>            
+            </WrapPanel>
         </Grid>
 
         <!--status bar-->

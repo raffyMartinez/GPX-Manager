@@ -18,17 +18,17 @@ namespace GPXManager.entities
         public event XMLFileFromCTX XMLFileFromCTXCreated;
 
         private SessionOptions _sessionOptions;
-        private List<CTXFIle> _ctxFileList;
-        public List<CTXFIle> CTXFiles { get; set; }
+        private List<CTXFile> _ctxFileList;
+        public List<CTXFile> CTXFiles { get; set; }
         public CTXFileRepository()
         {
             _ctxFileList = getFiles();
             CTXFiles = _ctxFileList;
         }
 
-        private List<CTXFIle> getFiles()
+        private List<CTXFile> getFiles()
         {
-            var list = new List<CTXFIle>();
+            var list = new List<CTXFile>();
             var dt = new DataTable();
             using (var conection = new OleDbConnection(Global.ConnectionString))
             {
@@ -45,7 +45,7 @@ namespace GPXManager.entities
                         list.Clear();
                         foreach (DataRow dr in dt.Rows)
                         {
-                            CTXFIle ctxfile = new CTXFIle();
+                            CTXFile ctxfile = new CTXFile();
                             ctxfile.RowID = (int)dr["RowID"];
                             ctxfile.FileName = dr["FileName"].ToString();
                             ctxfile.DeviceID = dr["DeviceID"].ToString();
@@ -73,11 +73,11 @@ namespace GPXManager.entities
                             }
                             if (dr["SetGearPts"].ToString().Length > 0)
                             {
-                                ctxfile.TrackPtCount = (int)dr["SetGearPts"];
+                                ctxfile.SetGearPtCount = (int)dr["SetGearPts"];
                             }
                             if (dr["RetrieveGearPts"].ToString().Length > 0)
                             {
-                                ctxfile.TrackPtCount = (int)dr["RetrieveGearPts"];
+                                ctxfile.RetrieveGearPtCount = (int)dr["RetrieveGearPts"];
                             }
                             if(dr["TrackTimeStampStart"].ToString().Length>0)
                             {
@@ -129,6 +129,7 @@ namespace GPXManager.entities
                                 LandingSite VarChar,
                                 DateStart DateTime,
                                 DateEnd DateTime,
+                                NumberOfTrips Int,
                                 FileName VarChar,
                                 TrackPts Int,
                                 TrackTimeStampStart DateTime,
@@ -183,14 +184,14 @@ namespace GPXManager.entities
             }
             return max_rec_no;
         }
-        public bool Add(CTXFIle f)
+        public bool Add(CTXFile f)
         {
             bool success = false;
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $@"Insert into ctxFIles (RowID, DeviceID, UserName, Gear, LandingSite, DateStart, DateEnd, TrackPts, TrackTimeStampStart, TrackTimeStampEnd, SetGearPts, RetrieveGearPts, FileName, XML, CTXFileName, AppVersion, DateAdded)
-                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                var sql = $@"Insert into ctxFIles (RowID, DeviceID, UserName, Gear, LandingSite, DateStart, DateEnd, NumberOfTrips, TrackPts, TrackTimeStampStart, TrackTimeStampEnd, SetGearPts, RetrieveGearPts, FileName, XML, CTXFileName, AppVersion, DateAdded)
+                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -243,6 +244,16 @@ namespace GPXManager.entities
                     {
                         update.Parameters.Add("@end", OleDbType.VarChar).Value = f.DateEnd;
                     }
+
+                    if(f.NumberOfTrips==null)
+                    {
+                        update.Parameters.Add("@numbnerTrips", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@numbnerTrips", OleDbType.Integer).Value = f.NumberOfTrips;
+                    }
+
 
                     if (f.TrackPtCount == null)
                     {
@@ -321,7 +332,7 @@ namespace GPXManager.entities
             return success;
         }
 
-        public bool Update(CTXFIle f)
+        public bool Update(CTXFile f)
         {
             return true;
         }
@@ -330,7 +341,7 @@ namespace GPXManager.entities
         {
             return true;
         }
-        public List<CTXFIle> GetServerContent(string url, string user, string pwd, bool download = false)
+        public List<CTXFile> GetServerContent(string url, string user, string pwd, bool download = false)
         {
             LastError = "";
             _sessionOptions = new SessionOptions
@@ -342,7 +353,7 @@ namespace GPXManager.entities
                 PortNumber = 21,
             };
 
-            List<CTXFIle> list = new List<CTXFIle>();
+            List<CTXFile> list = new List<CTXFile>();
 
             using (var session = new Session())
             {
@@ -359,7 +370,7 @@ namespace GPXManager.entities
                     {
                         try
                         {
-                            CTXFIle f = new CTXFIle { IsDownloaded = Entities.CTXFileViewModel.Exists(fileInfo.Name), RemoteFileInfo = fileInfo };
+                            CTXFile f = new CTXFile { IsDownloaded = Entities.CTXFileViewModel.Exists(fileInfo.Name), RemoteFileInfo = fileInfo };
                             list.Add(f);
                         }
                         catch (Exception ex)
@@ -390,7 +401,7 @@ namespace GPXManager.entities
         public string LastXMLFromCTXFile { get; private set; }
 
         public string LastError { get; private set; }
-        public bool DownloadFromServer(List<CTXFIle> files, string downloadLocation)
+        public bool DownloadFromServer(List<CTXFile> files, string downloadLocation)
         {
             LastError = "";
             if (files.Count > 0)

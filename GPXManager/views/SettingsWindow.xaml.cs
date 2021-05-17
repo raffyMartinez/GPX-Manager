@@ -56,10 +56,13 @@ namespace GPXManager.views
                 textLogImageFolder.Text = Global.Settings.LogImagesFolder.ToString();
                 textBoxCTXBackupPath.Text = Global.Settings.CTXBackupFolder;
                 textBoxCTXDownloadFolder.Text = Global.Settings.CTXDownloadFolder;
+                textSpeedThreshold.Text = Global.Settings.SpeedThresholdForRetrieving.ToString();
+                textGearRetrievalMainLength.Text = Global.Settings.GearRetrievingMinLength.ToString();
                 if (Global.Settings.PathToCybertrackerExe != null)
                 {
                     textBoxCybertrackerPath.Text = Global.Settings.PathToCybertrackerExe;
                 }
+
 
             }
             else
@@ -83,6 +86,8 @@ namespace GPXManager.views
                 textLogImageFolder.Text.Length > 0 &&
                 textBoxCTXBackupPath.Text.Length > 0 &&
                 textBoxCTXDownloadFolder.Text.Length > 0 &&
+                textSpeedThreshold.Text.Length > 0 &&
+                textGearRetrievalMainLength.Text.Length > 0 &&
                 textBoxCybertrackerPath.Text.Length > 0)
             {
                 return int.TryParse(textBoxHoursOffsetGMT.Text, out int v);
@@ -108,7 +113,9 @@ namespace GPXManager.views
                           textLogImageFolder.Text,
                           textBoxCybertrackerPath.Text,
                           textBoxCTXBackupPath.Text,
-                          textBoxCTXDownloadFolder.Text
+                          textBoxCTXDownloadFolder.Text,
+                          int.Parse(textSpeedThreshold.Text),
+                          int.Parse(textGearRetrievalMainLength.Text)
                           );
 
                         DialogResult = true;

@@ -9,6 +9,15 @@ using System.Security.Policy;
 
 namespace GPXManager.entities
 {
+    public enum DeviceType
+    {
+        DeviceTypeNone,
+        DeviceTypeGPS,
+        DeviceTypePhone,
+        DeviceTypeOther = 9
+
+    }
+
     [DisplayName("GPS")]
     public class GPSEdited
     {
@@ -21,6 +30,7 @@ namespace GPXManager.entities
             Brand = gps.Brand;
             Model = gps.Model;
             Folder = gps.Folder;
+            DevicetType = gps.DeviceType;
             //PNPDeviceID = gps.PNPDeviceID;
             //VolumeName = gps.VolumeName;
         }
@@ -29,6 +39,7 @@ namespace GPXManager.entities
         public string DeviceID { get; set; }
         public string DeviceName { get; set; }
 
+        public DeviceType DevicetType { get; set; }
         [ReadOnly(true)]
         public string Code { get; set; }
 
@@ -43,6 +54,9 @@ namespace GPXManager.entities
 
        //public string VolumeName { get; set; }
     }
+
+
+
     public class GPS
     {
         private DetectedDevice _device;
@@ -73,7 +87,27 @@ namespace GPXManager.entities
 
         public string Folder { get; set; }
 
-       
+        public DeviceType DeviceType { get; set; }
+        public string DeviceTypeString
+        {
+            get
+            {
+                string deviceType = "None";
+                switch (DeviceType)
+                {
+                    case DeviceType.DeviceTypeGPS:
+                        deviceType = "GPS";
+                        break;
+                    case DeviceType.DeviceTypePhone:
+                        deviceType = "Phone";
+                        break;
+                    case DeviceType.DeviceTypeOther:
+                        deviceType = "Other";
+                        break;
+                }
+                return deviceType;
+            }
+        }
 
         public DetectedDevice Device{
             get

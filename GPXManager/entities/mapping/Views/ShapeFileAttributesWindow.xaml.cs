@@ -34,8 +34,13 @@ namespace GPXManager.entities.mapping.Views
             _mapInterActionHandler.SelectionCleared += _mapInterActionHandler_SelectionCleared;
             _mapInterActionHandler.MapLayersHandler.CurrentLayer += MapLayersHandler_CurrentLayer;
             _mapInterActionHandler.MapLayersHandler.AllSelectionsCleared += MapLayersHandler_AllSelectionsCleared;
+            //dataGridAttributes.SelectionChanged += OnDataGridAttributes_SelectionChanged;
 
         }
+
+        public bool ShowSummaryOfSelectedItems { get; set; }
+
+
 
         private void _mapInterActionHandler_SelectionCleared(object sender, EventArgs e)
         {
@@ -60,7 +65,7 @@ namespace GPXManager.entities.mapping.Views
 
         private void _mapInterActionHandler_ShapesSelected(MapInterActionHandler s, LayerEventArg e)
         {
-            foreach(DataRowView item in dataGridAttributes.Items )
+            foreach (DataRowView item in dataGridAttributes.Items)
             {
                 if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
                 {
@@ -69,7 +74,7 @@ namespace GPXManager.entities.mapping.Views
             }
         }
 
-        
+
         private void CleanUp()
         {
             _instance = null;
@@ -116,19 +121,75 @@ namespace GPXManager.entities.mapping.Views
 
         }
 
+        private void OnDataGridAttributes_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var itemCounts = dataGridAttributes.SelectedItems.Count;
+            //if (itemCounts > 1 && ShowSummaryOfSelectedItems)
+            if (itemCounts > 1)
+            {
+                var summaryWindow = SelectedGridRowsSummaryWindow.GetInstance();
+                summaryWindow.Owner = this;
+                if (summaryWindow.Visibility == Visibility.Visible)
+                {
+                    summaryWindow.BringIntoView();
+                }
+                else
+                {
+                    summaryWindow.Show();
+                }
+            }
+            else
+            {
+
+            }
+
+        }
         private void OnDataGridSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count > 0)
+            if (dataGridAttributes.SelectedItems.Count >= 1)
             {
-                DataColumn col = ((DataRowView)e.AddedItems[0]).Row.Table.Columns["MWShapeID"];
-                if (col != null)
+
+                try
                 {
-                    List<int> selectedIDs = new List<int>();
-                    foreach (DataRowView row in ((DataGrid)sender).SelectedItems)
+                    DataColumn col = ((DataRowView)e.AddedItems[0]).Row.Table.Columns["MWShapeID"];
+
+                    if (col != null)
                     {
-                        selectedIDs.Add(row.Row.Field<int>(col));
+                        List<int> selectedIDs = new List<int>();
+                        foreach (DataRowView row in ((DataGrid)sender).SelectedItems)
+                        {
+                            selectedIDs.Add(row.Row.Field<int>(col));
+                        }
+                        MapWindowManager.SelectedAttributeRows = selectedIDs;
+
+                        if (dataGridAttributes.SelectedItems.Count == 1)
+                        {
+                            SelectedGridRowsSummaryWindow.Instance()?.Close();
+                        }
+                        else
+                        {
+                            var summaryWindow = SelectedGridRowsSummaryWindow.GetInstance();
+                            summaryWindow.Owner = this;
+                            if (summaryWindow.Visibility == Visibility.Visible)
+                            {
+                                summaryWindow.BringIntoView();
+                            }
+                            else
+                            {
+                                summaryWindow.Show();
+                                summaryWindow.GetSelectedShapes();
+                            }
+
+                        }
                     }
-                    MapWindowManager.SelectedAttributeRows = selectedIDs;
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    //ignore
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
                 }
             }
         }

@@ -50,6 +50,9 @@ namespace GPXManager.entities
         public string CTXBackupFolder { get; set; }
         public string LogImagesFolder { get; set; }
         public string DeviceGPXFolder { get; set; }
+
+        public int? SpeedThresholdForRetrieving { get; set; }
+        public int? GearRetrievingMinLength { get; set; }
         public string CTXDownloadFolder { get; set; }
         public string PathToCybertrackerExe { get; set; }
 

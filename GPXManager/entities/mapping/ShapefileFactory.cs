@@ -1,13 +1,19 @@
 ﻿using MapWinGIS;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml;
 
 namespace GPXManager.entities.mapping
 {
 
     public static class ShapefileFactory
     {
+        private static Dictionary<string, string> _ctxDictionary = new Dictionary<string, string>();
         private static MapWinGIS.Utils _mapWinGISUtils = new MapWinGIS.Utils();
+        private static Waypoint _wptBefore;
+        private static DateTime _timeBefore;
         public static List<WaypointLocalTime> WaypointsinLocalTine { get; set; }
 
         public static void ClearWaypoints()
@@ -15,6 +21,23 @@ namespace GPXManager.entities.mapping
             WaypointsinLocalTine.Clear();
         }
 
+        private static void FillCTXDictionary(string xml)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(xml);
+            XmlNodeList elements = doc.SelectNodes("//E");
+            foreach (XmlNode n in elements)
+            {
+                var key = n.Attributes["I"].Value;
+                var val = n.Attributes["N"].Value;
+                _ctxDictionary.Add(key, val);
+            }
+            setWaypointKey = _ctxDictionary.FirstOrDefault(x => x.Value == "Set gear").Key;
+            haulWaypointKey = _ctxDictionary.FirstOrDefault(x => x.Value == "Retrieve gear").Key;
+        }
+
+        private static string setWaypointKey { get; set; }
+        private static string haulWaypointKey { get; set; }
         static ShapefileFactory()
         {
             WaypointsinLocalTine = new List<WaypointLocalTime>();
@@ -37,7 +60,7 @@ namespace GPXManager.entities.mapping
             return null;
         }
 
-        public static Shapefile PointsFromWaypointList(List<WaypointLocalTime> wpts, out List<int>handles)
+        public static Shapefile PointsFromWaypointList(List<WaypointLocalTime> wpts, out List<int> handles)
         {
             handles = new List<int>();
             Shapefile sf;
@@ -89,14 +112,14 @@ namespace GPXManager.entities.mapping
             }
         }
 
-        public static Shapefile PointsFromTrips(List<Trip> trips,out List<int>handles)
+        public static Shapefile PointsFromTrips(List<Trip> trips, out List<int> handles)
         {
             int counter = 0;
             handles = new List<int>();
             Shapefile sf = null;
-            foreach(var trip in trips)
+            foreach (var trip in trips)
             {
-                if(counter==0)
+                if (counter == 0)
                 {
                     if (TripMappingManager.WaypointsShapefile == null || TripMappingManager.WaypointsShapefile.NumFields == 0)
                     {
@@ -118,10 +141,10 @@ namespace GPXManager.entities.mapping
                     {
                         sf = TripMappingManager.WaypointsShapefile;
                         sf.EditClear();
-                        
+
                     }
 
-                    foreach(var pt in trip.Waypoints)
+                    foreach (var pt in trip.Waypoints)
                     {
                         var shp = new Shape();
                         if (shp.Create(ShpfileType.SHP_POINT))
@@ -212,15 +235,72 @@ namespace GPXManager.entities.mapping
         //    }
         //}
 
-        public static Shapefile TrackFromTrip( List<Trip> trips, out List<int>handles)
+        private static Stream GenerateStreamFromString(string s)
+        {
+            var stream = new MemoryStream();
+            var writer = new StreamWriter(stream);
+            writer.Write(s);
+            writer.Flush();
+            stream.Position = 0;
+            return stream;
+        }
+
+        public static Shapefile TrackFromCTX(CTXFileSummaryView ctxfile, out List<int> handles)
         {
             handles = new List<int>();
-            Shapefile sf=null;
+            Shapefile sf = null;
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(ctxfile.XML);
+            var tracknodes = doc.SelectNodes("//T");
+            sf = new Shapefile();
+            if (tracknodes.Count > 0 && sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
+            {
+                sf.EditAddField("User", FieldType.STRING_FIELD, 1, 1);
+                sf.EditAddField("Gear", FieldType.STRING_FIELD, 1, 1);
+                sf.EditAddField("LandingSite", FieldType.STRING_FIELD, 1, 1);
+                sf.EditAddField("Start", FieldType.STRING_FIELD, 1, 1);
+                sf.EditAddField("Finished", FieldType.STRING_FIELD, 1, 1);
+
+
+
+                var shpIndex = -1;
+
+                sf.Key = "ctx_track";
+                sf.GeoProjection = globalMapping.GeoProjection;
+
+                var shp = new Shape();
+                if (shp.Create(ShpfileType.SHP_POLYLINE))
+                {
+                    foreach (XmlNode node in tracknodes)
+                    {
+                        var lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
+                        var lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
+                        shp.AddPoint(lon, lat);
+                    }
+                }
+                shpIndex = sf.EditAddShape(shp);
+                handles.Add(shpIndex);
+                sf.EditCellValue(sf.FieldIndexByName["User"], shpIndex, ctxfile.User);
+                sf.EditCellValue(sf.FieldIndexByName["Gear"], shpIndex, ctxfile.Gear);
+                sf.EditCellValue(sf.FieldIndexByName["LandingSite"], shpIndex, ctxfile.LandingSite);
+                sf.EditCellValue(sf.FieldIndexByName["Start"], shpIndex, ctxfile.DateStart);
+                sf.EditCellValue(sf.FieldIndexByName["Finished"], shpIndex, ctxfile.DateEnd);
+
+                return sf;
+            }
+            return null;
+        }
+
+        public static string GearPathXML { get; private set; }
+        public static Shapefile TrackFromTrip(List<Trip> trips, out List<int> handles)
+        {
+            handles = new List<int>();
+            Shapefile sf = null;
             var shpIndex = -1;
             int counter = 0;
-            foreach(var trip in trips)
+            foreach (var trip in trips)
             {
-                if(counter==0)
+                if (counter == 0)
                 {
                     if (TripMappingManager.TrackShapefile == null || TripMappingManager.TrackShapefile.NumFields == 0)
                     {
@@ -320,17 +400,134 @@ namespace GPXManager.entities.mapping
         //    }
         //}
 
-        public static Shapefile GPXTrackVertices(GPXFile gpxfile,out List<int> shpIndexes)
+        public static Shapefile CTXTrackVertices(CTXFile ctxFile, out List<int> shpIndexes, bool extractGearPath = false)
         {
             shpIndexes = new List<int>();
             Shapefile sf;
-            if(gpxfile.GPXFileType==GPXFileType.Track && gpxfile.TrackWaypoinsInLocalTime.Count>0)
+            if (ctxFile.TrackPtCount != null && ctxFile.TrackPtCount > 0)
             {
                 sf = new Shapefile();
-                if(sf.CreateNewWithShapeID("",ShpfileType.SHP_POINT))
+                if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POINT))
                 {
-                    sf.EditAddField("Name", FieldType.INTEGER_FIELD,1,1);
-                    sf.EditAddField("Time", FieldType.DATE_FIELD,1,1);
+                    sf.EditAddField("Name", FieldType.INTEGER_FIELD, 1, 1);
+                    sf.EditAddField("Time", FieldType.DATE_FIELD, 1, 1);
+                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.Key = "ctx_track_vertices";
+                    sf.GeoProjection = globalMapping.GeoProjection;
+                    GPXMappingManager.TrackVerticesShapefile = sf;
+                }
+            }
+            else
+            {
+                sf = GPXMappingManager.TrackVerticesShapefile;
+            }
+
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(ctxFile.XML);
+            var tracknodes = doc.SelectNodes("//T");
+
+            double lat = 0;
+            double lon = 0;
+            foreach (XmlNode node in tracknodes)
+            {
+                var shp = new Shape();
+                if (shp.Create(ShpfileType.SHP_POINT))
+                {
+                    lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
+                    lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
+                    if (shp.AddPoint(lon, lat) >= 0)
+                    {
+                        var shpIndex = sf.EditAddShape(shp);
+                        if (shpIndex >= 0)
+                        {
+                            sf.EditCellValue(sf.FieldIndexByName["Name"], shpIndex, shpIndex + 1);
+                            var wptDate = node.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                            var wptTime = node.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
+                            var wptDateTime = DateTime.Parse(wptDate) + DateTime.Parse(wptTime).TimeOfDay;
+                            sf.EditCellValue(sf.FieldIndexByName["Time"], shpIndex, wptDateTime);
+
+                            shpIndexes.Add(shpIndex);
+
+                            if (shpIndex > 0)
+                            {
+                                var wptNow = new Waypoint { Longitude = lon, Latitude = lat, Elevation = 0, Time = wptDateTime };
+                                double elevChange;
+                                double distance = Waypoint.ComputeDistance(_wptBefore, wptNow, out elevChange);
+                                TimeSpan timeElapsed = wptDateTime - _timeBefore;
+                                double speed = distance / timeElapsed.TotalMinutes;
+                                sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, distance);
+                                sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, speed);
+                            }
+                            else
+                            {
+                                sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, 0);
+                                sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, 0);
+                            }
+                            _wptBefore = new Waypoint { Longitude = lon, Latitude = lat, Elevation = 0, Time = wptDateTime };
+                            _timeBefore = wptDateTime;
+                        }
+                    }
+                }
+            }
+            sf.DefaultDrawingOptions.PointShape = tkPointShapeType.ptShapeRegular;
+            sf.DefaultDrawingOptions.PointSize = 10;
+            sf.DefaultDrawingOptions.PointSidesCount = 4;
+            sf.DefaultDrawingOptions.FillColor = _mapWinGISUtils.ColorByName(tkMapColor.Orange);
+            sf.DefaultDrawingOptions.LineColor = _mapWinGISUtils.ColorByName(tkMapColor.Black);
+            sf.DefaultDrawingOptions.LineWidth = 1.5f;
+            return sf;
+        }
+
+        public static Shapefile ConvexHull(List<Point> points, out List<int> handles)
+        {
+            handles = new List<int>();
+            var sf = new MapWinGIS.Shapefile();
+            int shpIndex;
+            if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
+            {
+                sf.GeoProjection = globalMapping.GeoProjection;
+                sf.Key = "convex_hull";
+                var shp = new Shape();
+                if (shp.Create(ShpfileType.SHP_POLYLINE))
+                {
+                    foreach (var pt in points)
+                    {
+                        shp.AddPoint(pt.x, pt.y);
+                    }
+                }
+                shpIndex = sf.EditAddShape(shp);
+                handles.Add(shpIndex);
+            }
+            return sf;
+        }
+        public static Shapefile ConvexHull(Shape shp, out List<int> handles)
+        {
+            handles = new List<int>();
+            int shpIndex;
+            Shapefile sf = new Shapefile();
+            if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYGON))
+            {
+                sf.GeoProjection = globalMapping.GeoProjection;
+                sf.Key = "convex_hull";
+                shpIndex = sf.EditAddShape(shp.ConvexHull());
+                handles.Add(shpIndex);
+            }
+            return sf;
+        }
+        public static Shapefile GPXTrackVertices(GPXFile gpxfile, out List<int> shpIndexes, bool extractGearPath = false)
+        {
+            shpIndexes = new List<int>();
+            Shapefile sf;
+            if (gpxfile.GPXFileType == GPXFileType.Track && gpxfile.TrackWaypoinsInLocalTime.Count > 0)
+            {
+                sf = new Shapefile();
+                if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POINT))
+                {
+                    sf.EditAddField("Name", FieldType.INTEGER_FIELD, 1, 1);
+                    sf.EditAddField("Time", FieldType.DATE_FIELD, 1, 1);
+                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 1, 1);
                     sf.Key = "gpx_track_vertices";
                     sf.GeoProjection = globalMapping.GeoProjection;
                     GPXMappingManager.TrackVerticesShapefile = sf;
@@ -351,9 +548,31 @@ namespace GPXManager.entities.mapping
                         var shpIndex = sf.EditAddShape(shp);
                         if (shpIndex >= 0)
                         {
-                            sf.EditCellValue(sf.FieldIndexByName["Name"], shpIndex, shpIndex+1);
+                            sf.EditCellValue(sf.FieldIndexByName["Name"], shpIndex, shpIndex + 1);
                             sf.EditCellValue(sf.FieldIndexByName["Time"], shpIndex, wlt.Time);
                             shpIndexes.Add(shpIndex);
+
+                            if (shpIndex > 0)
+                            {
+                                var wptNow = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Elevation = 0, Time = wlt.Time };
+                                double elevChange;
+                                double distance = Waypoint.ComputeDistance(_wptBefore, wptNow, out elevChange);
+                                TimeSpan timeElapsed = wlt.Time - _timeBefore;
+                                double speed = distance / timeElapsed.TotalMinutes;
+                                sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, distance);
+                                sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, speed);
+                                if (extractGearPath)
+                                {
+
+                                }
+                            }
+                            else
+                            {
+                                sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, 0);
+                                sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, 0);
+                            }
+                            _wptBefore = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Elevation = 0, Time = wlt.Time };
+                            _timeBefore = wlt.Time;
                         }
                     }
                 }
@@ -366,11 +585,11 @@ namespace GPXManager.entities.mapping
             sf.DefaultDrawingOptions.LineWidth = 1.5f;
             return sf;
         }
-        public static Shapefile TrackFromGPX(GPXFile gpxFile, out List<int>handles)
+        public static Shapefile TrackFromGPX(GPXFile gpxFile, out List<int> handles)
         {
             handles = new List<int>();
             var shpIndex = -1;
-            Shapefile sf; 
+            Shapefile sf;
             if (gpxFile.TrackWaypoinsInLocalTime.Count > 0)
             {
                 if (GPXMappingManager.TrackShapefile == null || GPXMappingManager.TrackShapefile.NumFields == 0)
@@ -417,6 +636,88 @@ namespace GPXManager.entities.mapping
             }
         }
 
+        public static Shapefile WaypointsFromCTX(CTXFileSummaryView ctxfile, out List<int> shpIndexes)
+        {
+            shpIndexes = new List<int>();
+            Shapefile sf;
+            if (ctxfile.WaypointsForSet != null && ((int)ctxfile.WaypointsForSet) > 0 ||
+                ctxfile.WaypointsForHaul != null && ((int)ctxfile.WaypointsForHaul) > 0)
+            {
+                if (GPXMappingManager.WaypointsShapefile == null || GPXMappingManager.WaypointsShapefile.NumFields == 0)
+                {
+                    sf = new Shapefile();
+
+                    if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POINT))
+                    {
+                        sf.GeoProjection = globalMapping.GeoProjection;
+                        sf.Key = "ctxfile_waypoint";
+                        sf.EditAddField("Name", FieldType.STRING_FIELD, 1, 1);
+                        sf.EditAddField("TimeStamp", FieldType.DATE_FIELD, 1, 1);
+                        sf.EditAddField("User", FieldType.STRING_FIELD, 1, 1);
+                        sf.EditAddField("Type", FieldType.STRING_FIELD, 1, 1);
+                        GPXMappingManager.WaypointsShapefile = sf;
+                    }
+
+                }
+                else
+                {
+                    sf = GPXMappingManager.WaypointsShapefile;
+                }
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(ctxfile.XML);
+                var wptNodes = doc.SelectNodes("//A[@N='Waypoint name']");
+                if (_ctxDictionary.Count == 0)
+                {
+                    FillCTXDictionary(ctxfile.XML);
+                }
+
+
+
+                foreach (XmlNode nd in wptNodes)
+                {
+                    var shp = new Shape();
+                    if (shp.Create(ShpfileType.SHP_POINT))
+                    {
+                        string wptType = "";
+                        double lat = double.Parse(nd.ParentNode.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
+                        double lon = double.Parse(nd.ParentNode.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
+                        var pt_type = nd.ParentNode.SelectSingleNode(".//A[@N='WaypointType']").Attributes["V"].Value;
+                        if (pt_type == setWaypointKey)
+                        {
+                            wptType = "Setting";
+                        }
+                        else
+                        {
+                            wptType = "Hauling";
+                        }
+                        if (shp.AddPoint(lon, lat) >= 0)
+                        {
+                            var shpIndex = sf.EditAddShape(shp);
+                            if (shpIndex >= 0)
+                            {
+                                sf.EditCellValue(sf.FieldIndexByName["Name"], shpIndex, nd.ParentNode.SelectSingleNode(".//A[@N='Waypoint name']").Attributes["V"].Value);
+                                var wptDate = nd.ParentNode.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
+                                var wptTime = nd.ParentNode.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
+                                sf.EditCellValue(sf.FieldIndexByName["TimeStamp"], shpIndex, DateTime.Parse(wptDate) + DateTime.Parse(wptTime).TimeOfDay);
+                                sf.EditCellValue(sf.FieldIndexByName["User"], shpIndex, ctxfile.User);
+                                sf.EditCellValue(sf.FieldIndexByName["Type"], shpIndex, wptType);
+                                shpIndexes.Add(shpIndex);
+                            }
+                        }
+                    }
+                }
+
+                sf.DefaultDrawingOptions.PointShape = tkPointShapeType.ptShapeCircle;
+                sf.DefaultDrawingOptions.PointSize = 12;
+                sf.DefaultDrawingOptions.FillColor = _mapWinGISUtils.ColorByName(tkMapColor.Red);
+                return sf;
+
+
+            }
+            return null;
+
+        }
         public static Shapefile NamedPointsFromGPX(GPXFile gpxFile, out List<int> shpIndexes)
         {
             shpIndexes = new List<int>();

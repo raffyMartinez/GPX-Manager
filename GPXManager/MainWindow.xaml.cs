@@ -65,6 +65,7 @@ namespace GPXManager
         private LogbookImage _logbookImage;
         private TreeViewItem _selectedTreeViewItem;
         private bool _startUp = false;
+        private CTXFileSummaryView _ctxFile;
         public DataGrid CurrentDataGrid { get; set; }
 
         public MainWindow()
@@ -1020,15 +1021,15 @@ namespace GPXManager
                     break;
                 case "buttonDownloadSelected":
 
-                    var forDownloading = new List<CTXFIle>();
+                    var forDownloading = new List<CTXFile>();
                     var downloadedCount = 0;
                     foreach (var item in cybertrackerGridAvailableFiles.Items)
                     {
-                        if (!((CTXFIle)item).IsDownloaded && ((CTXFIle)item).DownloadFile)
+                        if (!((CTXFile)item).IsDownloaded && ((CTXFile)item).DownloadFile)
                         {
-                            forDownloading.Add((CTXFIle)item);
+                            forDownloading.Add((CTXFile)item);
                         }
-                        else if (((CTXFIle)item).IsDownloaded)
+                        else if (((CTXFile)item).IsDownloaded)
                         {
                             downloadedCount++;
                         }
@@ -1069,7 +1070,7 @@ namespace GPXManager
                 case "buttonCheckAll":
                     foreach (var item in cybertrackerGridAvailableFiles.Items)
                     {
-                        ((CTXFIle)item).DownloadFile = true;
+                        ((CTXFile)item).DownloadFile = true;
                     }
                     cybertrackerGridAvailableFiles.Items.Refresh();
                     break;
@@ -1093,9 +1094,9 @@ namespace GPXManager
                     }
                     else
                     {
-                        if(Entities.CTXFileViewModel.LastRepositoryError().Length>0)
+                        if (Entities.CTXFileViewModel.LastRepositoryError().Length > 0)
                         {
-                            MessageBox.Show(Entities.CTXFileViewModel.LastRepositoryError(),"GPX Manager",MessageBoxButton.OK,MessageBoxImage.Information);
+                            MessageBox.Show(Entities.CTXFileViewModel.LastRepositoryError(), "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
                     buttonConnectFTP.IsEnabled = true;
@@ -2225,6 +2226,9 @@ namespace GPXManager
             dataGridLandingSites.Columns.Add(new DataGridTextColumn { Header = "Latitude", Binding = new Binding("Lat") });
             dataGridLandingSites.Columns.Add(new DataGridTextColumn { Header = "Longitude", Binding = new Binding("Lon") });
 
+
+
+
         }
 
         public GPS GPS { get; set; }
@@ -2773,12 +2777,40 @@ namespace GPXManager
 
             LayerSelector = (DataGrid)sender;
             MapWindowManager.TrackGPXFile = null;
+            MapWindowManager.CTXFile = null;
             if (MapWindowForm.Instance != null)
             {
                 MapWindowManager.MapWindowForm.LayerSelector = LayerSelector;
             }
             switch (((DataGrid)sender).Name)
             {
+                case "cybertrackerHistoryGrid":
+                case "cybertrackerDataGrid":
+                    _ctxFile = (CTXFileSummaryView)((DataGrid)sender).SelectedItem;
+
+                    if (_ctxFile != null)
+                    {
+                        if (MapWindowForm.Instance != null)
+                        {
+                            List<int> handles = new List<int>();
+                            MapWindowManager.CTXFile = _ctxFile.CTXFile;
+                            MapWindowManager.RemoveGPSDataFromMap();
+                            if (_ctxFile.TrackpointsCount != null && _ctxFile.TrackpointsCount > 0 && MapWindowManager.MapTrackCTX(_ctxFile, out handles) >= 0)
+                            {
+                                List<int> pthandles = new List<int>();
+                                MapWindowManager.MapWaypointsCTX(_ctxFile, out pthandles);
+                            }
+                        }
+
+                        if (CTXFileDetailsWindow.Instance != null)
+                        {
+                            ShowSelectedCTXFile();
+                        }
+                    }
+
+
+                    break;
+
                 case "dataGridLandingSites":
                     buttonLandingSiteDelete.IsEnabled = true;
                     buttonLandingSiteEdit.IsEnabled = true;
@@ -2884,7 +2916,7 @@ namespace GPXManager
 
                         if (MapWindowManager.MapWindowForm != null && dataGridGPXFiles.SelectedItems.Count == 1)
                         {
-                            GPXMappingManager.RemoveGPXLayersFromMap();
+                            //GPXMappingManager.RemoveGPXLayersFromMap();
                             MapWindowManager.RemoveGPSDataFromMap();
                             foreach (var item in _mappedGPXFiles)
                             {
@@ -3009,10 +3041,34 @@ namespace GPXManager
                 }
             }
         }
+
+        private void ShowSelectedCTXFile()
+        {
+            CTXFileDetailsWindow cfdw = CTXFileDetailsWindow.GetInstance();
+            cfdw.CTXFIle = _ctxFile;
+            cfdw.Owner = this;
+            if (cfdw.Visibility == Visibility.Visible)
+            {
+                cfdw.BringIntoView();
+                cfdw.ShowDetails();
+            }
+            else
+            {
+                cfdw.Show();
+                
+            }
+        }
         private void OnGridDoubleClick(object sender, MouseButtonEventArgs e)
         {
             switch (((DataGrid)sender).Name)
             {
+                case "cybertrackerHistoryGrid":
+                case "cybertrackerDataGrid":
+                    if (_ctxFile != null)
+                    {
+                        ShowSelectedCTXFile();
+                    }
+                    break;
                 case "dataGridLandingSites":
                     ShowSelectedLandingSite();
                     break;
@@ -3227,6 +3283,21 @@ namespace GPXManager
                         Global.Settings.CTXDownloadFolder.Length > 0)
                     {
                         ShowCybertracker();
+                        if (cybertrackerTreeItemUsers.Items.Count == 0)
+                        {
+                            foreach (var name in Entities.CTXFileViewModel.GetUserNames())
+                            {
+                                cybertrackerTreeItemUsers.Items.Add(new TreeViewItem { Header = name, Tag = "user name" });
+                            }
+                            cybertrackerTreeItemUsers.Items.Add(new TreeViewItem { Header = "Others", Tag = "user name" });
+                        }
+                        if (cybertrackerTreeItemHistory.Items.Count == 0)
+                        {
+                            foreach (var date in Entities.CTXFileViewModel.GetCTXDownloadMonthYear())
+                            {
+                                cybertrackerTreeItemHistory.Items.Add(new TreeViewItem { Header = date, Tag = "download history" });
+                            }
+                        }
                     }
                     else
                     {
@@ -3704,28 +3775,112 @@ namespace GPXManager
             }
         }
 
-        private void OnCybertrackerTreeItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void SetCybertrackerPanelsVisibility(string option)
         {
-            cybertrackerPanelGridFilesAvailable.Visibility = Visibility.Collapsed;
-            switch (((TreeViewItem)e.NewValue).Header.ToString())
+            switch (option)
             {
-                case "Connect to server":
+                case "Devices":
+                    ////cybertrackerPanelDevices.Visibility = Visibility.Visible;
+                    //cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
+                    //cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
+                    //cybertrackerPanelTools.Visibility = Visibility.Collapsed;
+                    //cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
+                    break;
+                case "download history":
+                case "Download history":
+                    cybertrackerPanelHistory.Visibility = Visibility.Visible;
                     cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
                     cybertrackerPanelTools.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelFTP.Visibility = Visibility.Visible;
+                    cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
+                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
+                case "user name":
                 case "Users":
+                case "UsersSummary":
+                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
                     cybertrackerPanelGrid.Visibility = Visibility.Visible;
                     cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
                     cybertrackerPanelTools.Visibility = Visibility.Collapsed;
+                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
+                    break;
+                case "Connect to server":
+                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
+                    cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
+                    cybertrackerPanelTools.Visibility = Visibility.Collapsed;
+                    cybertrackerPanelFTP.Visibility = Visibility.Visible;
+                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
                 case "Tools":
+                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
                     cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
                     cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
                     cybertrackerPanelTools.Visibility = Visibility.Visible;
+                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
             }
+        }
+        private void OnCybertrackerTreeItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            cybertrackerPanelGridFilesAvailable.Visibility = Visibility.Collapsed;
+            TreeViewItem selectedItem = (TreeViewItem)e.NewValue;
+            if (selectedItem.Tag != null)
+            {
+                SetCybertrackerPanelsVisibility(selectedItem.Tag.ToString());
+                switch (selectedItem.Tag.ToString())
+                {
 
+                    case "UsersSummary":
+
+                        cybertrackerDataGrid.Columns.Clear();
+                        cybertrackerDataGrid.AutoGenerateColumns = false;
+                        cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.GetUserSummary();
+
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("User") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of trips", Binding = new Binding("TotalNumberOfTrips") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date start", Binding = new Binding("DateOfFirstTrip") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date end", Binding = new Binding("DateOfLatestTrip") });
+                        break;
+                    case "user name":
+                        cybertrackerDataGrid.Columns.Clear();
+                        cybertrackerDataGrid.AutoGenerateColumns = false;
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("User") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Gear", Binding = new Binding("Gear") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Landing site", Binding = new Binding("LandingSite") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date start", Binding = new Binding("DateStart") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date end", Binding = new Binding("DateEnd") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of set points", Binding = new Binding("WaypointsForSet") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of haul points", Binding = new Binding("WaypointsForHaul") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of track points", Binding = new Binding("TrackpointsCount") });
+                        cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.LatestTripsOfUser(selectedItem.Header.ToString());
+
+                        break;
+                    case "download history":
+                        cybertrackerHistoryGrid.AutoGenerateColumns = false;
+                        cybertrackerHistoryGrid.Columns.Clear();
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Identifier", Binding = new Binding("Identifier") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Version", Binding = new Binding("Version") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("User") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Gear", Binding = new Binding("Gear") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Landing site", Binding = new Binding("LandingSite") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Date start", Binding = new Binding("DateStart") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "Date end", Binding = new Binding("DateEnd") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# waypoints at set", Binding = new Binding("WaypointsForSet") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# waypoints at haul", Binding = new Binding("WaypointsForHaul") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# track points", Binding = new Binding("TrackpointsCount") });
+                        cybertrackerHistoryGrid.DataContext = Entities.CTXFileViewModel.GetCTXFilesSummaryView(DateTime.Parse(selectedItem.Header.ToString()));
+                        break;
+                        //case "Devices":
+                        //    var list = Entities.CTXFileViewModel.GetUserSummary();
+                        //    cybertrackerDeviceGrid.Columns.Clear();
+                        //    cybertrackerDeviceGrid.ItemsSource = list;
+                        //    cybertrackerDeviceGrid.AutoGenerateColumns = true;
+                        //    break;
+                }
+            }
+            else
+            {
+                SetCybertrackerPanelsVisibility(selectedItem.Header.ToString());
+            }
         }
     }
 }

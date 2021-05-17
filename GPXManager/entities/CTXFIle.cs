@@ -7,7 +7,61 @@ using WinSCP;
 
 namespace GPXManager.entities
 {
-    public class CTXFIle
+    public class CTXFileSummaryView
+    {
+        public CTXFileSummaryView(CTXFile f)
+        {
+            Identifier = f.RowID;
+            DateStart = "";
+            DateEnd = "";
+            if(f.DateStart!=null)
+            {
+                DateStart = ((DateTime)f.DateStart).ToString("MMM-dd-yyyy HH:mm");
+            }
+            if (f.DateEnd != null)
+            {
+                DateEnd = ((DateTime)f.DateEnd).ToString("MMM-dd-yyyy HH:mm");
+            }
+
+            if(DateEnd.Length>0 && DateStart.Length>0)
+            {
+                Duration = ((DateTime)f.DateEnd - (DateTime)f.DateStart).ToString();
+            }
+
+            WaypointsForSet = f.SetGearPtCount;
+            WaypointsForHaul = f.RetrieveGearPtCount;
+            TrackpointsCount = f.TrackPtCount;
+            User = f.UserName;
+            Gear = f.Gear;
+            LandingSite = f.LandingSite;
+            Version = f.AppVersion;
+            XML = f.XML;
+            CTXFile = f;
+            CTXFileName = f.CTXFileName;
+            DeviceID = f.DeviceID;
+
+        }
+        public string Duration { get; internal set; }
+        public string CTXFileName { get; internal set; }
+        public string DeviceID{ get; internal set; }
+        public string Version { get; internal set; }
+        public string User { get;internal set; }
+        public int Identifier { get; internal set; }
+        public string DateStart { get; internal set; }
+        public string DateEnd { get; internal set; }
+        public int? WaypointsForSet { get; internal set; }
+        public int? WaypointsForHaul { get; internal set; }
+
+        public int? TrackpointsCount { get; internal set; }
+
+        public string Gear { get; internal set; }
+        public string LandingSite { get; internal set; }
+
+        public string XML { get; internal set; }
+
+        public CTXFile CTXFile { get; internal set; }
+    }
+    public class CTXFile
     {
         public RemoteFileInfo RemoteFileInfo { get; set; }
 
@@ -26,6 +80,8 @@ namespace GPXManager.entities
         public DateTime? TrackTimeStampEnd { get; set; }
         public int? SetGearPtCount { get; set; }
         public int? RetrieveGearPtCount { get; set; }
+
+        public int? NumberOfTrips { get; set; }
         public int RowID { get; set; }
         public string DeviceID { get; set; }
         public string FileName { get; set; }
@@ -38,7 +94,14 @@ namespace GPXManager.entities
 
         public override string ToString()
         {
-            return RemoteFileInfo.Name;
+            if (RemoteFileInfo != null)
+            {
+                return RemoteFileInfo.Name;
+            }
+            else
+            {
+                return "";
+            }
         }
     }
 }

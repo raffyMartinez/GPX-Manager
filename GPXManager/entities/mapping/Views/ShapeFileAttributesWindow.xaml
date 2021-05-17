@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
         <Label Content="This is the label" Margin="10 0" x:Name="labelTitle"/>
         <DataGrid x:Name="dataGridAttributes" Margin="10 10" Grid.Row="1" AutoGenerateColumns="True" ItemsSource="{Binding}" 
-                  CanUserAddRows="False" SelectionChanged="OnDataGridSelectionChanged"/>
+                  CanUserAddRows="False" SelectionChanged="OnDataGridSelectionChanged" IsReadOnly="True"/>
         <WrapPanel Grid.Row="2" HorizontalAlignment="Right" VerticalAlignment="Center">
             <Button Content="Close" Height="30" Width="75" Margin="10 0" x:Name="buttonClose" Click="OnButtonCLick"/>
         </WrapPanel>

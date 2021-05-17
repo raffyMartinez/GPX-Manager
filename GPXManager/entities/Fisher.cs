@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace GPXManager.entities
 {
-    public enum DeviceType
-    {
-        DeviceTypeNone,
-        DeviceTypeGPS,
-        DeviceTypePhone
-    }
+
     public class Fisher
     {
         private List<string> _gearCodes = new List<string>();

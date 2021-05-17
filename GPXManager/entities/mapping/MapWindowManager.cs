@@ -29,8 +29,18 @@ namespace GPXManager.entities.mapping
 
         public static MapLayer GPXTracksLayer { get; set; }
 
-        public static GPXFile TrackGPXFile{get;set;}
+        public static MapLayer GPXTrackVerticesLayer { get; set; }
         public static MapLayer GPXWaypointsLayer { get; set; }
+        public static MapLayer CTXTrackVerticesLayer { get; set; }
+        public static MapLayer CTXTracksLayer { get; set; }
+
+        public static MapLayer CTXWaypointsLayer { get; set; }
+
+
+        public static CTXFile CTXFile { get; set; }
+
+        public static GPXFile TrackGPXFile { get; set; }
+
 
         public static MapLayersViewModel MapLayersViewModel { get; set; }
         public static MapLayersHandler MapLayersHandler { get; private set; }
@@ -76,6 +86,9 @@ namespace GPXManager.entities.mapping
             RemoveLayerByKey("gpx_track_vertices");
             RemoveLayerByKey("named_points_from_gpx");
             RemoveLayerByKey("gpx_waypoints");
+            RemoveLayerByKey("ctx_track");
+            RemoveLayerByKey("ctxfile_waypoint");
+            RemoveLayerByKey("ctx_track_vertices");
             GPXMappingManager.RemoveAllFromMap();
         }
         public static string CoastLineFile
@@ -83,7 +96,7 @@ namespace GPXManager.entities.mapping
             get { return $@"{globalMapping.ApplicationPath}\Layers\Coastline\philippines_polygon.shp"; }
         }
 
-       
+
         static MapWindowManager()
         {
             GlobalSettings gs = new GlobalSettings();
@@ -115,7 +128,7 @@ namespace GPXManager.entities.mapping
             //TileProviders.Add(23, "MapQuestAerial");
 
         }
-        public static MapWindowForm OpenMapWindow(MainWindow ownerWindow, bool showCoastline=false)
+        public static MapWindowForm OpenMapWindow(MainWindow ownerWindow, bool showCoastline = false)
         {
 
             MapWindowForm mwf = MapWindowForm.GetInstance();
@@ -131,13 +144,13 @@ namespace GPXManager.entities.mapping
                 MapWindowForm.Owner = ownerWindow;
                 MapWindowForm.ParentWindow = ownerWindow;
                 MapWindowForm.Show();
-                
+
                 MapLayersHandler = MapWindowForm.MapLayersHandler;
                 MapInterActionHandler = MapWindowForm.MapInterActionHandler;
                 ShapefileAttributeTableManager.MapInterActionHandler = MapInterActionHandler;
                 AOIManager.Setup();
                 MapControl = MapWindowForm.MapControl;
-                if(!MapStateFileExists)
+                if (!MapStateFileExists)
                 {
                     LoadCoastline(CoastLineFile);
                     MapControl.TileProvider = tkTileProvider.ProviderNone;
@@ -289,16 +302,16 @@ namespace GPXManager.entities.mapping
             if (Directory.Exists($@"{LayersFolder}\LGUBoundary"))
             {
                 var files = Directory.GetFiles($@"{LayersFolder}\LGUBoundary", "*.shp");
-                if(files.Length>=0)
+                if (files.Length >= 0)
                 {
-                   var result= MapLayersHandler.FileOpenHandler(files[0],"LGU boundary",layerkey:"lgu_boundary");
+                    var result = MapLayersHandler.FileOpenHandler(files[0], "LGU boundary", layerkey: "lgu_boundary");
                     feedBack = result.errMsg;
-                    return result.success; 
+                    return result.success;
                 }
             }
             feedBack = "Folder for LGU boundary not found";
             return false;
-            
+
         }
         public static string LastError { get; set; }
 
@@ -351,7 +364,7 @@ namespace GPXManager.entities.mapping
         {
             get { return File.Exists($@"{AppDomain.CurrentDomain.BaseDirectory}mapstate.txt"); }
         }
-        private static string  InsertCustomSettingToMapState(string xml)
+        private static string InsertCustomSettingToMapState(string xml)
         {
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(xml);
@@ -359,10 +372,10 @@ namespace GPXManager.entities.mapping
 
             var coastlineLayer = MapLayersHandler.get_MapLayer("Coastline");
             XmlAttribute attr = doc.CreateAttribute("HasCoastline");
-            attr.Value = coastlineLayer!=null ? "1" : "0";
+            attr.Value = coastlineLayer != null ? "1" : "0";
             mapstate.Attributes.SetNamedItem(attr);
 
-            if (coastlineLayer!=null)
+            if (coastlineLayer != null)
             {
                 attr = doc.CreateAttribute("CoastlineVisible");
                 attr.Value = coastlineLayer.Visible ? "1" : "0";
@@ -391,7 +404,7 @@ namespace GPXManager.entities.mapping
 
         }
 
-        public static bool LoadCoastline(string coastlineShapeFile_FileName, bool visible=true)
+        public static bool LoadCoastline(string coastlineShapeFile_FileName, bool visible = true)
         {
             bool coastlineLoaded = false;
             for (int h = 0; h < MapControl.NumLayers - 1; h++)
@@ -412,7 +425,7 @@ namespace GPXManager.entities.mapping
                 if (sf.Open(coastlineShapeFile_FileName))
                 {
                     sf.Key = "coastline";
-                    var h = MapLayersHandler.AddLayer(sf, "Coastline", uniqueLayer:true, isVisible:visible, layerKey: "coastline", rejectIfExisting:true);
+                    var h = MapLayersHandler.AddLayer(sf, "Coastline", uniqueLayer: true, isVisible: visible, layerKey: "coastline", rejectIfExisting: true);
                     Coastline = sf;
                 }
             }
@@ -423,6 +436,7 @@ namespace GPXManager.entities.mapping
             MapWindowForm = null;
         }
 
+
         public static List<int> SelectedAttributeRows
         {
             get { return _selectedShapedIDs; }
@@ -431,7 +445,7 @@ namespace GPXManager.entities.mapping
                 _selectedShapedIDs = value;
                 var sf = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
                 sf.SelectNone();
-                foreach(var h in _selectedShapedIDs)
+                foreach (var h in _selectedShapedIDs)
                 {
                     sf.ShapeSelected[h] = true;
                 }
@@ -445,21 +459,42 @@ namespace GPXManager.entities.mapping
         }
 
 
-        public static int MapWaypointList(List<WaypointLocalTime> wpts, out List<int>handles)
+        public static int MapWaypointList(List<WaypointLocalTime> wpts, out List<int> handles)
         {
             handles = new List<int>();
-            if(wpts.Count>0)
+            if (wpts.Count > 0)
             {
-                var sf = ShapefileFactory.PointsFromWaypointList(wpts,out handles);
+                var sf = ShapefileFactory.PointsFromWaypointList(wpts, out handles);
                 MapLayersHandler.AddLayer(sf, "GPX waypoints", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
             }
             return MapLayersHandler.CurrentMapLayer.Handle;
         }
-        
-        public static int MapTrackGPX(GPXFile gpxfile, out List<int>handles)
+
+        public static int MapWaypointsCTX(CTXFileSummaryView ctx, out List<int> handles)
         {
             handles = new List<int>();
-            if(gpxfile.Tracks.Count>0)
+            if (ctx.WaypointsForSet != null && ctx.WaypointsForSet > 0 ||
+                ctx.WaypointsForHaul != null && ctx.WaypointsForHaul > 0)
+            {
+                var sf = ShapefileFactory.WaypointsFromCTX(ctx, out handles);
+                MapLayersHandler.AddLayer(sf, "CTX waypoints", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+            }
+            return MapLayersHandler.CurrentMapLayer.Handle;
+        }
+        public static int MapTrackCTX(CTXFileSummaryView ctx, out List<int> handles)
+        {
+            handles = new List<int>();
+            if (ctx.TrackpointsCount != null && ctx.TrackpointsCount > 0)
+            {
+                var sf = ShapefileFactory.TrackFromCTX(ctx, out handles);
+                MapLayersHandler.AddLayer(sf, "CTX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+            }
+            return MapLayersHandler.CurrentMapLayer.Handle;
+        }
+        public static int MapTrackGPX(GPXFile gpxfile, out List<int> handles)
+        {
+            handles = new List<int>();
+            if (gpxfile.Tracks.Count > 0)
             {
                 var sf = ShapefileFactory.TrackFromGPX(gpxfile, out handles);
                 MapLayersHandler.AddLayer(sf, "GPX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
@@ -474,30 +509,30 @@ namespace GPXManager.entities.mapping
             var shpfileName = "";
             if (showInMap)
             {
-                if(trip.Track.Waypoints.Count>0)
+                if (trip.Track.Waypoints.Count > 0)
                 {
                     Shapefile sf = null;
                     List<Trip> trips = new List<Trip>();
                     trips.Add(trip);
-                    sf = ShapefileFactory.TrackFromTrip( trips, out handles);
+                    sf = ShapefileFactory.TrackFromTrip(trips, out handles);
                     shpfileName = "Trip tracks";
                     MapLayersHandler.AddLayer(sf, shpfileName, uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
                 }
 
-                
+
             }
             return MapLayersHandler.CurrentMapLayer.Handle;
         }
 
         internal static void LabelTripWaypopints()
         {
-            
+
         }
 
 
 
 
-        public static int MapGPX(GPXFile gpxFile,  out int shpIndex,  out List<int>handles,  bool showInMap = true)
+        public static int MapGPX(GPXFile gpxFile, out int shpIndex, out List<int> handles, bool showInMap = true)
         {
             shpIndex = -1;
             handles = new List<int>();
@@ -547,7 +582,7 @@ namespace GPXManager.entities.mapping
                 MapLayersHandler.RemoveLayer(ly.Handle);
                 return -1;
             }
-            
+
         }
     }
 }

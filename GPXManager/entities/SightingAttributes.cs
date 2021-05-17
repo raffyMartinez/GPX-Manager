@@ -15,6 +15,8 @@ namespace GPXManager.entities
         public DateTime? Start { get; set; }
         public DateTime? End { get; set; }
 
+        public int? NumberOfTrips { get; set; }
+
         public int? TrackPointCount { get; set; }
 
         public DateTime? TrackTimeStampStart { get; set; }

@@ -31,7 +31,7 @@ namespace GPXManager.entities
                 try
                 {
                     conection.Open();
-                    string query = $"Select * from devices where isPhone=false";
+                    string query = $"Select * from devices where DeviceType=1";
 
 
                     var adapter = new OleDbDataAdapter(query, conection);
@@ -48,6 +48,7 @@ namespace GPXManager.entities
                             gps.Brand = dr["Brand"].ToString();
                             gps.Model = dr["Model"].ToString();
                             gps.Folder = dr["Folder"].ToString();
+                            gps.DeviceType = (DeviceType)Enum.Parse(typeof(DeviceType), dr["DeviceType"].ToString());
                             //gps.PNPDeviceID = dr["PNPDeviceID"].ToString();
                             //gps.VolumeName = dr["VolumeName"].ToString();
                             listGPS.Add(gps);
@@ -60,9 +61,9 @@ namespace GPXManager.entities
                     {
                         case -2147217904:
                             //ModifyGPSTable();
-                            if(UpdateTable())
+                            if(AddColumn("DeviceType","Int") && UpdateAllDevicesToGPS())
                             {
-                                gpsList = getGPSes();
+                                return getGPSes();
                             }
                         //No value given for one or more required parameters.
                         break;
@@ -77,7 +78,21 @@ namespace GPXManager.entities
             }
             return listGPS;
         }
+        private bool UpdateAllDevicesToGPS()
+        {
+            bool success = false;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+                var sql = $@"Update devices set DeviceType = 1";
 
+                using (OleDbCommand update = new OleDbCommand(sql, conn))
+                {
+                    success = update.ExecuteNonQuery() > 0;
+                }
+            }
+            return success;
+        }
         public bool Add(GPS gps)
         {
             bool success = false;
@@ -125,32 +140,32 @@ namespace GPXManager.entities
             return success;
         }
 
-        private bool UpdateTable()
-        {
-            var updated = false;
-            var columns = new List<string>();
-            using (var con = new OleDbConnection(Global.ConnectionString))
-            {
-                con.Open();
-                using (var cmd = new OleDbCommand("select * from devices", con))
-                    using (var reader = cmd.ExecuteReader(CommandBehavior.SchemaOnly))
-                    {
-                        var table = reader.GetSchemaTable();
-                        var nameColIndex = table.Columns["ColumnName"].Ordinal;
-                        foreach (DataRow row in table.Rows)
-                        {
-                            columns.Add(row.ItemArray[nameColIndex].ToString());
-                        }
-                    }
-            }
+        //private bool UpdateTable()
+        //{
+        //    var updated = false;
+        //    var columns = new List<string>();
+        //    using (var con = new OleDbConnection(Global.ConnectionString))
+        //    {
+        //        con.Open();
+        //        using (var cmd = new OleDbCommand("select * from devices", con))
+        //            using (var reader = cmd.ExecuteReader(CommandBehavior.SchemaOnly))
+        //            {
+        //                var table = reader.GetSchemaTable();
+        //                var nameColIndex = table.Columns["ColumnName"].Ordinal;
+        //                foreach (DataRow row in table.Rows)
+        //                {
+        //                    columns.Add(row.ItemArray[nameColIndex].ToString());
+        //                }
+        //            }
+        //    }
 
-            if(!columns.Contains("isPhone"))
-            {
-               updated =  AddColumn("isPhone", "bool");
+        //    if(!columns.Contains("isPhone"))
+        //    {
+        //       updated =  AddColumn("isPhone", "bool");
 
-            }
-            return updated;
-        }
+        //    }
+        //    return updated;
+        //}
 
         private bool AddColumn(string colName, string type, int? length = null)
         {
@@ -161,7 +176,14 @@ namespace GPXManager.entities
             }
             else
             {
-                sql = $"ALTER TABLE devices ADD COLUMN {colName} {type}({length})";
+                if (length == null)
+                {
+                    sql = $"ALTER TABLE devices ADD COLUMN {colName} {type}";
+                }
+                else
+                {
+                    sql = $"ALTER TABLE devices ADD COLUMN {colName} {type}({length})";
+                }
             }
             using (var con = new OleDbConnection(Global.ConnectionString))
             {

@@ -14,7 +14,7 @@ namespace GPXManager.entities.mapping
 
         public static string DataCaption { get; internal set; }
         public static MapInterActionHandler MapInterActionHandler { get; set; }
-        
+
         /// <summary>
         /// creates a datatable that represents the dbf table of shapefile attributes
         /// </summary>
@@ -58,7 +58,9 @@ namespace GPXManager.entities.mapping
                     row = dt.NewRow();
                     for (int z = 0; z < sf.NumFields; z++)
                     {
+
                         row[z] = sf.CellValue[z, x];
+
                     }
                     dt.Rows.Add(row);
                 }

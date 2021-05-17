@@ -439,7 +439,14 @@ namespace GPXManager.views
                 case "buttonTrack":
                     if((bool)tb.IsChecked)
                     {
-                        if(MapWindowManager.TrackGPXFile!=null)
+                        if(MapWindowManager.CTXFile!=null && MapWindowManager.CTXFile.TrackPtCount>0)
+                        {
+                            List<int> handles = new List<int>();
+                            var sf = ShapefileFactory.CTXTrackVertices(MapWindowManager.CTXFile, out handles);
+                            MapWindowManager.MapLayersHandler.AddLayer(sf, "Vertices", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                            MapWindowManager.MapLayersWindow.RefreshCurrentLayer();
+                        }
+                        else if(MapWindowManager.TrackGPXFile!=null)
                         {
                             List<int> handles = new List<int>();
                             var sf = ShapefileFactory.GPXTrackVertices(MapWindowManager.TrackGPXFile,out handles);

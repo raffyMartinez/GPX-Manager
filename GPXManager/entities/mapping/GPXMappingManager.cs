@@ -29,6 +29,13 @@ namespace GPXManager.entities.mapping
         {
             _mapInterActionHandler.MapLayersHandler.RemoveLayerByKey("gpx_track_vertices");
         }
+
+        public static void RemoveCTXLayersFromMap()
+        {
+            _mapInterActionHandler.MapLayersHandler.RemoveLayerByKey("ctx_track");
+            _mapInterActionHandler.MapLayersHandler.RemoveLayerByKey("gpx_waypoints");
+            //RemoveGPXTrackVertices();
+        }
         public static void RemoveGPXLayersFromMap()
         {
             _mapInterActionHandler.MapLayersHandler.RemoveLayerByKey("gpxfile_track");
