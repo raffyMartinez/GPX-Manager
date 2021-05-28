@@ -65,7 +65,9 @@ namespace GPXManager
         private LogbookImage _logbookImage;
         private TreeViewItem _selectedTreeViewItem;
         private bool _startUp = false;
-        private CTXFileSummaryView _ctxFile;
+        private CTXFileSummaryView _ctxFileSummary;
+
+
         public DataGrid CurrentDataGrid { get; set; }
 
         public MainWindow()
@@ -186,6 +188,12 @@ namespace GPXManager
                             m.Click += OnMenuClick;
                             cm.Items.Add(m);
                         }
+
+                        cm.Items.Add(new Separator());
+
+                        m = new MenuItem { Header = "Extract fishing tracks", Name = "menuExtractFishingTracks" };
+                        m.Click += OnMenuClick;
+                        cm.Items.Add(m);
                     }
                     else
                     {
@@ -302,6 +310,7 @@ namespace GPXManager
                     SetupLogBookImageControls();
                     _startUp = true;
                     ShowArchive();
+                    ShapefileFactory.MaxSelfCrossings = 3;
                     ((TreeViewItem)treeViewCybertracker.Items[0]).IsSelected = true;
                 }
                 else
@@ -991,10 +1000,33 @@ namespace GPXManager
         {
             this.Focus();
         }
+
+        private void GetCybertrackerFilesForImporting()
+        {
+            VistaFolderBrowserDialog vfbd = new VistaFolderBrowserDialog();
+            vfbd.Description = "Select folder with CTX files to import into CPX Manager";
+            vfbd.UseDescriptionForTitle = true;
+            vfbd.ShowDialog();
+            if (vfbd.SelectedPath.Length > 0 && Directory.Exists(vfbd.SelectedPath))
+            {
+                Entities.CTXFileViewModel.GetFilesFromDrive(vfbd.SelectedPath);
+                cybertrackerImportedGrid.DataContext = Entities.CTXFileViewModel.FilesForImporting;
+            }
+        }
         private async void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch (((Button)sender).Name)
+            var btn = (Button)sender;
+            switch (btn.Name)
             {
+                case "buttonExtractFishingTrack":
+                    ExtractFishingTracksWindow eftw = new ExtractFishingTracksWindow();
+                    eftw.Owner = this;
+                    eftw.ShowDialog();
+                    break;
+                case "buttonGetCybertrackerFilesForImporting":
+                    btn.IsEnabled = false;
+                    GetCybertrackerFilesForImporting();
+                    break;
                 case "buttonBackupCTXFiles":
                     Entities.CTXFileViewModel.CopyCTXToBackupFolder();
                     break;
@@ -1019,8 +1051,84 @@ namespace GPXManager
                         lsew.Show();
                     }
                     break;
-                case "buttonDownloadSelected":
+                case "buttonImportSelected":
+                    btn.IsEnabled = false;
+                    var forImporting = new List<CTXFile>();
+                    var importedCount = 0;
+                    foreach (var item in cybertrackerImportedGrid.Items)
+                    {
+                        if (!((CTXFile)item).IsDownloaded && ((CTXFile)item).DownloadFile)
+                        {
+                            forImporting.Add((CTXFile)item);
+                        }
+                        else if (((CTXFile)item).IsDownloaded)
+                        {
+                            importedCount++;
+                        }
+                    }
+                    if (forImporting.Count > 0)
+                    {
+                        VistaFolderBrowserDialog fbd = new VistaFolderBrowserDialog();
+                        fbd.UseDescriptionForTitle = true;
+                        fbd.SelectedPath = Global.Settings.CTXDownloadFolder;
+                        fbd.Description = "Locate folder for saving imported cybertracker data files";
+                        if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
+                        {
+                            Entities.CTXFileViewModel.XMLFileFromImportedCTXCreated += CTXFileViewModel_XMLFileFromImportedCTXCreated;
+                            statusProgress.Visibility = Visibility.Visible;
+                            statusProgress.Maximum = forImporting.Count;
+                            statusProgress.Value = 0;
+                            await Entities.CTXFileViewModel.ImportCTXFilesAsync(forImporting, fbd.SelectedPath);
+                            cybertrackerImportedGrid.Items.Refresh();
+                            Entities.CTXFileViewModel.XMLFileFromImportedCTXCreated -= CTXFileViewModel_XMLFileFromImportedCTXCreated;
+                            statusProgress.Visibility = Visibility.Collapsed;
+                            MessageBox.Show($"Finished importing {statusProgress.Value} files", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                            if (cybertrackerTreeItemHistory.Items.Count == 0)
+                            {
+                                foreach (var date in Entities.CTXFileViewModel.GetDownloadDates())
+                                {
+                                    cybertrackerTreeItemHistory.Items.Add(new TreeViewItem { Header = date.ToString("MMM-dd-yyyy") });
+                                }
+                            }
+                            else
+                            {
+                                foreach (var date in Entities.CTXFileViewModel.GetDownloadDates())
+                                {
+                                    bool itemFound = false;
+                                    foreach (TreeViewItem i in cybertrackerTreeItemHistory.Items)
+                                    {
+                                        if (i.Header.ToString() == date.ToString("MMM-dd-yyyy"))
+                                        {
+                                            itemFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!itemFound)
+                                    {
+                                        cybertrackerTreeItemHistory.Items.Add(new TreeViewItem { Header = date.ToString("MMM-dd-yyyy"), Tag = "download history" });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (importedCount == cybertrackerImportedGrid.Items.Count)
+                        {
+                            MessageBox.Show("All files are already imported", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("Select at least one file for importing", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
 
+
+
+                    }
+
+                    break;
+                case "buttonDownloadSelected":
+                    btn.IsEnabled = false;
                     var forDownloading = new List<CTXFile>();
                     var downloadedCount = 0;
                     foreach (var item in cybertrackerGridAvailableFiles.Items)
@@ -1042,7 +1150,7 @@ namespace GPXManager
                         fbd.Description = "Locate download folder for cybertracker data files";
                         if ((bool)fbd.ShowDialog() && fbd.SelectedPath.Length > 0)
                         {
-                            buttonDownloadSelected.IsEnabled = false;
+                            btn.IsEnabled = false;
                             Entities.CTXFileViewModel.XMLFileFromCTXCreated += CTXFileViewModel_XMLFileFromCTXCreated;
                             statusProgress.Visibility = Visibility.Visible;
                             statusProgress.Maximum = forDownloading.Count;
@@ -1051,7 +1159,34 @@ namespace GPXManager
                             cybertrackerGridAvailableFiles.Items.Refresh();
                             Entities.CTXFileViewModel.XMLFileFromCTXCreated -= CTXFileViewModel_XMLFileFromCTXCreated;
                             statusProgress.Visibility = Visibility.Collapsed;
-                            MessageBox.Show($"Finished downloading {forDownloading.Count} files", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                            MessageBox.Show($"Finished downloading {statusProgress.Value} files", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                            if (cybertrackerTreeItemHistory.Items.Count == 0)
+                            {
+                                foreach (var date in Entities.CTXFileViewModel.GetDownloadDates())
+                                {
+                                    cybertrackerTreeItemHistory.Items.Add(new TreeViewItem { Header = date.ToString("MMM-dd-yyyy") });
+                                }
+                            }
+                            else
+                            {
+                                foreach (var date in Entities.CTXFileViewModel.GetDownloadDates())
+                                {
+                                    bool itemFound = false;
+                                    foreach (TreeViewItem i in cybertrackerTreeItemHistory.Items)
+                                    {
+                                        if (i.Header.ToString() == date.ToString("MMM-dd-yyyy"))
+                                        {
+                                            itemFound = true;
+                                            break;
+                                        }
+                                    }
+                                    if (!itemFound)
+                                    {
+                                        cybertrackerTreeItemHistory.Items.Add(new TreeViewItem { Header = date.ToString("MMM-dd-yyyy"), Tag = "download history" });
+                                    }
+                                }
+                            }
                         }
                     }
                     else
@@ -1065,17 +1200,25 @@ namespace GPXManager
                             MessageBox.Show("Select at least one file for downloading", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
-                    buttonDownloadSelected.IsEnabled = true;
+
                     break;
                 case "buttonCheckAll":
-                    foreach (var item in cybertrackerGridAvailableFiles.Items)
+                case "buttonImportCheckAll":
+                    btn.IsEnabled = false;
+                    DataGrid dg = cybertrackerGridAvailableFiles;
+                    if (btn.Name == "buttonImportCheckAll")
+                    {
+                        dg = cybertrackerImportedGrid;
+                    }
+
+                    foreach (var item in dg.Items)
                     {
                         ((CTXFile)item).DownloadFile = true;
                     }
-                    cybertrackerGridAvailableFiles.Items.Refresh();
+                    dg.Items.Refresh();
                     break;
                 case "buttonConnectFTP":
-                    buttonConnectFTP.IsEnabled = false;
+                    btn.IsEnabled = false;
                     if (await Entities.CTXFileViewModel.GetFileListInServerAsync(
                          cybertrackerTextBoxFolderName.Text,
                          cybertrackerTextBoxUserName.Text,
@@ -1099,7 +1242,6 @@ namespace GPXManager
                             MessageBox.Show(Entities.CTXFileViewModel.LastRepositoryError(), "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
-                    buttonConnectFTP.IsEnabled = true;
                     break;
 
                 case "buttonSaveWaypointTripEdits":
@@ -1251,6 +1393,17 @@ namespace GPXManager
                     }
                     break;
             }
+            btn.IsEnabled = true;
+        }
+
+        private void CTXFileViewModel_XMLFileFromImportedCTXCreated(CTXFileViewModel s, CTXFileImportEventArgs e)
+        {
+            statusProgress.Dispatcher.BeginInvoke
+                (DispatcherPriority.Normal, new DispatcherOperationCallback(delegate
+                    {
+                        statusProgress.Value++;
+                        return null;
+                    }), null);
         }
 
         private void CTXFileViewModel_XMLFileFromCTXCreated(CTXFileViewModel s, WinSCP.TransferEventArgs e)
@@ -1639,26 +1792,20 @@ namespace GPXManager
             aw.Owner = this;
             aw.ShowDialog();
         }
+        private void ExtractFishingTracks()
+        {
+
+        }
 
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
             string menuName = ((MenuItem)sender).Name;
             switch (menuName)
             {
+                case "menuExtractFishingTracks":
+                    ExtractFishingTracks();
+                    break;
                 case "menuAddTripUsingGPS":
-
-                    //EditTripWindow etw = EditTripWindow.GetInstance();
-                    //etw.IsNew = true;
-                    //etw.GPS = _gps;
-                    //etw.ParentWindow = this;
-                    //if (etw.Visibility == Visibility.Visible)
-                    //{
-                    //    etw.BringIntoView();
-                    //}
-                    //else
-                    //{
-                    //    etw.Show();
-                    //}
                     AddTrip();
                     break;
                 case "menuGetTimeFromTrack":
@@ -2077,7 +2224,7 @@ namespace GPXManager
             DataGridTextColumn col;
             dataGridGPXFiles.Columns.Clear();
             dataGridGPXFiles.AutoGenerateColumns = false;
-
+            dataGridGPXFiles.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new Binding("RowID") });
             dataGridGPXFiles.Columns.Add(new DataGridTextColumn { Header = "File name", Binding = new Binding("FileName") });
             dataGridGPXFiles.Columns.Add(new DataGridTextColumn { Header = "Date range", Binding = new Binding("DateRange") });
 
@@ -2227,6 +2374,15 @@ namespace GPXManager
             dataGridLandingSites.Columns.Add(new DataGridTextColumn { Header = "Longitude", Binding = new Binding("Lon") });
 
 
+
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new Binding("ID") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("DeviceName") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "Source", Binding = new Binding("TrackSourceTypeToString") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "Start", Binding = new Binding("Start") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "Duration", Binding = new Binding("Duration") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "End", Binding = new Binding("End") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "Length", Binding = new Binding("LengthOriginal") });
+            DataGridExtractedTracks.Columns.Add(new DataGridTextColumn { Header = "Average speed ", Binding = new Binding("AverageSpeed") });
 
 
         }
@@ -2772,6 +2928,20 @@ namespace GPXManager
 
         public Control LayerSelector { get; set; }
 
+        private void CheckXMLOfSummaryFile(CTXFileSummaryView summaryView)
+        {
+            if (summaryView != null)
+            {
+                string xml = summaryView.CTXFile.XML;
+                if (xml == "")
+                {
+                    xml = Entities.CTXFileViewModel.GetXMLOfCTX(_ctxFileSummary.CTXFile);
+                    summaryView.XML = xml;
+                    summaryView.CTXFile.XML = xml;
+                }
+            }
+        }
+
         private void OnDataGridSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
@@ -2784,22 +2954,35 @@ namespace GPXManager
             }
             switch (((DataGrid)sender).Name)
             {
+                case "DataGridExtractedTracks":
+                    break;
+                case "cybertrackerGridAvailableFiles":
+
+                    _ctxFileSummary = new CTXFileSummaryView((CTXFile)((DataGrid)sender).SelectedItem);
+                    CheckXMLOfSummaryFile(_ctxFileSummary);
+                    break;
                 case "cybertrackerHistoryGrid":
                 case "cybertrackerDataGrid":
-                    _ctxFile = (CTXFileSummaryView)((DataGrid)sender).SelectedItem;
-
-                    if (_ctxFile != null)
+                    _ctxFileSummary = (CTXFileSummaryView)((DataGrid)sender).SelectedItem;
+                    CheckXMLOfSummaryFile(_ctxFileSummary);
+                    if (_ctxFileSummary != null)
                     {
                         if (MapWindowForm.Instance != null)
                         {
-                            List<int> handles = new List<int>();
-                            MapWindowManager.CTXFile = _ctxFile.CTXFile;
+                            //List<int> handles = new List<int>();
+                            MapWindowManager.CTXFile = _ctxFileSummary.CTXFile;
                             MapWindowManager.RemoveGPSDataFromMap();
-                            if (_ctxFile.TrackpointsCount != null && _ctxFile.TrackpointsCount > 0 && MapWindowManager.MapTrackCTX(_ctxFile, out handles) >= 0)
+                            if (_ctxFileSummary.TrackpointsCount != null && _ctxFileSummary.TrackpointsCount > 0)// && MapWindowManager.MapTrackCTX(_ctxFile, out handles) >= 0)
                             {
+                                var result = MapWindowManager.MapTrackCTX(_ctxFileSummary);
                                 List<int> pthandles = new List<int>();
-                                MapWindowManager.MapWaypointsCTX(_ctxFile, out pthandles);
+                                MapWindowManager.MapWaypointsCTX(_ctxFileSummary, out pthandles);
+
+                                List<int> trackHandles = new List<int>();
+
+                                MapWindowManager.MapExtractedFishingTrack(result, out trackHandles);
                             }
+                            MapWindowManager.MapWindowForm.ResetTrackVertivesButton();
                         }
 
                         if (CTXFileDetailsWindow.Instance != null)
@@ -2879,23 +3062,23 @@ namespace GPXManager
                     _gpxFile = (GPXFile)dataGridGPXFiles.SelectedItem;
                     _isTrackGPX = _gpxFile?.TrackCount > 0;
 
-                    if (_inArchive && _isTrackGPX)
-                    {
-                        _trips = Entities.TripViewModel.GetTrips(_gpxFile.GPS, _gpxFile.FileName);
-                        menuGPXViewTrip.Visibility = Visibility.Visible;
-                        if (_editTripWindow != null)
-                        {
-                            if (_trips.Count == 1)
-                            {
-                                _editTripWindow.TripID = _trips[0].TripID;
-                            }
-                            else if (_trips.Count == 0)
-                            {
-                                _editTripWindow.DefaultTripDates(_gpxFile.DateRangeStart.AddMinutes(1), _gpxFile.DateRangeEnd.AddMinutes(-1));
-                            }
-                            _editTripWindow.RefreshTrip(_trips.Count == 0);
-                        }
-                    }
+                    //if (_inArchive && _isTrackGPX)
+                    //{
+                    //    _trips = Entities.TripViewModel.GetTrips(_gpxFile.GPS, _gpxFile.FileName);
+                    //    menuGPXViewTrip.Visibility = Visibility.Visible;
+                    //    if (_editTripWindow != null)
+                    //    {
+                    //        if (_trips.Count == 1)
+                    //        {
+                    //            _editTripWindow.TripID = _trips[0].TripID;
+                    //        }
+                    //        else if (_trips.Count == 0)
+                    //        {
+                    //            _editTripWindow.DefaultTripDates(_gpxFile.DateRangeStart.AddMinutes(1), _gpxFile.DateRangeEnd.AddMinutes(-1));
+                    //        }
+                    //        _editTripWindow.RefreshTrip(_trips.Count == 0);
+                    //    }
+                    //}
 
                     if (_gpxFile != null)
                     {
@@ -2914,23 +3097,24 @@ namespace GPXManager
 
                         MapWindowManager.MapLayersHandler?.ClearAllSelections();
 
-                        if (MapWindowManager.MapWindowForm != null && dataGridGPXFiles.SelectedItems.Count == 1)
+                        if (MapWindowManager.MapWindowForm != null)
                         {
-                            //GPXMappingManager.RemoveGPXLayersFromMap();
-                            MapWindowManager.RemoveGPSDataFromMap();
-                            foreach (var item in _mappedGPXFiles)
+                            if (dataGridGPXFiles.SelectedItems.Count == 1)
                             {
-                                item.ShownInMap = false;
-                            }
-                            _mappedGPXFiles = new List<GPXFile>();
-
-                            List<int> ptHandles = new List<int>();
-                            if (_isTrackGPX)
-                            {
-                                MapWindowManager.TrackGPXFile = _gpxFile;
-                                List<int> handles = new List<int>();
-                                if (MapWindowManager.MapTrackGPX(_gpxFile, out handles) >= 0)
+                                //GPXMappingManager.RemoveGPXLayersFromMap();
+                                MapWindowManager.RemoveGPSDataFromMap();
+                                foreach (var item in _mappedGPXFiles)
                                 {
+                                    item.ShownInMap = false;
+                                }
+                                _mappedGPXFiles = new List<GPXFile>();
+
+                                List<int> ptHandles = new List<int>();
+                                if (_isTrackGPX)
+                                {
+                                    MapWindowManager.TrackGPXFile = _gpxFile;
+                                    List<int> handles = new List<int>();
+                                    var result = MapWindowManager.MapTrackGPX(_gpxFile);
                                     List<GPXFile> gpxFiles;
                                     List<WaypointLocalTime> waypoints = null;
 
@@ -2956,20 +3140,24 @@ namespace GPXManager
                                             _mappedGPXFiles.Add(item);
                                         }
                                     }
-                                }
-                            }
-                            else
-                            {
-                                var waypoints = Entities.DeviceGPXViewModel.GetWaypoints(_gpxFile);
-                                if (waypoints.Count > 0)
-                                {
-                                    MapWindowManager.MapWaypointList(waypoints, out ptHandles);
-                                }
-                                _gpxFile.ShownInMap = true;
-                            }
 
-                            MapWindowManager.MapControl.Redraw();
-                            MapWindowManager.MapLayersWindow?.RefreshCurrentLayer();
+                                    List<int> trackHandles = new List<int>();
+                                    MapWindowManager.MapExtractedFishingTrack(result, out trackHandles);
+                                }
+                                else
+                                {
+                                    var waypoints = Entities.DeviceGPXViewModel.GetWaypoints(_gpxFile);
+                                    if (waypoints.Count > 0)
+                                    {
+                                        MapWindowManager.MapWaypointList(waypoints, out ptHandles);
+                                    }
+                                    _gpxFile.ShownInMap = true;
+                                }
+
+                                MapWindowManager.MapControl.Redraw();
+                                MapWindowManager.MapLayersWindow?.RefreshCurrentLayer();
+                            }
+                            MapWindowManager.MapWindowForm.ResetTrackVertivesButton();
                         }
                         else
                         {
@@ -3045,7 +3233,14 @@ namespace GPXManager
         private void ShowSelectedCTXFile()
         {
             CTXFileDetailsWindow cfdw = CTXFileDetailsWindow.GetInstance();
-            cfdw.CTXFIle = _ctxFile;
+
+            if (_ctxFileSummary.CTXFile.XML == "")
+            {
+                string xml = Entities.CTXFileViewModel.GetXMLOfCTX(_ctxFileSummary.CTXFile);
+                _ctxFileSummary.XML = xml;
+                _ctxFileSummary.CTXFile.XML = xml;
+            }
+            cfdw.CTXFileSummary = _ctxFileSummary;
             cfdw.Owner = this;
             if (cfdw.Visibility == Visibility.Visible)
             {
@@ -3055,18 +3250,38 @@ namespace GPXManager
             else
             {
                 cfdw.Show();
-                
+
             }
         }
+
+
         private void OnGridDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            switch (((DataGrid)sender).Name)
+            DataGrid grd = (DataGrid)sender;
+            switch (grd.Name)
             {
+                case "DataGridExtractedTracks":
+                    break;
                 case "cybertrackerHistoryGrid":
                 case "cybertrackerDataGrid":
-                    if (_ctxFile != null)
+                case "cybertrackerGridAvailableFiles":
+                    if (_ctxFileSummary != null)
                     {
-                        ShowSelectedCTXFile();
+                        if (grd.Name == "cybertrackerGridAvailableFiles")
+                        {
+                            if (_ctxFileSummary.CTXFile.IsDownloaded)
+                            {
+                                if (_ctxFileSummary.XML == null)
+                                {
+                                    _ctxFileSummary = new CTXFileSummaryView(Entities.CTXFileViewModel.GetFile(_ctxFileSummary.CTXFileName));
+                                }
+                                ShowSelectedCTXFile();
+                            }
+                        }
+                        else
+                        {
+                            ShowSelectedCTXFile();
+                        }
                     }
                     break;
                 case "dataGridLandingSites":
@@ -3287,7 +3502,11 @@ namespace GPXManager
                         {
                             foreach (var name in Entities.CTXFileViewModel.GetUserNames())
                             {
-                                cybertrackerTreeItemUsers.Items.Add(new TreeViewItem { Header = name, Tag = "user name" });
+                                TreeViewItem userItem = new TreeViewItem { Header = name, Tag = "user name" };
+                                TreeViewItem userDateItem = new TreeViewItem { Header = "**dummy**" };
+                                userItem.Expanded += UserDateItem_Expanded;
+                                userItem.Items.Add(userDateItem);
+                                cybertrackerTreeItemUsers.Items.Add(userItem);
                             }
                             cybertrackerTreeItemUsers.Items.Add(new TreeViewItem { Header = "Others", Tag = "user name" });
                         }
@@ -3350,6 +3569,19 @@ namespace GPXManager
                 case "buttonMap":
                     ShowMap();
                     break;
+            }
+        }
+
+        private void UserDateItem_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (((TreeViewItem)((TreeViewItem)e.Source).Items[0])?.Header.ToString() == "**dummy**")
+            {
+                var userItem = (TreeViewItem)e.Source;
+                userItem.Items.Clear();
+                foreach (var item in Entities.CTXFileViewModel.getCTXUserHistoryMonths(userItem.Header.ToString()))
+                {
+                    userItem.Items.Add(new TreeViewItem { Header = item.ToString("MMM-yyyy"), Tag = "User history month" });
+                }
             }
         }
 
@@ -3654,6 +3886,11 @@ namespace GPXManager
 
             switch (chk.Name)
             {
+                case "chkShowExtractReults":
+
+                    ShowExtractedFishingTracksFromGearHauling();
+
+                    break;
                 case "checkEditTripWaypoints":
 
                     try
@@ -3777,72 +4014,86 @@ namespace GPXManager
 
         private void SetCybertrackerPanelsVisibility(string option)
         {
+            cybertrackerPanelImport.Visibility = Visibility.Collapsed;
+            cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
+            cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
+            cybertrackerPanelTools.Visibility = Visibility.Collapsed;
+            cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
+
             switch (option)
             {
-                case "Devices":
-                    ////cybertrackerPanelDevices.Visibility = Visibility.Visible;
-                    //cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
-                    //cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
-                    //cybertrackerPanelTools.Visibility = Visibility.Collapsed;
-                    //cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
+                case "Import":
+                    cybertrackerPanelImport.Visibility = Visibility.Visible;
                     break;
                 case "download history":
                 case "Download history":
                     cybertrackerPanelHistory.Visibility = Visibility.Visible;
-                    cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelTools.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
-                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
                 case "user name":
                 case "Users":
                 case "UsersSummary":
-                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
+                case "User history month":
                     cybertrackerPanelGrid.Visibility = Visibility.Visible;
-                    cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelTools.Visibility = Visibility.Collapsed;
-                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
                 case "Connect to server":
-                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelTools.Visibility = Visibility.Collapsed;
                     cybertrackerPanelFTP.Visibility = Visibility.Visible;
-                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
                 case "Tools":
-                    cybertrackerPanelHistory.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelGrid.Visibility = Visibility.Collapsed;
-                    cybertrackerPanelFTP.Visibility = Visibility.Collapsed;
                     cybertrackerPanelTools.Visibility = Visibility.Visible;
-                    //cybertrackerPanelDevices.Visibility = Visibility.Collapsed;
                     break;
             }
+        }
+
+
+        public void ShowExtractedFishingTracksFromGearHauling()
+        {
+
+            DataGridExtractedTracks.Visibility = Visibility.Collapsed;
+            if ((bool)chkShowExtractReults.IsChecked)
+            {
+                var extractedList = Entities.ExtractedFishingTrackViewModel.AllExtractedFishingTracks;
+                if (extractedList != null && extractedList.Count > 0)
+                {
+                    DataGridExtractedTracks.Visibility = Visibility.Visible;
+                    DataGridExtractedTracks.AutoGenerateColumns = false;
+                    DataGridExtractedTracks.DataContext = extractedList;
+
+                }
+            }
+
         }
         private void OnCybertrackerTreeItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             cybertrackerPanelGridFilesAvailable.Visibility = Visibility.Collapsed;
             TreeViewItem selectedItem = (TreeViewItem)e.NewValue;
+
             if (selectedItem.Tag != null)
             {
-                SetCybertrackerPanelsVisibility(selectedItem.Tag.ToString());
-                switch (selectedItem.Tag.ToString())
+                string tag = selectedItem.Tag.ToString();
+                SetCybertrackerPanelsVisibility(tag);
+                switch (tag)
                 {
 
-                    case "UsersSummary":
 
+                    case "Tools":
+                        ShowExtractedFishingTracksFromGearHauling();
+
+                        break;
+                    case "UsersSummary":
                         cybertrackerDataGrid.Columns.Clear();
                         cybertrackerDataGrid.AutoGenerateColumns = false;
                         cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.GetUserSummary();
-
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("User") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of trips", Binding = new Binding("TotalNumberOfTrips") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date start", Binding = new Binding("DateOfFirstTrip") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Date end", Binding = new Binding("DateOfLatestTrip") });
+                        cybertrackerDataGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "Downloaded from server", Binding = new Binding("DownloadedFromServer") });
                         break;
                     case "user name":
+                    case "User history month":
                         cybertrackerDataGrid.Columns.Clear();
                         cybertrackerDataGrid.AutoGenerateColumns = false;
+                        cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Identifier", Binding = new Binding("Identifier") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "User", Binding = new Binding("User") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Gear", Binding = new Binding("Gear") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "Landing site", Binding = new Binding("LandingSite") });
@@ -3851,7 +4102,18 @@ namespace GPXManager
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of set points", Binding = new Binding("WaypointsForSet") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of haul points", Binding = new Binding("WaypointsForHaul") });
                         cybertrackerDataGrid.Columns.Add(new DataGridTextColumn { Header = "# of track points", Binding = new Binding("TrackpointsCount") });
-                        cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.LatestTripsOfUser(selectedItem.Header.ToString());
+                        cybertrackerDataGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "Downloaded from server", Binding = new Binding("DownloadedFromServer") });
+                        if (tag == "user name")
+                        {
+                            cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.LatestTripsOfUser(selectedItem.Header.ToString());
+                        }
+                        else
+                        {
+                            cybertrackerDataGrid.DataContext = Entities.CTXFileViewModel.TripsOfUserByMonth(selectedItem.Header.ToString(), ((TreeViewItem)selectedItem.Parent).Header.ToString());
+                        }
+
+                        cybertrackerDataGrid.Items.Refresh();
+
 
                         break;
                     case "download history":
@@ -3867,20 +4129,40 @@ namespace GPXManager
                         cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# waypoints at set", Binding = new Binding("WaypointsForSet") });
                         cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# waypoints at haul", Binding = new Binding("WaypointsForHaul") });
                         cybertrackerHistoryGrid.Columns.Add(new DataGridTextColumn { Header = "# track points", Binding = new Binding("TrackpointsCount") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "XML error", Binding = new Binding("ErrorConvertingToXML") });
+                        cybertrackerHistoryGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "Downloaded from server", Binding = new Binding("DownloadedFromServer") });
                         cybertrackerHistoryGrid.DataContext = Entities.CTXFileViewModel.GetCTXFilesSummaryView(DateTime.Parse(selectedItem.Header.ToString()));
                         break;
-                        //case "Devices":
-                        //    var list = Entities.CTXFileViewModel.GetUserSummary();
-                        //    cybertrackerDeviceGrid.Columns.Clear();
-                        //    cybertrackerDeviceGrid.ItemsSource = list;
-                        //    cybertrackerDeviceGrid.AutoGenerateColumns = true;
-                        //    break;
+                    case "Import":
+                        cybertrackerImportedGrid.AutoGenerateColumns = false;
+                        cybertrackerImportedGrid.Columns.Clear();
+                        cybertrackerImportedGrid.CanUserAddRows = false;
+                        cybertrackerImportedGrid.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new Binding("FileInfo.Name"), IsReadOnly = true });
+
+                        var col = new DataGridTextColumn()
+                        {
+                            Binding = new Binding("FileInfo.LastWriteTime"),
+                            Header = "Date modified",
+                            IsReadOnly = true
+                        };
+                        col.Binding.StringFormat = "MMM-dd-yyyy HH:mm";
+                        cybertrackerImportedGrid.Columns.Add(col);
+
+                        cybertrackerImportedGrid.Columns.Add(new DataGridTextColumn { Header = "Size", Binding = new Binding("FileInfo.Length"), IsReadOnly = true });
+                        cybertrackerImportedGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "Already imported", Binding = new Binding("IsDownloaded"), IsReadOnly = true });
+                        cybertrackerImportedGrid.Columns.Add(new DataGridCheckBoxColumn { Header = "Import file", Binding = new Binding("DownloadFile") });
+                        break;
                 }
             }
             else
             {
                 SetCybertrackerPanelsVisibility(selectedItem.Header.ToString());
             }
+        }
+
+        private void OnGridRowLoading(object sender, DataGridRowEventArgs e)
+        {
+            e.Row.Header = (e.Row.GetIndex() + 1).ToString();
         }
     }
 }

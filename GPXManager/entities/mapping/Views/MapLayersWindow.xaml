@@ -23,12 +23,12 @@
                 <MenuItem Header="Snap to map">
                     <MenuItem Header="Left" IsCheckable="True" >
                         <MenuItem.Icon>
-                            <Image Source="move to right.png"/>
+                            <Image Source="pack://application:,,,/Resources/move to right.png"/>
                         </MenuItem.Icon>
                     </MenuItem>
                     <MenuItem Header="Right" IsCheckable="True">
                         <MenuItem.Icon>
-                            <Image Source="move to left.png"/>
+                            <Image Source="pack://application:,,,/Resources/move to left.png"/>
                         </MenuItem.Icon>
                     </MenuItem>
                 </MenuItem>
@@ -58,6 +58,7 @@
             <DataGrid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Properties" Click="OnMenuClick"/>
+                    <MenuItem Header="Zoom to layer" Click="OnMenuClick"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>    
         </DataGrid>

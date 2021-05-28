@@ -17,9 +17,17 @@ namespace GPXManager.entities
     {
 
         private bool _editSuccess;
-        private int _count;
         public ObservableCollection<DeviceGPX> DeviceGPXCollection { get; set; }
         private DeviceGPXRepository DeviceWaypointGPXes { get; set; }
+
+        public DeviceGPXViewModel()
+        {
+            DeviceWaypointGPXes = new DeviceGPXRepository();
+            DeviceGPXCollection = new ObservableCollection<DeviceGPX>(DeviceWaypointGPXes.DeviceGPXes);
+            DeviceGPXCollection.CollectionChanged += DeviceWptGPXCollection_CollectionChanged;
+            ConvertDeviceGPXInArchiveToGPXFile();
+            GPXBackupFolder = "GPXBackup";
+        }
 
         public List<GPSDataSummary> GetGPSDataSummaries()
         {
@@ -65,14 +73,7 @@ namespace GPXManager.entities
         }
 
         public Dictionary<GPS, List<GPXFile>> ArchivedGPXFiles { get; private set; } = new Dictionary<GPS, List<GPXFile>>();
-        public DeviceGPXViewModel()
-        {
-            DeviceWaypointGPXes = new DeviceGPXRepository();
-            DeviceGPXCollection = new ObservableCollection<DeviceGPX>(DeviceWaypointGPXes.DeviceGPXes);
-            DeviceGPXCollection.CollectionChanged += DeviceWptGPXCollection_CollectionChanged;
-            ConvertDeviceGPXInArchiveToGPXFile();
-            GPXBackupFolder = "GPXBackup";
-        }
+
 
         /// <summary>
         /// checks if the backup location exists. It not, it will create one.

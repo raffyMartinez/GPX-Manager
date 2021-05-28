@@ -251,7 +251,7 @@ namespace GPXManager.entities
                     }
                     catch (OleDbException dbex)
                     {
-
+                        Logger.Log(dbex);
                     }
                     catch (Exception ex)
                     {

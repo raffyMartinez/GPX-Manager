@@ -101,7 +101,8 @@ namespace GPXManager.views
             Entities.CTXFileViewModel = new CTXFileViewModel();
             UpdateProgress("fisher device assignment");
             Entities.FisherDeviceAssignmentViewModel = new FisherDeviceAssignmentViewModel();
-
+            UpdateProgress("extracted fishing tracks");
+            Entities.ExtractedFishingTrackViewModel = new ExtractedFishingTrackViewModel();
 
         }
         private async void OnWindowLoaded(object sender, RoutedEventArgs e)

@@ -21,6 +21,7 @@ namespace GPXManager.entities.mapping
 {
     public static class MapWindowManager
     {
+        private static Shapefile _coastline;
         private static List<int> _selectedShapedIDs;
         public static ShapeFileAttributesWindow ShapeFileAttributesWindow { get; set; }
 
@@ -45,7 +46,20 @@ namespace GPXManager.entities.mapping
         public static MapLayersViewModel MapLayersViewModel { get; set; }
         public static MapLayersHandler MapLayersHandler { get; private set; }
         public static MapInterActionHandler MapInterActionHandler { get; private set; }
-        public static Shapefile Coastline { get; private set; }
+        public static Shapefile Coastline
+        {
+            get
+            {
+                if (Global.Settings.CoastlineIDFieldName == null || Global.Settings.CoastlineIDFieldName == "")
+                {
+                    ShapefileAttributeTableManager.SetupIDColumn(_coastline, true);
+                    Global.Settings.CoastlineIDFieldName = ShapefileAttributeTableManager.UnqiueIDColumnName;
+                    Global.Settings.CoastlineIDFieldIndex = ShapefileAttributeTableManager.UnqiueIDColumnIndex;
+                }
+                return _coastline;
+            }
+            private set { _coastline = value; }
+        }
         public static AxMap MapControl { get; private set; }
         public static Dictionary<int, string> TileProviders { get; set; } = new Dictionary<int, string>();
         public static void CleanUp(bool applicationIsClosing = false)
@@ -89,6 +103,8 @@ namespace GPXManager.entities.mapping
             RemoveLayerByKey("ctx_track");
             RemoveLayerByKey("ctxfile_waypoint");
             RemoveLayerByKey("ctx_track_vertices");
+            RemoveLayerByKey("fishing_trackline");
+            RemoveLayerByKey("extracted_tracks");
             GPXMappingManager.RemoveAllFromMap();
         }
         public static string CoastLineFile
@@ -296,6 +312,112 @@ namespace GPXManager.entities.mapping
         }
 
         public static string LayersFolder = $@"{AppDomain.CurrentDomain.BaseDirectory}\Layers";
+
+        public static bool AddShapefileLayer(string sf, out string feedBack)
+        {
+            if (File.Exists(sf))
+            {
+
+                FileInfo fi = new FileInfo(sf);
+                if (fi.Extension == ".shp")
+                {
+                    DirectoryInfo dirInfo;
+                    dirInfo = new DirectoryInfo(Path.GetDirectoryName(sf));
+                    var listFiles = Directory.GetFiles(dirInfo.FullName, $"{Path.GetFileNameWithoutExtension(fi.Name)}.*");
+                    var proposedPath = $@"{LayersFolder}\{Path.GetFileNameWithoutExtension(fi.Name)}";
+                    if (!Directory.Exists(proposedPath))
+                    {
+                        dirInfo = Directory.CreateDirectory(proposedPath);
+                    }
+                    else
+                    {
+                        dirInfo = new DirectoryInfo(proposedPath);
+                    }
+                    var files = Directory.GetFiles(dirInfo.FullName, "*.shp");
+                    if (files.Length == 0)
+                    {
+                        foreach (var item in listFiles)
+                        {
+                            File.Copy(item, $@"{dirInfo.FullName}\{Path.GetFileName(item)}");
+                        }
+                        files = Directory.GetFiles(dirInfo.FullName, "*.shp");
+                        var result = MapLayersHandler.FileOpenHandler(files[0], $"{fi.Name}", layerkey: $"{fi.Name}");
+                        feedBack = result.errMsg;
+                        return result.success;
+                    }
+                }
+            }
+
+            feedBack = "Folder for LGU boundary not found";
+            return false;
+        }
+        private static Shapefile _bscBoundaryShapefile;
+        public static Shapefile BSCBoundaryShapefile
+        {
+            get
+            {
+                var boundaryFolder = $@"{LayersFolder}\BSCBoundaryLine";
+                if (Directory.Exists(boundaryFolder))
+                {
+                    var boundarySF = Directory.GetFiles(boundaryFolder, "*.shp");
+                    if (boundarySF.Length == 1)
+                    {
+                        MapLayersHandler.FileOpenHandler(boundarySF[0], "BSC boundary", layerkey: "bsc_boundary");
+                        _bscBoundaryShapefile = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+                        ShapefileFactory.BSCBoundaryLine = _bscBoundaryShapefile.Shape[0];
+                        return _bscBoundaryShapefile;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                return null;
+            }
+            set
+            {
+                _bscBoundaryShapefile = value;
+                ShapefileFactory.BSCBoundaryLine = _bscBoundaryShapefile.Shape[0];
+            }
+        }
+        public static bool AddBSCBoundaryLineShapefile(string inSF, out string feedBack)
+        {
+            var boundaryFolder = $@"{LayersFolder}\BSCBoundaryLine";
+            if (File.Exists(inSF))
+            {
+                FileInfo fi = new FileInfo(inSF);
+                if (fi.Extension == ".shp")
+                {
+
+                    if (!Directory.Exists(boundaryFolder))
+                    {
+                        Directory.CreateDirectory(boundaryFolder);
+                    }
+
+
+                    var sourceDirInfo = new DirectoryInfo(Path.GetDirectoryName(inSF));
+                    var listFiles = Directory.GetFiles(sourceDirInfo.FullName, $"{Path.GetFileNameWithoutExtension(fi.Name)}.*");
+
+                    var files = Directory.GetFiles(boundaryFolder, "*.shp");
+                    if (files.Length == 0)
+                    {
+                        foreach (var item in listFiles)
+                        {
+                            File.Copy(item, $@"{boundaryFolder}\{Path.GetFileName(item)}");
+                        }
+                        files = Directory.GetFiles(boundaryFolder, "*.shp");
+                        var result = MapLayersHandler.FileOpenHandler(files[0], "BSC boundary", layerkey: "bsc_boundary");
+                        BSCBoundaryShapefile = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+                        feedBack = result.errMsg;
+                        return result.success;
+                    }
+                }
+            }
+
+            feedBack = "Folder for LGU boundary not found";
+            return false;
+
+        }
         public static bool AddLGUBoundary(out string feedBack)
         {
 
@@ -470,6 +592,35 @@ namespace GPXManager.entities.mapping
             return MapLayersHandler.CurrentMapLayer.Handle;
         }
 
+        public static int MapExtractedFishingTrack(TripAndHauls th, out List<int> handles)
+        {
+            handles = new List<int>();
+            if(th!=null &&  th.Tracks.Count>0 && ShapefileFactory.ExtractFishingTrackLine)
+            {
+                var sf = ShapefileFactory.FishingTrackLine(th);
+                if (sf != null)
+                {
+                    //return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                    return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key);
+                }
+            }
+            return -1;
+        }
+        public static int MapExtractedFishingTrack(out List<int> handles)
+        {
+            handles = new List<int>();
+            if (ShapefileFactory.ExtractFishingTrackLine)
+            {
+                var sf = ShapefileFactory.FishingTrackLine();
+                if (sf != null)
+                {
+                    //return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                    return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key);
+                }
+            }
+            return -1;
+
+        }
         public static int MapWaypointsCTX(CTXFileSummaryView ctx, out List<int> handles)
         {
             handles = new List<int>();
@@ -481,26 +632,44 @@ namespace GPXManager.entities.mapping
             }
             return MapLayersHandler.CurrentMapLayer.Handle;
         }
-        public static int MapTrackCTX(CTXFileSummaryView ctx, out List<int> handles)
+
+
+        //public static int MapTrackCTX(CTXFileSummaryView ctx, out List<int> handles)
+        public static TripAndHauls MapTrackCTX(CTXFileSummaryView ctx)//, out List<int> handles)
         {
-            handles = new List<int>();
+            //handles = new List<int>();
             if (ctx.TrackpointsCount != null && ctx.TrackpointsCount > 0)
             {
-                var sf = ShapefileFactory.TrackFromCTX(ctx, out handles);
-                MapLayersHandler.AddLayer(sf, "CTX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                var result = ShapefileFactory.CreateTripAndHaulsFromCTX(ctx);
+                if (result != null)
+                {
+                    MapLayersHandler.AddLayer(result.Shapefile, "CTX track", uniqueLayer: true, layerKey: result.Shapefile.Key, rejectIfExisting: true);
+                }
+                //return result.
+                //var sf = ShapefileFactory.TrackFromCTX(ctx, out handles);
+                //MapLayersHandler.AddLayer(sf, "CTX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                return result;
             }
-            return MapLayersHandler.CurrentMapLayer.Handle;
+            //return MapLayersHandler.CurrentMapLayer.Handle;
+            return null;
         }
-        public static int MapTrackGPX(GPXFile gpxfile, out List<int> handles)
+
+        public static TripAndHauls MapTrackGPX(GPXFile gpxfile)
         {
-            handles = new List<int>();
+
             if (gpxfile.Tracks.Count > 0)
             {
-                var sf = ShapefileFactory.TrackFromGPX(gpxfile, out handles);
-                MapLayersHandler.AddLayer(sf, "GPX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                var result = ShapefileFactory.CreateTripAndHaulsFromGPX(gpxfile);
+                if (result != null)
+                {
+
+                    MapLayersHandler.AddLayer(result.Shapefile, "GPX track", uniqueLayer: true, layerKey: result.Shapefile.Key, rejectIfExisting: true);
+                }
+                return result;
             }
-            return MapLayersHandler.CurrentMapLayer.Handle;
+            return null;
         }
+
         public static int MapTrip(Trip trip, out int shpIndex, out List<int> handles, bool showInMap = true)
         {
             shpIndex = -1;
@@ -530,7 +699,11 @@ namespace GPXManager.entities.mapping
         }
 
 
-
+        public static int MapExtractedFishingTracksShapefile(Shapefile extractedTracks)
+        {
+            RemoveGPSDataFromMap();
+            return MapLayersHandler.AddLayer(extractedTracks, "Extracted tracks", uniqueLayer: true, layerKey: extractedTracks.Key, rejectIfExisting: true);
+        }
 
         public static int MapGPX(GPXFile gpxFile, out int shpIndex, out List<int> handles, bool showInMap = true)
         {

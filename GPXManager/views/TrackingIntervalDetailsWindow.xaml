@@ -1,0 +1,22 @@
+﻿<Window x:Class="GPXManager.views.TrackingIntervalDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.views"
+        mc:Ignorable="d"
+        Title="Details of tracking interval" Height="450" Width="460.294">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="90"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Label Content="This is a label" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+        <DataGrid Grid.Row="1" Margin="10" Name="dataGrid" ItemsSource="{Binding}"/>
+        <Button Content="Ok" Grid.Column="1" Grid.Row="1"  Height="30" Margin="10" VerticalAlignment="Top" IsCancel="True" Click="OnButtonClick"/>
+    </Grid>
+</Window>

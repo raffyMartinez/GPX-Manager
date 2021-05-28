@@ -37,6 +37,10 @@ namespace GPXManager.views
     {
         private static MapWindowForm _instance;
 
+        public void ResetTrackVertivesButton()
+        {
+            buttonTrack.IsChecked = false;
+        }
         public static MapWindowForm Instance { get { return _instance; } }
         public AxMapWinGIS.AxMap MapControl { get; set; }
         public MapWindowForm()
@@ -77,7 +81,7 @@ namespace GPXManager.views
             ParentWindow.Focus();
         }
 
-        
+
 
         public GPXFile GPXFile { get; set; }
         public MainWindow ParentWindow { get; set; }
@@ -143,7 +147,7 @@ namespace GPXManager.views
         private void OnMapShapeSelected(MapInterActionHandler s, LayerEventArg e)
         {
             Title = "not found";
-            if (CurrentLayer.LayerType == "ShapefileClass" && LayerSelector != null)
+            if (CurrentLayer != null && CurrentLayer.LayerType == "ShapefileClass" && LayerSelector != null)
             {
                 SelectedShapeIndexes = e.SelectedIndexes.ToList();
                 var sf = (Shapefile)CurrentLayer.LayerObject;
@@ -207,14 +211,41 @@ namespace GPXManager.views
                 System.Windows.MessageBox.Show(MapWindowManager.LastError, "GPXManager", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private string FileOpenDialogForShapefile( )
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Title = "Open shapefile";
+            ofd.Filter = "Shapefile (*.shp)|*.shp";
+            ofd.DefaultExt = ".shp";
+            var result = ofd.ShowDialog();
+            if (result==System.Windows.Forms.DialogResult.OK &&
+                File.Exists(ofd.FileName))
+            {
+                return ofd.FileName;
+            }
+            return null;
+        }
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
             switch (((WindowMenuItem)sender).Name)
             {
+                case "menuAddBSCBoundary":
+                    string feedfBack = "";
+                    
+                    if (MapWindowManager.BSCBoundaryShapefile == null)
+                    {
+                        MapWindowManager.AddBSCBoundaryLineShapefile(FileOpenDialogForShapefile(), out feedfBack);
+                    }
+                    if (feedfBack.Length > 0)
+                    {
+                        System.Windows.MessageBox.Show(feedfBack, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    break;
                 case "menuEdit":
                     break;
                 case "menuAddLayerBoundaryLGU":
-                    string feedfBack = "";
+                    feedfBack = "";
                     MapWindowManager.AddLGUBoundary(out feedfBack);
                     if (feedfBack.Length > 0)
                     {
@@ -267,7 +298,7 @@ namespace GPXManager.views
                     }
                     else
                     {
-                        if(File.Exists(MapWindowManager.CoastLineFile))
+                        if (File.Exists(MapWindowManager.CoastLineFile))
                         {
                             System.Windows.MessageBox.Show("Coastline file could not be loaded as a GIS Shapefile", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
@@ -397,7 +428,22 @@ namespace GPXManager.views
 
                     break;
                 case "buttonAddLayer":
-                    ToBeImplemented("add a layer");
+                    OpenFileDialog ofd = new OpenFileDialog();
+                    ofd.Title = "Open shapefile";
+                    ofd.Filter = "Shapefile (*.shp)|*.shp";
+                    ofd.DefaultExt = "*.shp";
+                    DialogResult dr = ofd.ShowDialog();
+                    if (dr == System.Windows.Forms.DialogResult.OK &&
+                        ofd.FileName.Length > 0 &&
+                        File.Exists(ofd.FileName))
+                    {
+                        string feedBack = "";
+                        if(!MapWindowManager.AddShapefileLayer(ofd.FileName, out feedBack))
+                        {
+                           System.Windows.MessageBox.Show(feedBack, "GPX Manager", 
+                               MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
                     break;
 
             }
@@ -421,7 +467,7 @@ namespace GPXManager.views
 
 
 
-            if(!buttonTrack.IsEnabled)
+            if (!buttonTrack.IsEnabled)
             {
                 buttonTrack.Opacity = buttonOpacityDisabled;
             }
@@ -434,24 +480,30 @@ namespace GPXManager.views
         {
 
             ToggleButton tb = (ToggleButton)sender;
-            switch(tb.Name)
+            switch (tb.Name)
             {
                 case "buttonTrack":
-                    if((bool)tb.IsChecked)
+                    if ((bool)tb.IsChecked)
                     {
-                        if(MapWindowManager.CTXFile!=null && MapWindowManager.CTXFile.TrackPtCount>0)
+                        if (MapWindowManager.CTXFile != null && MapWindowManager.CTXFile.TrackPtCount > 0)
                         {
                             List<int> handles = new List<int>();
                             var sf = ShapefileFactory.CTXTrackVertices(MapWindowManager.CTXFile, out handles);
                             MapWindowManager.MapLayersHandler.AddLayer(sf, "Vertices", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
-                            MapWindowManager.MapLayersWindow.RefreshCurrentLayer();
+                            if (MapWindowManager.MapLayersWindow != null)
+                            {
+                                MapWindowManager.MapLayersWindow.RefreshCurrentLayer();
+                            }
                         }
-                        else if(MapWindowManager.TrackGPXFile!=null)
+                        else if (MapWindowManager.TrackGPXFile != null)
                         {
                             List<int> handles = new List<int>();
-                            var sf = ShapefileFactory.GPXTrackVertices(MapWindowManager.TrackGPXFile,out handles);
-                            MapWindowManager.MapLayersHandler.AddLayer(sf, "Vertices", uniqueLayer: true,layerKey:sf.Key,rejectIfExisting:true);
-                            MapWindowManager.MapLayersWindow.RefreshCurrentLayer();
+                            var sf = ShapefileFactory.GPXTrackVertices(MapWindowManager.TrackGPXFile, out handles);
+                            MapWindowManager.MapLayersHandler.AddLayer(sf, "Vertices", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                            if (MapWindowManager.MapLayersWindow != null)
+                            {
+                                MapWindowManager.MapLayersWindow.RefreshCurrentLayer();
+                            }
                         }
                         else
                         {
@@ -466,7 +518,10 @@ namespace GPXManager.views
                         }
                         else
                         {
-                            ((Shapefile)CurrentLayer.LayerObject).DefaultDrawingOptions.VerticesVisible = false;
+                            if (CurrentLayer.LayerObject != null)
+                            {
+                                ((Shapefile)CurrentLayer.LayerObject).DefaultDrawingOptions.VerticesVisible = false;
+                            }
                         }
 
                     }

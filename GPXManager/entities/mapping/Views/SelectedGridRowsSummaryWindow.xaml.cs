@@ -29,7 +29,16 @@ namespace GPXManager.entities.mapping.Views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
         }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            //_sf = null;
+            //this.SavePlacement();
+            //_instance = null;
+        }
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);

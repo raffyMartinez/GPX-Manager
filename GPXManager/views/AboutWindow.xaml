@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
         Title="About GPX Manager" Height="539.578" Width="476.169" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Grid>
@@ -16,7 +15,7 @@
 
             <Label Content="App version:" x:Name="labelAppVerion" HorizontalAlignment="Center" Margin="0 50 0 0" FontSize="12"/>
             <Label Content="Mapping component:" HorizontalAlignment="Center" x:Name="labelMapOCXVersion"/>
-            <Button Content="Close" x:Name="buttonClose" Click="OnButtonClick" Width="70" Height="30" Margin="0 30"/>
+            <Button Content="Close" x:Name="buttonClose" Click="OnButtonClick" Width="70" Height="30" Margin="0 30" IsCancel="True"/>
         </StackPanel>
     </Grid>
 </Window>

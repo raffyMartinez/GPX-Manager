@@ -49,6 +49,7 @@ namespace GPXManager.entities
 
         public static FisherDeviceAssignmentViewModel FisherDeviceAssignmentViewModel { get; set; }
         
+        public static ExtractedFishingTrackViewModel ExtractedFishingTrackViewModel { get; set; }
 
 
 

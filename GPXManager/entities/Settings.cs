@@ -56,6 +56,8 @@ namespace GPXManager.entities
         public string CTXDownloadFolder { get; set; }
         public string PathToCybertrackerExe { get; set; }
 
+        public string CoastlineIDFieldName{ get; set; }
+        public int CoastlineIDFieldIndex{ get; set; }
         public int HoursOffsetGMT { get; set; }
         //public List<string> Setting2 { get; set; }
 

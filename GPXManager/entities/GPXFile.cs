@@ -37,6 +37,8 @@ namespace GPXManager.entities
                 return new DateTime(DateRangeStart.Year, DateRangeStart.Month, 1);
             }
         }
+
+        public int RowID { get; set; }
         public FileInfo FileInfo { get; set; }
         public string FileName { get; set; }
         public int WaypointCount { get; internal set; }
@@ -69,7 +71,7 @@ namespace GPXManager.entities
         public DateTime DateModifiedUTC { get; set; }
         public string DriveName { get; set; }
         public GPS GPS { get; set; }
-
+        public int? GPSTimerInterval { get; set; }
         public List<Track> Tracks { get; internal set; }
         public List<WaypointLocalTime> TrackWaypoinsInLocalTime { get; internal set; } = new List<WaypointLocalTime>();
         public  List<int> ShapeIndexes { get; set; }
@@ -129,6 +131,7 @@ namespace GPXManager.entities
             }
             TrackCount = tracks.Count;
             Tracks = tracks;
+            
             if(TrackCount>0)
             {
                 trkDateStart = tracks[0].Waypoints[0].Time.AddHours(Global.Settings.HoursOffsetGMT) ;
@@ -151,6 +154,7 @@ namespace GPXManager.entities
                         TrackWaypoinsInLocalTime.Add(new WaypointLocalTime(pt));
                     }
                 }
+                GPSTimerInterval = tracks[0].Statistics.TrackingInterval;
             }
 
 

@@ -48,27 +48,97 @@ namespace GPXManager.entities
                             gpx.GPXType = dr["gpx_type"].ToString(); ;
                             gpx.TimeRangeStart = (DateTime)dr["time_range_start"];
                             gpx.TimeRangeEnd = (DateTime)dr["time_range_end"];
+                            if (dr["TimerInterval"] != DBNull.Value)
+                            {
+                                gpx.TimerInterval = (int)dr["TimerInterval"];
+                            }
                             thisList.Add(gpx);
                         }
                     }
                 }
+                catch (OleDbException dbex)
+                {
+
+                }
                 catch (Exception ex)
                 {
-                    Logger.Log(ex);
+                    switch (ex.HResult)
+                    {
+                        case -2147024809:
+                            var arr = ex.Message.Split(new char[] { ' ', '\'' });
+                            string fieldName = arr[2];
+                            if (AddField(fieldName))
+                            {
+                                return getDeviceGPXes();
+                            }
+                            break;
+                        default:
+                            Logger.Log(ex);
+                            break;
+                    }
 
                 }
             }
-             return thisList;
+            return thisList;
         }
 
+        private bool AddField(string name)
+        {
+            Type t;
+            switch (name)
+            {
+                case "TimerInterval":
+                    return AddColumn(name, "Int");
+            }
+            return false;
+        }
+
+        private bool AddColumn(string colName, string type, int? length = null)
+        {
+            string sql = "";
+            if (type == "bool")
+            {
+                sql = $"ALTER TABLE device_gpx ADD COLUMN {colName} BIT DEFAULT 0";
+            }
+            else if(type=="VarChar")
+            {
+                sql = $"ALTER TABLE device_gpx ADD COLUMN {colName} {type}({length})";
+            }
+            else
+            {
+                sql = $"ALTER TABLE device_gpx ADD COLUMN {colName} {type}";
+            }
+            using (var con = new OleDbConnection(Global.ConnectionString))
+            {
+                con.Open();
+                OleDbCommand myCommand = new OleDbCommand();
+                myCommand.Connection = con;
+                myCommand.CommandText = sql;
+                try
+                {
+                    myCommand.ExecuteNonQuery();
+                }
+                catch (InvalidOperationException)
+                {
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    return false;
+                }
+                myCommand.Connection.Close();
+                return true;
+            }
+        }
         public bool Add(DeviceGPX gpx)
         {
             bool success = false;
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
-                
+
                 conn.Open();
-                var sql = $@"Insert into device_gpx (DeviceID,FileName,gpx_xml,RowID,md5,DateAdded,DateModified,gpx_type,time_range_start,time_range_end)
+                var sql = $@"Insert into device_gpx (DeviceID,FileName,gpx_xml,RowID,d5,DateAdded,DateModified,gpx_type,time_range_start,time_range_end,TimerInterval)
                            Values (
                                     '{gpx.GPS.DeviceID}',
                                     '{gpx.Filename}', 
@@ -79,7 +149,8 @@ namespace GPXManager.entities
                                     '{DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss")}',
                                     '{gpx.GPXType}',
                                     '{gpx.TimeRangeStart}',
-                                    '{gpx.TimeRangeEnd}'
+                                    '{gpx.TimeRangeEnd}',
+                                     {gpx.TimerInterval}
                                   )";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -130,7 +201,8 @@ namespace GPXManager.entities
                                 DateModified='{DateTime.Now.ToString("dd-MMM-yyyy HH:mm:ss")}',
                                 gpx_type = '{gpx.GPXType}',
                                 time_range_start = '{gpx.TimeRangeStart}',
-                                time_range_end = '{gpx.TimeRangeEnd}'
+                                time_range_end = '{gpx.TimeRangeEnd}',
+                                TimerInterval = {gpx.TimerInterval}
                             WHERE RowID = {gpx.RowID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {

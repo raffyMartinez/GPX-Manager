@@ -65,6 +65,12 @@
     <Reference Include="GongSolutions.WPF.DragDrop, Version=2.0.0.0, Culture=neutral, PublicKeyToken=91f1945125b7a587, processorArchitecture=MSIL">
       <HintPath>..\packages\gong-wpf-dragdrop.2.3.2\lib\net47\GongSolutions.WPF.DragDrop.dll</HintPath>
     </Reference>
+    <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
+    </Reference>
+    <Reference Include="LiveCharts.Wpf, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
+      <HintPath>..\packages\LiveCharts.Wpf.0.9.7\lib\net45\LiveCharts.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="MetadataExtractor, Version=2.4.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MetadataExtractor.2.4.3\lib\net45\MetadataExtractor.dll</HintPath>
     </Reference>
@@ -120,11 +126,15 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="entities\CTXFile.cs" />
+    <Compile Include="entities\CTXFileImportEventArgs.cs" />
     <Compile Include="entities\CTXFileRepository.cs" />
     <Compile Include="entities\CTXFileViewModel.cs" />
     <Compile Include="entities\CTXUserSummary.cs" />
     <Compile Include="entities\DetectDeviceEventArg.cs" />
     <Compile Include="entities\EntitiesChangedEventArg.cs" />
+    <Compile Include="entities\mapping\DetectedTrack.cs" />
+    <Compile Include="entities\mapping\ExtractTrackEventArgs.cs" />
+    <Compile Include="entities\mapping\ExtractedFishingTrackRepository.cs" />
     <Compile Include="entities\FileSizeFormatExtension.cs" />
     <Compile Include="entities\Fisher.cs" />
     <Compile Include="entities\FisherDeviceAssignment.cs" />
@@ -160,11 +170,17 @@
     <Compile Include="entities\mapping\AOIManager.cs" />
     <Compile Include="entities\mapping\AOIRepository.cs" />
     <Compile Include="entities\mapping\AOIViewModel.cs" />
+    <Compile Include="entities\mapping\Callback.cs" />
+    <Compile Include="entities\mapping\DouglasPeucker.cs" />
     <Compile Include="entities\mapping\Enums.cs" />
     <Compile Include="entities\mapping\extension.cs" />
+    <Compile Include="entities\mapping\ExtractedFishingTrack.cs" />
+    <Compile Include="entities\mapping\ExtractedFishingTrackViewModel.cs" />
+    <Compile Include="entities\mapping\GearWaypoint.cs" />
     <Compile Include="entities\mapping\globalMapping.cs" />
     <Compile Include="entities\mapping\GPXMappingManager.cs" />
-    <Compile Include="entities\mapping\Grid25.cs" />
+    <Compile Include="entities\mapping\gridding\Class1.cs" />
+    <Compile Include="entities\mapping\gridding\Grid25.cs" />
     <Compile Include="entities\mapping\LabelProperty.cs" />
     <Compile Include="entities\mapping\LayerEventArg.cs" />
     <Compile Include="entities\mapping\LineWidthFix.cs" />
@@ -180,6 +196,7 @@
     <Compile Include="entities\mapping\ShapefileFieldSummary.cs" />
     <Compile Include="entities\mapping\ShapefileLabelHandler.cs" />
     <Compile Include="entities\mapping\ShapefileLayerHelper.cs" />
+    <Compile Include="entities\mapping\TripAndHauls.cs" />
     <Compile Include="entities\mapping\TripMappingManager.cs" />
     <Compile Include="entities\mapping\Views\AOIWindow.xaml.cs">
       <DependentUpon>AOIWindow.xaml</DependentUpon>
@@ -208,11 +225,12 @@
     <Compile Include="entities\SightingAttributes.cs" />
     <Compile Include="entities\Track.cs" />
     <Compile Include="entities\TrackViewModel.cs" />
+    <Compile Include="entities\mapping\TrackWaypoint.cs" />
     <Compile Include="entities\Trip.cs" />
     <Compile Include="entities\TripCalendarViewModel.cs" />
     <Compile Include="entities\TripRepository.cs" />
     <Compile Include="entities\TripViewModel.cs" />
-    <Compile Include="entities\TripWaypoint.cs" />
+    <Compile Include="entities\mapping\TripWaypoint.cs" />
     <Compile Include="entities\TripWaypointRepository.cs" />
     <Compile Include="entities\TripWaypointViewModel.cs" />
     <Compile Include="entities\VesselNameItemsSource.cs" />
@@ -237,6 +255,9 @@
     </Compile>
     <Compile Include="views\EditTripWindow.xaml.cs">
       <DependentUpon>EditTripWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\ExtractFishingTracksWindow.xaml.cs">
+      <DependentUpon>ExtractFishingTracksWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\GPSBrandModelWindow.xaml.cs">
       <DependentUpon>GPSBrandModelWindow.xaml</DependentUpon>
@@ -273,6 +294,9 @@
     </Compile>
     <Compile Include="views\SplashWindow.xaml.cs">
       <DependentUpon>SplashWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="views\TrackingIntervalDetailsWindow.xaml.cs">
+      <DependentUpon>TrackingIntervalDetailsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="views\ZoomBorder.cs" />
     <Page Include="entities\mapping\Views\AOIWindow.xaml">
@@ -350,6 +374,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\ExtractFishingTracksWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="views\GPSBrandModelWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -394,6 +422,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="views\TrackingIntervalDetailsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -423,18 +455,18 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\add.png">
+    <Content Include="Resources\add.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\delete.png">
+    </Content>
+    <Content Include="Resources\delete.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\gpx_icon.ico">
+    </Content>
+    <Content Include="Resources\gpx_icon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\upload_cloud.png">
+    </Content>
+    <Content Include="Resources\upload_cloud.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -472,185 +504,192 @@
     <Folder Include="Images\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\layers.png">
+    <Content Include="Resources\layers.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\layers new.png">
+    <Content Include="Resources\layers new.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\zoom+.bmp" />
+    <Content Include="Resources\gps2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\gps2.png">
+    <Content Include="Resources\select_none1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\select_none1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="entities\mapping\Views\layers new.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\gpx_logo.png">
+    <Content Include="Resources\gpx_logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\select1.png">
+    <Content Include="Resources\select1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\table1.png">
+    <Content Include="Resources\table1.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\track.png">
+    <Content Include="Resources\track.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\zoom-.png">
+    <Content Include="Resources\zoom-.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\zoom+.png">
+    <Content Include="Resources\zoom+.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\map screen grey.png">
+    <Content Include="Resources\map screen grey.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\move.png">
+    <Content Include="Resources\move.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ruler.png">
+    <Content Include="Resources\ruler.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\exit.png">
+    <Content Include="Resources\exit.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\map screen.png">
+    <Content Include="Resources\map screen.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\archive.png">
+    <Content Include="Resources\archive.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ctx_folder.png">
+    <Content Include="Resources\ctx_folder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\eject usb.png">
+    <Content Include="Resources\eject usb.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\rotate left.png">
+    <Content Include="Resources\rotate left.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\rotate right.png">
+    <Content Include="Resources\rotate right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\station.png">
+    <Content Include="Resources\station.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\uisb.png">
+    <Content Include="Resources\uisb.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\calendar3.png">
+    <Content Include="Resources\calendar3.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\person.png">
+    <Content Include="Resources\person.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\file image.png">
+    <Content Include="Resources\file image.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\gears.png">
+    <Content Include="Resources\gears.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\question.png">
+    <Content Include="Resources\question.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\openfolder.png">
+    <Content Include="Resources\openfolder.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\flip vertical.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    <Content Include="Resources\flip vertical.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\tags gray.png">
+    <Content Include="Resources\tags gray.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\prevent2.png">
+    <Content Include="Resources\prevent2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ok2.png">
+    <Content Include="Resources\ok2.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\navigation path.png">
+    <Content Include="Resources\navigation path.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\cancel.png">
+    <Content Include="Resources\cancel.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\layer remove.png">
+    <Content Include="Resources\layer remove.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\move to left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\move to right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\WinSCP.5.17.10\build\WinSCP.targets" Condition="Exists('..\packages\WinSCP.5.17.10\build\WinSCP.targets')" />

@@ -65,13 +65,37 @@ namespace GPXManager.entities.mapping.Views
 
         private void _mapInterActionHandler_ShapesSelected(MapInterActionHandler s, LayerEventArg e)
         {
-            foreach (DataRowView item in dataGridAttributes.Items)
+            if (((Shapefile)MapWindowManager.MapLayersHandler[e.LayerHandle].LayerObject).FieldIndexByName["MWShapeID"] >= 0)
             {
-                if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                if (e.SelectedIndexes.Count() == 1)
                 {
-                    dataGridAttributes.SelectedItem = item;
+                    foreach (DataRowView item in dataGridAttributes.Items)
+                    {
+
+                        if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                        {
+                            dataGridAttributes.SelectedItem = item;
+                            dataGridAttributes.ScrollIntoView(dataGridAttributes.SelectedItem);
+                        }
+                    }
+                }
+                else
+                {
+                    for (int x = 0; x < e.SelectedIndexes.Count(); x++)
+                    {
+                        foreach (DataRowView item in dataGridAttributes.Items)
+                        {
+                            if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                            {
+                                //dataGridAttributes.SelectedItem = item;
+                                dataGridAttributes.SelectedItems.Add(item);
+                                //break;
+                            }
+                        }
+                    }
                 }
             }
+
         }
 
 
@@ -152,7 +176,11 @@ namespace GPXManager.entities.mapping.Views
                 try
                 {
                     DataColumn col = ((DataRowView)e.AddedItems[0]).Row.Table.Columns["MWShapeID"];
-
+                    if(col==null)
+                    {
+                        return;
+                        //Global.Settings.
+                    }
                     if (col != null)
                     {
                         List<int> selectedIDs = new List<int>();

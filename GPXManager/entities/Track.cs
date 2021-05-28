@@ -19,7 +19,16 @@ namespace GPXManager.entities
         /// </summary>
         public class TrackStatistics
         {
-
+            static TrackStatistics()
+            {
+                _gpsTimerIntervals.Add(30);
+                _gpsTimerIntervals.Add(60);
+                _gpsTimerIntervals.Add(120);
+                _gpsTimerIntervals.Add(150);
+                _gpsTimerIntervals.Add(180);
+                _gpsTimerIntervals.Add(300);
+            }
+            public int? TrackingInterval { get; set; }
             public Waypoint WayPointStart { get; set; }
             public Waypoint WayPointEnd { get; set; }
             /// <summary>
@@ -167,8 +176,36 @@ namespace GPXManager.entities
             return splitTracks;
         }
 
+        private static List<int> _gpsTimerIntervals = new List<int>();
+
+        private static int? GetInterval(List<double> intervals)
+        {
+            if(intervals.Count<2)
+            {
+                return null;
+            }
+
+            var query = from r in intervals
+                        group r by r into g
+                        select new { Count = g.Count(), Value = g.Key };
+
+            var top = query.OrderByDescending(t => t.Count).First();
+
+            foreach (int intv in _gpsTimerIntervals)
+            {
+
+                if (Math.Abs(intv - top.Value) < 5)
+                {
+                    return intv;
+                }
+
+            }
+            return 0;
+        }
+
         private void ComputeStatistics()
         {
+            List<double> intervals = new List<double>();
             if (Waypoints.Count > 1)
             {
                 TrackStatistics trackStatistics = new TrackStatistics();
@@ -177,6 +214,8 @@ namespace GPXManager.entities
                     Waypoint w1 = Waypoints[i];
                     Waypoint w2 = Waypoints[i + 1];
                     double distance = Waypoint.ComputeDistance(w1, w2, out double elevationChange);
+                    TimeSpan duration = w2.Time - w1.Time;
+                    intervals.Add(duration.TotalSeconds);
                     if (elevationChange < 0)
                     {
                         trackStatistics.AbsoluteDescent -= elevationChange;
@@ -193,8 +232,9 @@ namespace GPXManager.entities
                     }
                     trackStatistics.Length += distance;
                 }
+                trackStatistics.TrackingInterval = GetInterval(intervals);
                 trackStatistics.WayPointStart = Waypoints[0];
-                trackStatistics.WayPointEnd = Waypoints[Waypoints.Count-1];
+                trackStatistics.WayPointEnd = Waypoints[Waypoints.Count - 1];
                 trackStatistics.Length /= 1000; // convert to km
                 trackStatistics.Duration = Waypoints[Waypoints.Count - 1].Time - Waypoints[0].Time;
                 trackStatistics.AverageSpeed = trackStatistics.Length / trackStatistics.Duration.TotalHours;
@@ -251,8 +291,8 @@ namespace GPXManager.entities
             XMLString = xml;
         }
 
-        public  string XMLString { get; internal set; }
-        public  string SerializeToString(GPS gps, DateTime timeStamp,string gpxFileName)
+        public string XMLString { get; internal set; }
+        public string SerializeToString(GPS gps, DateTime timeStamp, string gpxFileName)
         {
             XmlDocument doc = new XmlDocument();
 

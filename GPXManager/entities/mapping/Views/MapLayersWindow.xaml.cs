@@ -158,7 +158,7 @@ namespace GPXManager.entities.mapping.Views
                 int rowIndex = FindRowIndex(row);
 
 
-                if(columnIndex==0)
+                if(columnIndex==0 && value!=null)
                 {
                     MapLayersHandler.EditLayer(CurrentLayer.Handle, CurrentLayer.Name, !(bool)value);
 
@@ -188,27 +188,35 @@ namespace GPXManager.entities.mapping.Views
         {
             // find the property that this cell's column is bound to
             string boundPropertyName = FindBoundProperty(cell.Column);
+            if (boundPropertyName != null)
+            {
+                // find the object that is realted to this row
+                object data = row.Item;
 
-            // find the object that is realted to this row
-            object data = row.Item;
+                // extract the property value
+                PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(data);
+                PropertyDescriptor property = properties[boundPropertyName];
+                object value = property.GetValue(data);
 
-            // extract the property value
-            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(data);
-            PropertyDescriptor property = properties[boundPropertyName];
-            object value = property.GetValue(data);
-
-            return value;
+                return value;
+            }
+            return null;
         }
 
         private string FindBoundProperty(DataGridColumn col)
         {
             DataGridBoundColumn boundColumn = col as DataGridBoundColumn;
 
-            // find the property that this column is bound to
-            Binding binding = boundColumn.Binding as Binding;
-            string boundPropertyName = binding.Path.Path;
+            if (boundColumn != null)
+            {
+                // find the property that this column is bound to
+                Binding binding = boundColumn.Binding as Binding;
+                string boundPropertyName = binding.Path.Path;
 
-            return boundPropertyName;
+
+                return boundPropertyName;
+            }
+            return null;
 
 
         }
@@ -424,7 +432,16 @@ namespace GPXManager.entities.mapping.Views
 
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
+            var mnu = (MenuItem)sender;
+            switch(mnu.Header)
+            {
+                case "Properties":
 
+                    break;
+                case "Zoom to layer":
+                    MapWindowManager.MapWindowForm.MapControl.ZoomToLayer(MapLayersHandler.CurrentMapLayer.Handle);
+                    break;
+            }
         }
     }
 }

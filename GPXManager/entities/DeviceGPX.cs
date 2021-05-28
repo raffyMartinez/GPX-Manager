@@ -19,5 +19,7 @@ namespace GPXManager.entities
 
         public DateTime TimeRangeStart { get; set; }
         public DateTime TimeRangeEnd { get; set; }
+
+        public int? TimerInterval { get; set; }
     }
 }

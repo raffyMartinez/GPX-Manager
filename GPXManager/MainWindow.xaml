@@ -530,63 +530,90 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
-            <TreeView x:Name="treeViewCybertracker" SelectedItemChanged="OnCybertrackerTreeItemChanged">
+            <TreeView x:Name="treeViewCybertracker" SelectedItemChanged="OnCybertrackerTreeItemChanged" >
                 <TreeViewItem Header="Connect to server" x:Name="cybertrackerTreeItemConnect"/>
                 <TreeViewItem Header="Download history" x:Name="cybertrackerTreeItemHistory"/>
+                <TreeViewItem Header="Import" x:Name="cybertrackerTreeImport" Tag="Import"/>
                 <TreeViewItem Header="Users" x:Name="cybertrackerTreeItemUsers" Tag="UsersSummary"/>
-                <!--<TreeViewItem Header="Devices" x:Name="cybertrackerTreeItemDevices" Tag="Devices"/>-->
-                <TreeViewItem Header="Tools" x:Name="cybertrackerTreeItemTools"/>
+                <TreeViewItem Header="Tools" x:Name="cybertrackerTreeItemTools" Tag = "Tools"/>
             </TreeView>
 
             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Visible">
-                <StackPanel x:Name="cybertrackerPanelFTP"  Margin="20">
+                <StackPanel>
 
-                    <WrapPanel Margin="10">
-                        <Label Content="Server name" Width="80"/>
-                        <TextBox x:Name="cybertrackerTextBoxFolderName" Height="30" Width="700" Margin="20 0" VerticalContentAlignment="Center" FontSize="14" />
-                    </WrapPanel>
-                    <WrapPanel Margin="10">
-                        <Label Content="User name" Width="80"/>
-                        <TextBox x:Name="cybertrackerTextBoxUserName" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
-                        <Label Content="Password"/>
-                        <PasswordBox x:Name="cybertrackerTextBoxPassword" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
-                        <Button Content="Connect" x:Name="buttonConnectFTP" Margin="20 0" Height="30" Width="80" Click="OnButtonClick" />
-                    </WrapPanel>
+                    <!--when downloading from FTP-->
+                    <StackPanel x:Name="cybertrackerPanelFTP"  Margin="20">
+
+                        <WrapPanel Margin="10">
+                            <Label Content="Server name" Width="80"/>
+                            <TextBox x:Name="cybertrackerTextBoxFolderName" Height="30" Width="700" Margin="20 0" VerticalContentAlignment="Center" FontSize="14" />
+                        </WrapPanel>
+                        <WrapPanel Margin="10">
+                            <Label Content="User name" Width="80"/>
+                            <TextBox x:Name="cybertrackerTextBoxUserName" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
+                            <Label Content="Password"/>
+                            <PasswordBox x:Name="cybertrackerTextBoxPassword" Height="30" Width="300" Margin="20 0" VerticalContentAlignment="Center" FontSize="14"/>
+                            <Button Content="Connect" x:Name="buttonConnectFTP" Margin="20 0" Height="30" Width="80" Click="OnButtonClick" />
+                        </WrapPanel>
 
 
 
-                    <StackPanel x:Name="cybertrackerPanelGridFilesAvailable" Visibility="Collapsed" Grid.Column="1" Margin="20 30 0 0">
-                        <Label Content="Files in the server" />
-                        <DataGrid ItemsSource="{Binding}" x:Name="cybertrackerGridAvailableFiles"/>
+                        <StackPanel x:Name="cybertrackerPanelGridFilesAvailable" Visibility="Collapsed" Grid.Column="1" Margin="20 30 0 0">
+                            <Label Content="Files in the server" />
+                            <DataGrid ItemsSource="{Binding}" x:Name="cybertrackerGridAvailableFiles" LoadingRow="OnGridRowLoading" RowHeaderWidth="NaN" MouseDoubleClick="OnGridDoubleClick" SelectionChanged="OnDataGridSelectionChanged"/>
+                            <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Height="60" Margin="0 20 0 0">
+                                <Button Content="Check all" x:Name="buttonCheckAll" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                                <Button Content="Download" x:Name="buttonDownloadSelected" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                            </WrapPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+
+                    <!--container for download history-->
+                    <StackPanel x:Name="cybertrackerPanelHistory"  Margin="20">
+                        <DataGrid x:Name="cybertrackerHistoryGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True" SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp" LoadingRow="OnGridRowLoading" RowHeaderWidth="NaN"/>
+                    </StackPanel>
+
+                    <!--container for importing from storage-->
+                    <StackPanel x:Name="cybertrackerPanelImport" Grid.Column="1" Margin="20">
+                        <WrapPanel Orientation="Horizontal"  VerticalAlignment="Center" >
+                            <Label Content="Import Cybertracker files"/>
+                            <Button Content="Get files" Width="60" Height="30" Margin="20 0" HorizontalAlignment="Left" x:Name="buttonGetCybertrackerFilesForImporting" Click="OnButtonClick"/>
+                        </WrapPanel>
+
+                        <DataGrid x:Name="cybertrackerImportedGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="False"  SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp" Margin="0 20" LoadingRow="OnGridRowLoading" RowHeaderWidth="NaN"/>
+
                         <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Height="60" Margin="0 20 0 0">
-                            <Button Content="Check all" x:Name="buttonCheckAll" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
-                            <Button Content="Download" x:Name="buttonDownloadSelected" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                            <Button Content="Check all" x:Name="buttonImportCheckAll" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
+                            <Button Content="Import" x:Name="buttonImportSelected" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
                         </WrapPanel>
                     </StackPanel>
 
+                    <!--container for device-->
+                    <StackPanel x:Name="cybertrackerPanelGrid"  Margin="20">
+                        <DataGrid x:Name="cybertrackerDataGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True"
+                          SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
+                    </StackPanel>
+
+                    <!--container for tools-->
+                    <StackPanel x:Name="cybertrackerPanelTools" Grid.Column="1" Margin="20">
+                        <WrapPanel Orientation="Vertical" Margin=" 0 20 0 0" Visibility="Collapsed">
+                            <Label Content="Backup cybertracker data downloaded from the server"/>
+                            <Button Content="Backup" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonBackupCTXFiles" Click="OnButtonClick"/>
+                        </WrapPanel>
+                        
+                        <WrapPanel Orientation="Horizontal" Margin=" 0 0 0 0" VerticalAlignment="Center">
+                            <Label Content="Extract fishing tracks of gear retrieval" VerticalAlignment="Center"/>
+                            <Button Content="Extract" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonExtractFishingTrack" Click="OnButtonClick" VerticalAlignment="Center"/>
+                            <CheckBox Content="Tabulate results" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange" x:Name="chkShowExtractReults" VerticalAlignment="Center" Margin="20 0 0 0"/>
+                        </WrapPanel>
+
+                        <DataGrid x:Name="DataGridExtractedTracks" ItemsSource="{Binding}" IsReadOnly="True"
+                          SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" />
+
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
-
-            <StackPanel x:Name="cybertrackerPanelGrid" Grid.Column="1" Margin="20">
-                <DataGrid x:Name="cybertrackerDataGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True"
-                          SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
-            </StackPanel>
-
-            <!--<StackPanel x:Name="cybertrackerPanelDevices" Grid.Column="1" Margin="20">
-                <DataGrid x:Name="cybertrackerDeviceGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True" SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
-            </StackPanel>-->
-
-            <StackPanel x:Name="cybertrackerPanelHistory" Grid.Column="1" Margin="20">
-                <DataGrid x:Name="cybertrackerHistoryGrid" CanUserAddRows ="False" ItemsSource="{Binding}" IsReadOnly="True" SelectionChanged="OnDataGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" MouseUp="OnDataGridMouseUp"/>
-            </StackPanel>
-
-            <StackPanel x:Name="cybertrackerPanelTools" Grid.Column="1" Margin="20">
-                <WrapPanel Orientation="Vertical" >
-                    <Label Content="Backup cybertracker data downloaded from the server"/>
-                    <Button Content="Backup" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonBackupCTXFiles" Click="OnButtonClick"/>
-                </WrapPanel>
-            </StackPanel>
-
         </Grid>
 
         <!--landing sites-->

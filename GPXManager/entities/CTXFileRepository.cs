@@ -14,8 +14,11 @@ namespace GPXManager.entities
 
     public class CTXFileRepository
     {
-        public delegate void XMLFileFromCTX(CTXFileRepository s, TransferEventArgs e);
-        public event XMLFileFromCTX XMLFileFromCTXCreated;
+        public delegate void XMLFileFromDownloadedCTX(CTXFileRepository s, TransferEventArgs e);
+        public event XMLFileFromDownloadedCTX XMLFileFromDownloadedCTXCreated;
+
+        public delegate void XMLFileFromImportedCTX(CTXFileRepository s, CTXFileImportEventArgs e);
+        public event XMLFileFromImportedCTX XMLFileFromImportedCTXCreated;
 
         private SessionOptions _sessionOptions;
         private List<CTXFile> _ctxFileList;
@@ -25,7 +28,28 @@ namespace GPXManager.entities
             _ctxFileList = getFiles();
             CTXFiles = _ctxFileList;
         }
-
+        public string getXML(int RowID)
+        {
+            string xml = "";
+            
+            using (var conection = new OleDbConnection(Global.ConnectionString))
+            {
+                try
+                {
+                    conection.Open();
+                    string query = $"Select xml from ctxFiles where RowID={RowID}";
+                    using (OleDbCommand getXML = new OleDbCommand(query, conection))
+                    {
+                        xml = (string)getXML.ExecuteScalar();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex.Message);
+                }
+            }
+            return xml;
+        }
         private List<CTXFile> getFiles()
         {
             var list = new List<CTXFile>();
@@ -49,13 +73,17 @@ namespace GPXManager.entities
                             ctxfile.RowID = (int)dr["RowID"];
                             ctxfile.FileName = dr["FileName"].ToString();
                             ctxfile.DeviceID = dr["DeviceID"].ToString();
-                            ctxfile.XML = dr["xml"].ToString();
+                            ctxfile.XML = "";
+                            //ctxfile.XML = dr["xml"].ToString();
                             ctxfile.CTXFileName = dr["CTXFileName"].ToString();
                             ctxfile.UserName = dr["UserName"].ToString();
                             ctxfile.Gear = dr["Gear"].ToString();
                             ctxfile.LandingSite = dr["LandingSite"].ToString();
                             ctxfile.DateAdded = DateTime.Parse(dr["DateAdded"].ToString());
+                            ctxfile.CTXFileTimeStamp = DateTime.Parse(dr["CTXFileTimeStamp"].ToString());
                             ctxfile.AppVersion = dr["AppVersion"].ToString();
+                            ctxfile.ErrorConvertingToXML = (bool)dr["ErrorConvertingToXML"];
+                            ctxfile.IsDownloadedFromServer = (bool)dr["IsDownloadedFromServer"];
 
                             if (dr["DateStart"].ToString().Length > 0)
                             {
@@ -66,7 +94,7 @@ namespace GPXManager.entities
                             {
                                 ctxfile.DateEnd = DateTime.Parse(dr["DateEnd"].ToString());
                             }
-                            
+
                             if (dr["TrackPts"].ToString().Length > 0)
                             {
                                 ctxfile.TrackPtCount = (int)dr["TrackPts"];
@@ -79,13 +107,17 @@ namespace GPXManager.entities
                             {
                                 ctxfile.RetrieveGearPtCount = (int)dr["RetrieveGearPts"];
                             }
-                            if(dr["TrackTimeStampStart"].ToString().Length>0)
+                            if (dr["TrackTimeStampStart"].ToString().Length > 0)
                             {
                                 ctxfile.TrackTimeStampStart = DateTime.Parse(dr["TrackTimeStampStart"].ToString());
                             }
                             if (dr["TrackTimeStampEnd"].ToString().Length > 0)
                             {
                                 ctxfile.TrackTimeStampEnd = DateTime.Parse(dr["TrackTimeStampEnd"].ToString());
+                            }
+                            if (dr["TrackingInterval"] != DBNull.Value)
+                            {
+                                ctxfile.TrackingInterval = (int)dr["TrackingInterval"];
                             }
 
                             list.Add(ctxfile);
@@ -139,7 +171,11 @@ namespace GPXManager.entities
                                 xml Memo,
                                 CTXFileName VarChar,
                                 AppVersion VarChar,
-                                DateAdded DateTime
+                                ErrorConvertingToXML Bit,    
+                                CTXFileTimeStamp DateTime,
+                                IsDownloadedFromServer Bit,
+                                DateAdded DateTime,
+                                TrackingInterval Int
                                 )";
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;
@@ -148,14 +184,6 @@ namespace GPXManager.entities
                 try
                 {
                     cmd.ExecuteNonQuery();
-
-                    //sql = "ALTER TABLE trips ALTER COLUMN NameOfOperator INT";
-                    //cmd.CommandText = sql;
-                    //cmd.ExecuteNonQuery();
-
-                    //sql = "ALTER TABLE trips ADD CONSTRAINT fisherID_FK FOREIGN KEY (NameOfOperator) REFERENCES fishers(FisherID)";
-                    //cmd.CommandText = sql;
-                    //cmd.ExecuteNonQuery();
                 }
                 catch (OleDbException)
                 {
@@ -190,13 +218,26 @@ namespace GPXManager.entities
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $@"Insert into ctxFIles (RowID, DeviceID, UserName, Gear, LandingSite, DateStart, DateEnd, NumberOfTrips, TrackPts, TrackTimeStampStart, TrackTimeStampEnd, SetGearPts, RetrieveGearPts, FileName, XML, CTXFileName, AppVersion, DateAdded)
-                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                var sql = $@"Insert into ctxFiles 
+                            (RowID, DeviceID, UserName, Gear, LandingSite, 
+                            DateStart, DateEnd, NumberOfTrips, TrackPts, TrackTimeStampStart, 
+                            TrackTimeStampEnd, SetGearPts, RetrieveGearPts, FileName, XML, 
+                            CTXFileName, AppVersion, ErrorConvertingToXML, CTXFileTimeStamp, IsDownloadedFromServer, 
+                            DateAdded, TrackingInterval)
+                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     update.Parameters.Add("@rowID", OleDbType.Integer).Value = f.RowID;
-                    update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = f.DeviceID;
+
+                    if (f.DeviceID == null)
+                    {
+                        update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = f.DeviceID;
+                    }
 
                     if (f.UserName == null)
                     {
@@ -245,7 +286,7 @@ namespace GPXManager.entities
                         update.Parameters.Add("@end", OleDbType.VarChar).Value = f.DateEnd;
                     }
 
-                    if(f.NumberOfTrips==null)
+                    if (f.NumberOfTrips == null)
                     {
                         update.Parameters.Add("@numbnerTrips", OleDbType.Integer).Value = DBNull.Value;
                     }
@@ -264,7 +305,7 @@ namespace GPXManager.entities
                         update.Parameters.Add("@trackCount", OleDbType.Integer).Value = f.TrackPtCount;
                     }
 
-                    if(f.TrackTimeStampStart==null)
+                    if (f.TrackTimeStampStart == null)
                     {
                         update.Parameters.Add("@tracktimestart", OleDbType.Date).Value = DBNull.Value;
                     }
@@ -300,10 +341,33 @@ namespace GPXManager.entities
                         update.Parameters.Add("@retreiveCount", OleDbType.Integer).Value = f.RetrieveGearPtCount;
                     }
 
+                    if (f.FileName == null)
+                    {
+                        update.Parameters.Add("@fileName", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@fileName", OleDbType.VarChar).Value = f.FileName;
+                    }
 
-                    update.Parameters.Add("@fileName", OleDbType.VarChar).Value = f.FileName;
-                    update.Parameters.Add("@xml", OleDbType.VarChar).Value = f.XML;
-                    update.Parameters.Add("@ctxFileName", OleDbType.VarChar).Value = f.CTXFileName;
+                    if (f.XML == null)
+                    {
+                        update.Parameters.Add("@xml", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@xml", OleDbType.VarChar).Value = f.XML;
+                    }
+
+                    if (f.CTXFileName == null)
+                    {
+                        update.Parameters.Add("@ctxFileName", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@ctxFileName", OleDbType.VarChar).Value = f.CTXFileName;
+                    }
+
                     if (f.AppVersion == null)
                     {
                         update.Parameters.Add("@appVersion", OleDbType.VarChar).Value = DBNull.Value;
@@ -313,7 +377,18 @@ namespace GPXManager.entities
                         update.Parameters.Add("@appVersion", OleDbType.VarChar).Value = f.AppVersion;
                     }
 
+                    update.Parameters.Add("@convert_xml_error", OleDbType.Boolean).Value = f.ErrorConvertingToXML;
+                    update.Parameters.Add("@fileTimeStamp", OleDbType.Date).Value = f.CTXFileTimeStamp;
+                    update.Parameters.Add("@isDownloadedFromServer", OleDbType.Boolean).Value = f.IsDownloadedFromServer;
                     update.Parameters.Add("@dateAdded", OleDbType.Date).Value = f.DateAdded;
+                    if (f.TrackingInterval == null)
+                    {
+                        update.Parameters.Add("@trackingInterval", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@trackingInterval", OleDbType.Integer).Value = f.TrackingInterval;
+                    }
 
                     try
                     {
@@ -332,9 +407,249 @@ namespace GPXManager.entities
             return success;
         }
 
+        public List<CTXFile> GetFilesForImportCTXByFolder(string folder)
+        {
+            _ctxFileList.Clear();
+            var list = GetFilesImportCTXByFolder1(folder);
+            //return GetFilesImportCTXByFolder1(folder);
+            return list;
+        }
+        private List<CTXFile> GetFilesImportCTXByFolder1(string folder)
+        {
+
+            var folderName = System.IO.Path.GetFileName(folder);
+            var files = Directory.GetFiles(folder).Select(s => new FileInfo(s));
+
+            if (files.Any())
+            {
+                foreach (var file in files)
+                {
+                    if (file.Extension.ToLower() == ".ctx")
+                    {
+                        _ctxFileList.Add(new CTXFile { FileInfo = file, IsDownloaded = Entities.CTXFileViewModel.Exists(file.Name) });
+                    }
+                }
+            }
+
+            foreach (var dir in Directory.GetDirectories(folder))
+            {
+                GetFilesImportCTXByFolder1(dir);
+            }
+            return _ctxFileList;
+        }
+
         public bool Update(CTXFile f)
         {
-            return true;
+            bool success = false;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+
+
+                using (OleDbCommand update = conn.CreateCommand())
+                {
+
+
+                    if (f.DeviceID == null)
+                    {
+                        update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = f.DeviceID;
+                    }
+
+                    if (f.UserName == null)
+                    {
+                        update.Parameters.Add("@user", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@user", OleDbType.VarChar).Value = f.UserName;
+                    }
+
+
+                    if (f.Gear == null)
+                    {
+                        update.Parameters.Add("@gear", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@gear", OleDbType.VarChar).Value = f.Gear;
+                    }
+
+                    if (f.LandingSite == null)
+                    {
+                        update.Parameters.Add("@landingSite", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@landingSite", OleDbType.VarChar).Value = f.LandingSite;
+                    }
+
+
+                    if (f.DateStart == null)
+                    {
+                        update.Parameters.Add("@start", OleDbType.Date).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@start", OleDbType.Date).Value = f.DateStart;
+                    }
+
+                    if (f.DateEnd == null)
+                    {
+                        update.Parameters.Add("@end", OleDbType.Date).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@end", OleDbType.Date).Value = f.DateEnd;
+                    }
+
+                    if (f.NumberOfTrips == null)
+                    {
+                        update.Parameters.Add("@numbnerTrips", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@numbnerTrips", OleDbType.Integer).Value = f.NumberOfTrips;
+                    }
+
+
+                    if (f.TrackPtCount == null)
+                    {
+                        update.Parameters.Add("@trackCount", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@trackCount", OleDbType.Integer).Value = f.TrackPtCount;
+                    }
+
+                    if (f.TrackTimeStampStart == null)
+                    {
+                        update.Parameters.Add("@tracktimestart", OleDbType.Date).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@tracktimestart", OleDbType.Date).Value = f.TrackTimeStampStart;
+                    }
+
+                    if (f.TrackTimeStampEnd == null)
+                    {
+                        update.Parameters.Add("@tracktimeend", OleDbType.Date).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@tracktimeend", OleDbType.Date).Value = f.TrackTimeStampEnd;
+                    }
+
+                    if (f.SetGearPtCount == null)
+                    {
+                        update.Parameters.Add("@setCount", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@setCount", OleDbType.Integer).Value = f.SetGearPtCount;
+                    }
+
+                    if (f.RetrieveGearPtCount == null)
+                    {
+                        update.Parameters.Add("@retreiveCount", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@retreiveCount", OleDbType.Integer).Value = f.RetrieveGearPtCount;
+                    }
+
+                    if (f.FileName == null)
+                    {
+                        update.Parameters.Add("@fileName", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@fileName", OleDbType.VarChar).Value = f.FileName;
+                    }
+
+                    if (f.XML == null)
+                    {
+                        update.Parameters.Add("@xml", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@xml", OleDbType.VarChar).Value = f.XML;
+                    }
+
+                    if (f.CTXFileName == null)
+                    {
+                        update.Parameters.Add("@ctxFileName", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@ctxFileName", OleDbType.VarChar).Value = f.CTXFileName;
+                    }
+
+                    if (f.AppVersion == null)
+                    {
+                        update.Parameters.Add("@appVersion", OleDbType.VarChar).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@appVersion", OleDbType.VarChar).Value = f.AppVersion;
+                    }
+
+                    update.Parameters.Add("@convert_xml_error", OleDbType.Boolean).Value = f.ErrorConvertingToXML;
+                    update.Parameters.Add("@fileTimeStamp", OleDbType.Date).Value = f.CTXFileTimeStamp;
+                    update.Parameters.Add("@isDownloadedFromServer", OleDbType.Boolean).Value = f.IsDownloadedFromServer;
+                    update.Parameters.Add("@dateAdded", OleDbType.Date).Value = f.DateAdded;
+                    if (f.TrackingInterval == null)
+                    {
+                        update.Parameters.Add("@trackingInterval", OleDbType.Integer).Value = DBNull.Value;
+                    }
+                    else
+                    {
+                        update.Parameters.Add("@trackingInterval", OleDbType.Integer).Value = f.TrackingInterval;
+                    }
+                    update.Parameters.Add("@rowID", OleDbType.Integer).Value = f.RowID;
+
+                    update.CommandText = @"UPDATE ctxFiles SET 
+                            DeviceID = @deviceID, 
+                            UserName = @user, 
+                            Gear = @gear, 
+                            LandingSite = @landingSite, 
+                            DateStart = @start, 
+                            DateEnd = @end, 
+                            NumberOfTrips = @numbnerTrips, 
+                            TrackPts = @trackCount, 
+                            TrackTimeStampStart = @tracktimestart, 
+                            TrackTimeStampEnd = @tracktimeend, 
+                            SetGearPts = @setCount, 
+                            RetrieveGearPts = @retreiveCount, 
+                            FileName = @fileName, 
+                            XML = @xml, 
+                            CTXFileName = @ctxFileName, 
+                            AppVersion = @appVersion, 
+                            ErrorConvertingToXML = @convert_xml_error, 
+                            CTXFileTimeStamp = @fileTimeStamp, 
+                            IsDownloadedFromServer = @isDownloadedFromServer, 
+                            DateAdded = @dateAdded,
+                            TrackingInterval = @trackingInterval
+                            Where RowID = @rowID";
+
+                    try
+                    {
+                        success = update.ExecuteNonQuery() > 0;
+                    }
+                    catch (OleDbException dbex)
+                    {
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
+                }
+            }
+            return success;
         }
 
         public bool Delete(int id)
@@ -370,7 +685,8 @@ namespace GPXManager.entities
                     {
                         try
                         {
-                            CTXFile f = new CTXFile { IsDownloaded = Entities.CTXFileViewModel.Exists(fileInfo.Name), RemoteFileInfo = fileInfo };
+                            CTXFile f = new CTXFile { IsDownloaded = Entities.CTXFileViewModel.Exists(fileInfo.Name), RemoteFileInfo = fileInfo, CTXFileName = fileInfo.Name };
+                            f.CTXFileTimeStamp = f.RemoteFileInfo.LastWriteTime;
                             list.Add(f);
                         }
                         catch (Exception ex)
@@ -400,7 +716,58 @@ namespace GPXManager.entities
 
         public string LastXMLFromCTXFile { get; private set; }
 
+        public bool ErrorConvertingToXML { get; private set; }
         public string LastError { get; private set; }
+
+        public static bool ExtractXMLFromCTX(string inCTX)//, string downloadLocation)
+        {
+            string args = $@"/datafile {inCTX} /exportxml  {inCTX}.xml";
+            string command = $@"{Global.Settings.PathToCybertrackerExe}\ct3";
+            System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(command, args);
+            psi.UseShellExecute = false;
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            psi.ErrorDialog = true;
+            p.StartInfo = psi;
+            p.Start();
+            p.WaitForExit();
+            return File.Exists($@"{inCTX}.xml");
+        }
+
+        public bool ImportCTXFIles(List<CTXFile> files, string importLocation)
+        {
+            foreach (var f in files)
+            {
+                string inCTX = $@"{Global.Settings.CTXDownloadFolder}\{f.FileInfo.Name}";
+                string sourceCTX = $@"{f.FileInfo.FullName}";
+
+                if (!File.Exists(inCTX))
+                {
+                    File.Copy(sourceCTX, inCTX, overwrite: false);
+                }
+
+                if (File.Exists(inCTX) && ExtractXMLFromCTX(inCTX))
+                {
+                    if (XMLFileFromImportedCTXCreated != null)
+                    {
+                        LastXMLFromCTXFile = $@"{inCTX}.xml";
+                        if (!File.Exists(LastXMLFromCTXFile))
+                        {
+                            ErrorConvertingToXML = true;
+                            LastError = "XML file converted from binary CTX not found";
+                        }
+                        CTXFileImportEventArgs e = new CTXFileImportEventArgs();
+                        e.SourceFile = f.FileInfo.FullName;
+                        e.ImportResultFile = inCTX;
+                        XMLFileFromImportedCTXCreated(this, e);
+                        if (!File.Exists($@"{Global.Settings.CTXBackupFolder}\{f.FileInfo.Name}"))
+                        {
+                            File.Copy($@"{inCTX}", $@"{Global.Settings.CTXBackupFolder}\{f.FileInfo.Name}", overwrite: false);
+                        }
+                    }
+                }
+            }
+            return true;
+        }
         public bool DownloadFromServer(List<CTXFile> files, string downloadLocation)
         {
             LastError = "";
@@ -424,23 +791,44 @@ namespace GPXManager.entities
                                 var transferResult = session.GetFileToDirectory(f.RemoteFileInfo.FullName, $"{downloadLocation}");//, false, transferOptions);
                                 if (transferResult.Error == null)
                                 {
-                                    string args = $@"/datafile {downloadLocation}\{f.RemoteFileInfo.Name} /exportxml  {downloadLocation}\{f.RemoteFileInfo.Name}.xml";
-                                    string command = $@"{Global.Settings.PathToCybertrackerExe}\ct3";
-                                    System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(command, args);
-                                    psi.UseShellExecute = false;
-                                    System.Diagnostics.Process p = new System.Diagnostics.Process();
-                                    psi.ErrorDialog = true;
-                                    p.StartInfo = psi;
-                                    p.Start();
-                                    p.WaitForExit();
+                                    ErrorConvertingToXML = false;
+                                    string inCTX = $@"{downloadLocation}\{f.RemoteFileInfo.Name}";
 
-                                    if (XMLFileFromCTXCreated != null)
+                                    //string args = $@"/datafile {downloadLocation}\{f.RemoteFileInfo.Name} /exportxml  {downloadLocation}\{f.RemoteFileInfo.Name}.xml";
+                                    //string command = $@"{Global.Settings.PathToCybertrackerExe}\ct3";
+                                    //System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo(command, args);
+                                    //psi.UseShellExecute = false;
+                                    //System.Diagnostics.Process p = new System.Diagnostics.Process();
+                                    //psi.ErrorDialog = true;
+                                    //p.StartInfo = psi;
+                                    //p.Start();
+                                    //p.WaitForExit();
+
+                                    if (ExtractXMLFromCTX(inCTX))//0., downloadLocation))
                                     {
-                                        LastXMLFromCTXFile = $@"{downloadLocation}\{f.RemoteFileInfo.Name}.xml";
-                                        XMLFileFromCTXCreated(this, transferResult);
+                                        if (XMLFileFromDownloadedCTXCreated != null)
+                                        {
+                                            LastXMLFromCTXFile = $@"{inCTX}.xml";
+                                            if (!File.Exists(LastXMLFromCTXFile))
+                                            {
+                                                ErrorConvertingToXML = true;
+                                                LastError = "XML file converted from binary CTX not found";
+                                            }
+                                            XMLFileFromDownloadedCTXCreated(this, transferResult);
+                                        }
+                                        //copy downloaded file to backup folder
+                                        if (!File.Exists($@"{Global.Settings.CTXBackupFolder}\{f.RemoteFileInfo.Name}"))
+                                        {
+                                            File.Copy($@"{Global.Settings.CTXDownloadFolder}\{f.RemoteFileInfo.Name}", $@"{Global.Settings.CTXBackupFolder}\{f.RemoteFileInfo.Name}", overwrite: false);
+                                        }
+
                                     }
-                                    //copy downloaded file to backup folder
-                                    File.Copy($@"{Global.Settings.CTXDownloadFolder}\{f.RemoteFileInfo.Name}",$@"{Global.Settings.CTXBackupFolder}\{f.RemoteFileInfo.Name}",overwrite:false);
+                                    else
+                                    {
+                                        ErrorConvertingToXML = true;
+                                        LastError = "XML file converted from binary CTX not found";
+                                        XMLFileFromDownloadedCTXCreated(this, transferResult);
+                                    }
                                 }
                             }
                             catch (Exception ex)

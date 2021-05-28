@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MapWinGIS;
-namespace GPXManager.entities.mapping
+namespace GPXManager.entities.mapping.gridding
 {
     public enum UTMZone
     {

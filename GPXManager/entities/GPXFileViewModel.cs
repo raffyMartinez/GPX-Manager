@@ -15,15 +15,19 @@ namespace GPXManager.entities
     {
         private List<GPS> _gpsFinishedReadingFiles = new List<GPS>();
         public ObservableCollection<GPXFile> GPXFileCollection { get; set; }
+
         public GPXFileViewModel()
         {
             GPXFileCollection = new ObservableCollection<GPXFile>();
             GPXFileCollection.CollectionChanged += GPXFileCollection_CollectionChanged;
+
+
         }
 
         public GPXFile ConvertToGPXFile(DeviceGPX deviceGPX )
         {
             GPXFile gpxFile = new GPXFile(deviceGPX.Filename);
+            gpxFile.RowID = deviceGPX.RowID;
             gpxFile.GPS = deviceGPX.GPS;
             gpxFile.ComputeStats(deviceGPX);
             gpxFile.XML = deviceGPX.GPX;

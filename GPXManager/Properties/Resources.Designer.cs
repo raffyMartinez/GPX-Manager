@@ -253,6 +253,26 @@ namespace GPXManager.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap move_to_left {
+            get {
+                object obj = ResourceManager.GetObject("move_to_left", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap move_to_right {
+            get {
+                object obj = ResourceManager.GetObject("move_to_right", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap navigation_path {
             get {
                 object obj = ResourceManager.GetObject("navigation_path", resourceCulture);

@@ -19,18 +19,18 @@
             <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="1" Grid.Row="1">
-            <Button  Width="60" Height="30" Content="Ok" Margin="10" Name="buttonOk" Click="OnButtonClicked"/>
+            <Button  Width="60" Height="30" Content="Ok" Margin="10" Name="buttonOk" Click="OnButtonClicked" IsCancel="True"/>
         </StackPanel>
         <Label Grid.ColumnSpan="2" Content="Properties of CTX file" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14" FontWeight="Bold"/>
         <xctk:PropertyGrid x:Name="PropertyGrid" Grid.Row="1" Grid.Column="0" Margin="10"
-                           VerticalAlignment="Top" ShowSearchBox="False" ShowSortOptions="False"
-                           ShowTitle="False" NameColumnWidth="250" />
+                           VerticalAlignment="Top" ShowSearchBox="False" ShowSortOptions="False" SelectedPropertyItemChanged="OnPropetyChanged"
+                           ShowTitle="False" NameColumnWidth="250" MouseDoubleClick="OnPropertyDblClick"/>
         <TabControl Grid.Row="2" Margin="10" Grid.ColumnSpan="2">
             <TabItem Header="Waypoints">
-                <DataGrid x:Name="DataGridWaypoints" Grid.Row="2" Margin="10"/>
+                <DataGrid x:Name="DataGridWaypoints" Grid.Row="2" Margin="10" ItemsSource="{Binding}" IsReadOnly="True"/>
             </TabItem>
             <TabItem Header="Tracks">
-                <DataGrid x:Name="DataGridTracks" Grid.Row="3" Margin="10"/>
+                <DataGrid x:Name="DataGridTracks" Grid.Row="3" Margin="10" ItemsSource="{Binding}" IsReadOnly="True"/>
             </TabItem>
             <TabItem Header="XML">
                 <TextBox x:Name="txtXML" Margin="5"/>

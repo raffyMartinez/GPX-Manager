@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WinSCP;
+using System.IO;
 
 namespace GPXManager.entities
 {
@@ -28,6 +29,7 @@ namespace GPXManager.entities
                 Duration = ((DateTime)f.DateEnd - (DateTime)f.DateStart).ToString();
             }
 
+            ErrorConvertingToXML = f.ErrorConvertingToXML;
             WaypointsForSet = f.SetGearPtCount;
             WaypointsForHaul = f.RetrieveGearPtCount;
             TrackpointsCount = f.TrackPtCount;
@@ -39,8 +41,12 @@ namespace GPXManager.entities
             CTXFile = f;
             CTXFileName = f.CTXFileName;
             DeviceID = f.DeviceID;
+            DownloadedFromServer = f.IsDownloadedFromServer;
+            TrackingInterval = f.TrackingInterval;
 
         }
+        public int? TrackingInterval { get; internal set; }
+        public bool ErrorConvertingToXML { get; set; }
         public string Duration { get; internal set; }
         public string CTXFileName { get; internal set; }
         public string DeviceID{ get; internal set; }
@@ -60,11 +66,14 @@ namespace GPXManager.entities
         public string XML { get; internal set; }
 
         public CTXFile CTXFile { get; internal set; }
+        public bool DownloadedFromServer { get;  set; }
     }
     public class CTXFile
     {
+        public FileInfo FileInfo { get; set; }
         public RemoteFileInfo RemoteFileInfo { get; set; }
 
+        public bool ErrorConvertingToXML { get; set; }
         public bool IsDownloaded { get; set; }
 
         public string CTXFileName { get; set; }
@@ -74,6 +83,25 @@ namespace GPXManager.entities
         public string LandingSite { get; set; }
         public DateTime? DateStart { get; set; }
         public DateTime? DateEnd { get; set; }
+
+        public DateTime? Date
+        {
+            get
+            {
+                if(DateStart!=null)
+                {
+                    return DateStart;
+                }
+                else if(DateEnd!=null)
+                {
+                    return DateEnd;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         public int? TrackPtCount { get; set; }
         public DateTime? TrackTimeStampStart { get; set; }
@@ -85,12 +113,17 @@ namespace GPXManager.entities
         public int RowID { get; set; }
         public string DeviceID { get; set; }
         public string FileName { get; set; }
+
+        public DateTime CTXFileTimeStamp { get; set; }
         public DateTime DateAdded { get; set; }
         public string XML { get; set; }
 
+        public int? TrackingInterval { get; set; }
         public string AppVersion { get; set; }
 
         public bool DownloadFile { get; set; }
+
+        public bool IsDownloadedFromServer { get; set; }
 
         public override string ToString()
         {

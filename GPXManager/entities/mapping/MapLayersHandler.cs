@@ -576,7 +576,7 @@ namespace GPXManager.entities.mapping
             return false;
         }
 
-        public void RemoveLayerByKey(string layerKey)
+        public bool RemoveLayerByKey(string layerKey)
         {
             if (LayerDictionary.Count > 0)
             {
@@ -612,7 +612,9 @@ namespace GPXManager.entities.mapping
                 {
                     _axmap.Redraw();
                 }
+                return counter > 0;
             }
+            return false;
         }
         /// <summary>
         /// Removes a layer using layer handle and raises a Layer removed event.
