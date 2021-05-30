@@ -19,7 +19,28 @@ namespace GPXManager.entities
 
 
 
+        public string getXML(int RowID)
+        {
+            string xml = "";
 
+            using (var conection = new OleDbConnection(Global.ConnectionString))
+            {
+                try
+                {
+                    conection.Open();
+                    string query = $"Select gpx_xml from device_gpx where RowID={RowID}";
+                    using (OleDbCommand getXML = new OleDbCommand(query, conection))
+                    {
+                        xml = (string)getXML.ExecuteScalar();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex.Message);
+                }
+            }
+            return xml;
+        }
         public List<DeviceGPX> getDeviceGPXes()
         {
             var thisList = new List<DeviceGPX>();
@@ -30,7 +51,9 @@ namespace GPXManager.entities
                 {
                     conection.Open();
                     string query = $"Select * from device_gpx";
-
+                    //string query = @"Select FileName, DeviceID, RowID, md5, gpx_type, 
+                    //                        time_range_start, time_range_end, 
+                    //                        TimerInterval  from device_gpx";
 
                     var adapter = new OleDbDataAdapter(query, conection);
                     adapter.Fill(dt);
@@ -44,6 +67,7 @@ namespace GPXManager.entities
                             gpx.GPS = Entities.GPSViewModel.GetGPSEx(dr["DeviceID"].ToString());
                             gpx.RowID = int.Parse(dr["RowID"].ToString());
                             gpx.GPX = dr["gpx_xml"].ToString();
+                            //gpx.GPX = "";
                             gpx.MD5 = dr["md5"].ToString();
                             gpx.GPXType = dr["gpx_type"].ToString(); ;
                             gpx.TimeRangeStart = (DateTime)dr["time_range_start"];

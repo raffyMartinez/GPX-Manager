@@ -52,6 +52,7 @@ namespace GPXManager.entities
         }
         private List<CTXFile> getFiles()
         {
+            Logger.Log($"about to start getting ctx from database");
             var list = new List<CTXFile>();
             var dt = new DataTable();
             using (var conection = new OleDbConnection(Global.ConnectionString))
@@ -59,8 +60,12 @@ namespace GPXManager.entities
                 try
                 {
                     conection.Open();
-                    string query = $"Select * from ctxFiles";
-
+                    //string query = $"Select * from ctxFiles";
+                    string query = @"Select RowID, FileName, DeviceID, CTXFilename, UserName, Gear,
+                                     LandingSite, DateAdded, CTXFileTimeStamp, AppVersion,
+                                     ErrorConvertingToXML, IsDownloadedFromServer, DateStart, DateEnd,
+                                     TrackPts, SetGearPts, RetrieveGearPts, TrackTimeStampStart, TrackTimeStampEnd,
+                                     TrackingInterval from ctxFiles";
 
                     var adapter = new OleDbDataAdapter(query, conection);
                     adapter.Fill(dt);
@@ -121,6 +126,7 @@ namespace GPXManager.entities
                             }
 
                             list.Add(ctxfile);
+                            //Logger.Log($"Added ctxfile ID: {ctxfile.RowID}");
                         }
                     }
                 }

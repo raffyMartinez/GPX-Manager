@@ -52,7 +52,6 @@ namespace GPXManager.entities
         public static ExtractedFishingTrackViewModel ExtractedFishingTrackViewModel { get; set; }
 
 
-
         public static bool ClearTables()
         {
             var result = DeviceGPXViewModel.ClearRepository();

@@ -9,8 +9,10 @@ namespace GPXManager.entities.mapping
 {
     public enum ExtractedTrackSourceType
     {
+        TrackSourceTypeNone,
         TrackSourceTypeCTX,
         TrackSourceTypeGPX
+
     }
     public class ExtractedFishingTrack
     {
@@ -71,9 +73,10 @@ namespace GPXManager.entities.mapping
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public double AverageSpeed { get; set; }
-        public Double TrackPointCountOriginal { get; set; }
-        public double TrackPointCountSimplified { get; set; }
+        public int TrackPointCountOriginal { get; set; }
+        public int TrackPointCountSimplified { get; set; }
 
+        public bool FromDatabase { get; set; }
         public string DeviceName { get; set; }
         public string Duration
         {

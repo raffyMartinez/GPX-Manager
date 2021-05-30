@@ -2964,9 +2964,10 @@ namespace GPXManager
                 case "cybertrackerHistoryGrid":
                 case "cybertrackerDataGrid":
                     _ctxFileSummary = (CTXFileSummaryView)((DataGrid)sender).SelectedItem;
-                    CheckXMLOfSummaryFile(_ctxFileSummary);
+
                     if (_ctxFileSummary != null)
                     {
+                        CheckXMLOfSummaryFile(_ctxFileSummary);
                         if (MapWindowForm.Instance != null)
                         {
                             //List<int> handles = new List<int>();
@@ -4060,6 +4061,7 @@ namespace GPXManager
 
                 }
             }
+            chkShowInMapExtracted.IsEnabled = MapWindowManager.MapWindowForm != null;
 
         }
         private void OnCybertrackerTreeItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)

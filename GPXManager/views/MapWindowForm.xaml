@@ -25,6 +25,7 @@
                     <MenuItem Header="Add reef area ..." x:Name="menuAddLayerReef" Click="OnMenuClick"/>
                     <MenuItem Header="Add mangrove area ..." x:Name="menuAddLayerMangrove" Click="OnMenuClick"/>
                     <MenuItem Header="Add BSC boundary ..." x:Name="menuAddBSCBoundary" Click="OnMenuClick"/>
+                    <MenuItem Header="Add extracted tracks" x:Name="menuAddExtractedTracks" Click="OnMenuClick"/>
                 </MenuItem>
                 <MenuItem Header="Save map state" x:Name="menuSaveMapState" Click="OnMenuClick"/>
                 <MenuItem Header="Close" x:Name="menuClose" Click="OnMenuClick"/>

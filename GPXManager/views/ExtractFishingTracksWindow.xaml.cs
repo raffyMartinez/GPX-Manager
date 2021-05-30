@@ -36,7 +36,7 @@ namespace GPXManager.views
         {
             _timer = new DispatcherTimer();
             chkShowInMap.IsEnabled = false;
-            if(entities.mapping.MapWindowManager.MapWindowForm!=null)
+            if (entities.mapping.MapWindowManager.MapWindowForm != null)
             {
                 chkShowInMap.IsEnabled = true;
             }
@@ -44,7 +44,7 @@ namespace GPXManager.views
 
         private async void OnButtonClicked(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonOk":
                     _timer.Interval = new TimeSpan(0, 0, 1);
@@ -61,9 +61,9 @@ namespace GPXManager.views
                         (bool)chkSave.IsChecked,
                         (bool)chkShowInMap.IsChecked
                         );
-                    
+
                     Entities.ExtractedFishingTrackViewModel.TrackExtractedFromSourceCreated -= ExtractedFishingTrackViewModel_TrackExtractedFromSourceCreated;
-                    if((bool)chkShowInMap.IsChecked)
+                    if ((bool)chkShowInMap.IsChecked)
                     {
                         entities.mapping.MapWindowManager.MapExtractedFishingTracksShapefile(Entities.ExtractedFishingTrackViewModel.ExtractedFishingTracksSF);
                     }
@@ -75,7 +75,7 @@ namespace GPXManager.views
                     _timer.Tick -= OnTimerTick;
                     break;
                 case "buttonCancel":
-                    
+
                     Close();
                     break;
             }
@@ -103,16 +103,26 @@ namespace GPXManager.views
                 (
                   DispatcherPriority.Normal, new DispatcherOperationCallback(delegate
                   {
-                      string sourceType = "GPX";
-                      if(e.ExtractedFishingTrack.TrackSourceType==entities.mapping.ExtractedTrackSourceType.TrackSourceTypeCTX)
+                      _trackCount = e.Counter;
+                      switch (e.Context)
                       {
-                          sourceType = "CTX";
+                          case "Saved track":
+                              labelProgress.Content = $"Saved track # {_trackCount}";
+                              break;
+                          case "Extracted track":
+                              string sourceType = "GPX";
+                              if (e.ExtractedFishingTrack.TrackSourceType == entities.mapping.ExtractedTrackSourceType.TrackSourceTypeCTX)
+                              {
+                                  sourceType = "CTX";
+                              }
+                              labelProgress.Content = $"Created track # {_trackCount} from {sourceType}";
+                              break;
                       }
 
-                      _trackCount = e.Counter;
-                      labelProgress.Content = $"Created track # {_trackCount} from {sourceType}";
-                              //do what you need to do on UI Thread
-                              return null;
+                      //do what you need to do on UI Thread
+                      return null;
+
+
                   }
                  ), null);
         }

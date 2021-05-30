@@ -144,7 +144,7 @@ namespace GPXManager.entities.mapping
         /// </summary>
         /// <param name="sf"></param>
         /// <returns></returns>
-        public static DataTable SetupAttributeTable(Shapefile sf)
+        public static DataTable SetupAttributeTable(Shapefile sf, bool selectedOnly=false)
         {
             DataTable dt = new DataTable();
             DataCaption = $"Name of layer: {MapInterActionHandler.MapLayersHandler.CurrentMapLayer.Name}";
@@ -176,27 +176,7 @@ namespace GPXManager.entities.mapping
 
 
             DataRow row;
-            if (sf.NumSelected == 0)
-            {
-                for (int x = 0; x < sf.NumShapes; x++)
-                {
-                    row = dt.NewRow();
-                    for (int z = 0; z < sf.NumFields; z++)
-                    {
-                        if (sf.CellValue[z, x] == null)
-                        {
-                            row[z] = DBNull.Value;
-                        }
-                        else
-                        {
-                            row[z] = sf.CellValue[z, x];
-                        }
-
-                    }
-                    dt.Rows.Add(row);
-                }
-            }
-            else
+            if (selectedOnly)
             {
                 for (int x = 0; x < sf.NumShapes; x++)
                 {
@@ -216,6 +196,52 @@ namespace GPXManager.entities.mapping
                             }
                         }
                         dt.Rows.Add(row);
+                    }
+                }
+            }
+            else
+            {
+                if (sf.NumSelected == 0)
+                {
+                    for (int x = 0; x < sf.NumShapes; x++)
+                    {
+                        row = dt.NewRow();
+                        for (int z = 0; z < sf.NumFields; z++)
+                        {
+                            if (sf.CellValue[z, x] == null)
+                            {
+                                row[z] = DBNull.Value;
+                            }
+                            else
+                            {
+                                row[z] = sf.CellValue[z, x];
+                            }
+
+                        }
+                        dt.Rows.Add(row);
+                    }
+                }
+                else
+                {
+                    for (int x = 0; x < sf.NumShapes; x++)
+                    {
+                        if (sf.ShapeSelected[x])
+                        {
+                            row = dt.NewRow();
+                            for (int z = 0; z < sf.NumFields; z++)
+                            {
+                                //row[z] = sf.CellValue[z, x];
+                                if (sf.CellValue[z, x] == null)
+                                {
+                                    row[z] = DBNull.Value;
+                                }
+                                else
+                                {
+                                    row[z] = sf.CellValue[z, x];
+                                }
+                            }
+                            dt.Rows.Add(row);
+                        }
                     }
                 }
             }

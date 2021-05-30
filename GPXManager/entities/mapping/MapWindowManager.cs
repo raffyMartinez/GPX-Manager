@@ -23,6 +23,8 @@ namespace GPXManager.entities.mapping
     {
         private static Shapefile _coastline;
         private static List<int> _selectedShapedIDs;
+
+
         public static ShapeFileAttributesWindow ShapeFileAttributesWindow { get; set; }
 
         public static MapLayersWindow MapLayersWindow { get; set; }
@@ -380,6 +382,16 @@ namespace GPXManager.entities.mapping
                 ShapefileFactory.BSCBoundaryLine = _bscBoundaryShapefile.Shape[0];
             }
         }
+
+        public static bool AddExtractedTracksLayer()
+        {
+            if (Entities.ExtractedFishingTrackViewModel.Count() > 0)
+            {
+                var sf = ShapefileFactory.FishingTrackLines();
+                return MapLayersHandler.AddLayer(sf, "Fishing tracks", layerKey: sf.Key, uniqueLayer: true) >= 0;
+            }
+            return false;
+        }
         public static bool AddBSCBoundaryLineShapefile(string inSF, out string feedBack)
         {
             var boundaryFolder = $@"{LayersFolder}\BSCBoundaryLine";
@@ -592,15 +604,16 @@ namespace GPXManager.entities.mapping
             return MapLayersHandler.CurrentMapLayer.Handle;
         }
 
-        public static int MapExtractedFishingTrack(TripAndHauls th, out List<int> handles)
+        public static Shapefile ExtractedTracksShapefile { get; set; }
+
+        public static int MapExtractedFishingTrack(FishingTripAndGearRetrievalTracks th, out List<int> handles)
         {
             handles = new List<int>();
-            if(th!=null &&  th.Tracks.Count>0 && ShapefileFactory.ExtractFishingTrackLine)
+            if (th != null && th.GearRetrievalTracks.Count > 0 && ShapefileFactory.ExtractFishingTrackLine)
             {
                 var sf = ShapefileFactory.FishingTrackLine(th);
                 if (sf != null)
                 {
-                    //return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
                     return MapLayersHandler.AddLayer(sf, "Extracted fishng track", uniqueLayer: true, layerKey: sf.Key);
                 }
             }
@@ -634,27 +647,21 @@ namespace GPXManager.entities.mapping
         }
 
 
-        //public static int MapTrackCTX(CTXFileSummaryView ctx, out List<int> handles)
-        public static TripAndHauls MapTrackCTX(CTXFileSummaryView ctx)//, out List<int> handles)
+        public static FishingTripAndGearRetrievalTracks MapTrackCTX(CTXFileSummaryView ctx)
         {
-            //handles = new List<int>();
             if (ctx.TrackpointsCount != null && ctx.TrackpointsCount > 0)
             {
                 var result = ShapefileFactory.CreateTripAndHaulsFromCTX(ctx);
                 if (result != null)
                 {
-                    MapLayersHandler.AddLayer(result.Shapefile, "CTX track", uniqueLayer: true, layerKey: result.Shapefile.Key, rejectIfExisting: true);
+                    MapLayersHandler.AddLayer(result.TripShapefile, "CTX track", uniqueLayer: true, layerKey: result.TripShapefile.Key, rejectIfExisting: true);
                 }
-                //return result.
-                //var sf = ShapefileFactory.TrackFromCTX(ctx, out handles);
-                //MapLayersHandler.AddLayer(sf, "CTX track", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
                 return result;
             }
-            //return MapLayersHandler.CurrentMapLayer.Handle;
             return null;
         }
 
-        public static TripAndHauls MapTrackGPX(GPXFile gpxfile)
+        public static FishingTripAndGearRetrievalTracks MapTrackGPX(GPXFile gpxfile)
         {
 
             if (gpxfile.Tracks.Count > 0)
@@ -663,7 +670,7 @@ namespace GPXManager.entities.mapping
                 if (result != null)
                 {
 
-                    MapLayersHandler.AddLayer(result.Shapefile, "GPX track", uniqueLayer: true, layerKey: result.Shapefile.Key, rejectIfExisting: true);
+                    MapLayersHandler.AddLayer(result.TripShapefile, "GPX track", uniqueLayer: true, layerKey: result.TripShapefile.Key, rejectIfExisting: true);
                 }
                 return result;
             }
@@ -719,7 +726,11 @@ namespace GPXManager.entities.mapping
                     if (gpxFile.TrackCount > 0)
                     {
                         //sf = ShapefileFactory.TrackFromGPX(gpxFile,out shpIndex);
-                        sf = ShapefileFactory.TrackFromGPX(gpxFile, out handles);
+                        sf = ShapefileFactory.TracksFromGPXFiles(gpxFile, out handles);
+                        //var result = ShapefileFactory.CreateTripAndHaulsFromGPX(gpxFile);
+                        //sf = result.Shapefile;
+                        //handles.Add(result.Handle);
+                        //Console.WriteLine($"shapefile with {sf.Shape[0].numPoints} created. Handle is {result.Handle}");
                         shpfileName = "GPX tracks";
                     }
                     else if (gpxFile.WaypointCount > 0)

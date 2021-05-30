@@ -8,8 +8,10 @@ namespace GPXManager.entities
 {
     public class DeviceGPX
     {
+
         public GPS GPS { get; set; }
         public string Filename { get; set; }
+        
         public string GPX { get; set; }
         public int RowID { get; set; }
 

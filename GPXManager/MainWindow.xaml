@@ -606,6 +606,7 @@
                             <Label Content="Extract fishing tracks of gear retrieval" VerticalAlignment="Center"/>
                             <Button Content="Extract" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonExtractFishingTrack" Click="OnButtonClick" VerticalAlignment="Center"/>
                             <CheckBox Content="Tabulate results" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange" x:Name="chkShowExtractReults" VerticalAlignment="Center" Margin="20 0 0 0"/>
+                            <CheckBox Content="Show extracted tracks in map" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange" Name="chkShowInMapExtracted" VerticalAlignment="Center" Margin="20 0 0 0" IsEnabled="False"/>
                         </WrapPanel>
 
                         <DataGrid x:Name="DataGridExtractedTracks" ItemsSource="{Binding}" IsReadOnly="True"

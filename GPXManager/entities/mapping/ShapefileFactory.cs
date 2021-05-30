@@ -251,503 +251,93 @@ namespace GPXManager.entities.mapping
 
         public static Shape BSCBoundaryLine { get; set; }
 
-        public static List<ExtractedFishingTrack> ExtractedFishingTracks()
+        public static FishingTripAndGearRetrievalTracks GearRetrievalTrackShapeFromGPX(GPXFile gpxFile, int? interval)
         {
-            return _gearHaulExtractedTracks;
-        }
-        public static bool TrackShapeFromGPX(GPXFile gpxFile)
-        {
-            Waypoint ptBefore = null;
-            double accumulatedDistance = 0;
-            Shape segment = null;
-            ExtractedFishingTrack eft = new ExtractedFishingTrack();
-            _gearHaulExtractedTracks = new List<ExtractedFishingTrack>();
-            if (gpxFile.TrackWaypoinsInLocalTime.Count > 0)
+            ExtractFishingTrackLine = true;
+            List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
+
+            if (gpxFile.TrackWaypoinsInLocalTime.Count < 2)
             {
-                int ptIndex = 0;
-                foreach (var wlt in gpxFile.TrackWaypoinsInLocalTime)
-                {
-
-                    Waypoint wpt = null;
-                    if (ptIndex > 0)
-                    {
-                        wpt = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Time = wlt.Time };
-                        double elevChange;
-                        double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                        TimeSpan timeElapsed = wlt.Time - _timeBefore;
-                        double speed = distance / timeElapsed.TotalMinutes;
-                        if (speed < Global.Settings.SpeedThresholdForRetrieving)
-                        {
-                            if (segment == null || segment.numPoints == 0)
-                            {
-                                segment = new Shape();
-                                segment.Create(ShpfileType.SHP_POLYLINE);
-
-                                segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-
-                            }
-                            segment.AddPoint(wlt.Longitude, wlt.Latitude);
-                            if (eft.SpeedAtWaypoints.Count == 0)
-                            {
-                                eft.Start = wlt.Time;
-                            }
-                            eft.SpeedAtWaypoints.Add(speed);
-                            accumulatedDistance += distance;
-                        }
-                        else
-                        {
-                            if (accumulatedDistance >= Global.Settings.GearRetrievingMinLength)
-                            {
-                                //we have a potential haul segment
-                                eft.TrackPointCountOriginal = segment.numPoints;
-                                eft.TrackOriginal = segment;
-                                segment = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 30);
-                                eft.SegmentSimplified = segment;
-                                eft.TrackPointCountSimplified = segment.numPoints;
-                                eft.LengthOriginal = accumulatedDistance;
-                                eft.LengthSimplified = (double)GetPolyLineShapeLength(segment);
-                                eft.End = wlt.Time;
-                                eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                if (eft.AverageSpeed > 12 &&
-                                    eft.LengthSimplified >= Global.Settings.GearRetrievingMinLength &&
-                                    eft.LengthOriginal < 3000)
-                                {
-
-                                    if (BSCBoundaryLine == null)
-                                    {
-                                        _gearHaulExtractedTracks.Add(eft);
-                                    }
-                                    else if (!segment.Crosses(BSCBoundaryLine))
-                                    {
-                                        _gearHaulExtractedTracks.Add(eft);
-                                    }
-
-
-
-
-                                }
-                            }
-                            ptIndex = 0;
-                            accumulatedDistance = 0;
-                            segment = new Shape();
-                            segment.Create(ShpfileType.SHP_POLYLINE);
-                            eft = new ExtractedFishingTrack();
-                        }
-                    }
-                    _timeBefore = wlt.Time;
-                    ptBefore = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Time = _timeBefore };
-                    ptIndex++;
-                }
-
-
+                return null;
             }
-            return _gearHaulExtractedTracks.Count > 0;
-        }
-
-        public static bool TrackShapeFromCTX(CTXFile ctxFile)
-        {
-            if (ctxFile.XML.Length == 0)
-                return false;
             else
             {
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(ctxFile.XML);
-                var tracknodes = doc.SelectNodes("//T");
-                return TrackShapeFromCTX(tracknodes);
-            }
-        }
-        public static TripAndHauls TrackShapeFromGPX(GPXFile gpxFile, int? interval)
-        {
-            List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
-            Waypoint ptBefore = null;
-            double accumulatedDistance = 0;
-            Shape segment = null;
-            DateTime wptDateTime;
-            ExtractedFishingTrack eft = new ExtractedFishingTrack();
-            int counter = 0;
-            if (gpxFile.TrackWaypoinsInLocalTime.Count >= 2)
-            {
+                DateTime wptDateTime = DateTime.Now;
+                Waypoint pt1 = null;
+                Waypoint pt2 = null;
+                _candidateTrack = new Shape();
+                _eft = new ExtractedFishingTrack();
+                _trackingInterval = interval;
+                _detectedTracks = new List<DetectedTrack>();
+                int counter = 0;
                 foreach (var wlt in gpxFile.TrackWaypoinsInLocalTime)
                 {
                     var lat = wlt.Latitude;
                     var lon = wlt.Longitude;
                     wptDateTime = wlt.Time;
 
-                    if (_timeBefore < wptDateTime)
+                    if (counter > 0)
                     {
-
-                        Waypoint wpt = null;
-                        if (segment != null)
-                        {
-                            wpt = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                            double elevChange;
-                            double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                            TimeSpan timeElapsed = wptDateTime - _timeBefore;
-                            double speed = distance / timeElapsed.TotalMinutes;
-
-                            bool proceed = interval == null || interval == 0;
-                            if (!proceed)
-                            {
-                                proceed = (wptDateTime - _timeBefore).TotalSeconds < (int)interval * 2;
-                            }
-
-
-                            if (proceed &&
-                                counter < gpxFile.TrackWaypoinsInLocalTime.Count &&
-                                speed < Global.Settings.SpeedThresholdForRetrieving)
-                            {
-                                if (segment.numPoints == 0)
-                                {
-                                    segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-                                }
-                                segment.AddPoint(lon, lat);
-                                if (eft.SpeedAtWaypoints.Count == 0)
-                                {
-                                    eft.Start = wptDateTime;
-                                }
-                                eft.SpeedAtWaypoints.Add(speed);
-                                accumulatedDistance += distance;
-                            }
-                            else
-                            {
-                                if (counter == gpxFile.TrackWaypoinsInLocalTime.Count)
-                                {
-                                    segment.AddPoint(lon, lat);
-                                    eft.SpeedAtWaypoints.Add(speed);
-                                    accumulatedDistance += distance;
-                                }
-                                if (segment.numPoints >= 6 && PolylineSelfCrossingsCount(segment, 10, true) < 10)
-                                {
-                                    if (BSCBoundaryLine == null || !segment.Crosses(BSCBoundaryLine))
-                                    {
-                                        eft.TrackPointCountOriginal = segment.numPoints;
-                                        eft.TrackOriginal = segment;
-                                        eft.SegmentSimplified = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 20);
-                                        eft.Segment = segment;
-                                        eft.TrackPointCountSimplified = eft.SegmentSimplified.numPoints;
-                                        eft.LengthOriginal = accumulatedDistance;
-                                        eft.LengthSimplified = (double)GetPolyLineShapeLength(eft.SegmentSimplified);
-                                        eft.End = wptDateTime;
-                                        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                        detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = eft, Accept = false, Length = eft.LengthOriginal });
-                                    }
-                                }
-                                accumulatedDistance = 0;
-                                segment = null;
-                                eft = new ExtractedFishingTrack();
-                            }
-                        }
-
+                        pt2 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                        detectedTracks = MakeSegments(counter, pt1, pt2, counter >= gpxFile.TrackWaypoinsInLocalTime.Count - 1);
                     }
-                    if (_timeBefore < wptDateTime || segment == null)
-                    {
-                        _timeBefore = wptDateTime;
-                        ptBefore = new Waypoint { Longitude = lon, Latitude = lat, Time = _timeBefore };
-                    }
-
-                    if (segment == null)
-                    {
-                        segment = new Shape();
-                        segment.Create(ShpfileType.SHP_POLYLINE);
-                    }
+                    pt1 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                    counter++;
                 }
-
-                var th = new TripAndHauls { Shapefile = null };
-                if (detectedTracks.Count > 0)
-                {
-                    counter = 0;
-                    DetectedTrack firstSegment = null;
-                    foreach (var tr in detectedTracks)
-                    {
-                        if (tr.ExtractedFishingTrack.LengthOriginal > Global.Settings.GearRetrievingMinLength &&
-                            tr.ExtractedFishingTrack.TrackPointCountOriginal > 6 &&
-                            tr.ExtractedFishingTrack.LengthOriginal < 3500)
-                        {
-                            tr.Accept = true;
-                        }
-                        if (counter > 0)
-                        {
-                            Point pt1 = firstSegment.ExtractedFishingTrack.Segment.Point[firstSegment.ExtractedFishingTrack.Segment.numPoints - 1];
-                            Point pt2 = tr.ExtractedFishingTrack.Segment.Point[0];
-                            double elevChange = 0;
-                            var distance = Waypoint.ComputeDistance(
-                                new Waypoint { Latitude = pt1.y, Longitude = pt1.x },
-                                new Waypoint { Latitude = pt2.y, Longitude = pt2.x },
-                                out elevChange);
-
-                            if (distance < 50 &&
-                                (firstSegment.ExtractedFishingTrack.LengthOriginal +
-                                tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
-                            {
-                                firstSegment.Accept = true;
-                                tr.Accept = true;
-                            }
-                        }
-                        firstSegment = tr;
-                        counter++;
-                    }
-                }
-
-                th.Tracks = detectedTracks;
-                return th;
+                return new FishingTripAndGearRetrievalTracks { TripShapefile = null, GearRetrievalTracks = detectedTracks };
             }
-            else
+        }
+        /// <summary>
+        /// extracts the segment where gear retrieval is taking place and creates a shape from the segment
+        /// </summary>
+        /// <param name="tracknodes"></param>
+        /// <param name="interval"></param>
+        /// <returns></returns>
+        public static FishingTripAndGearRetrievalTracks GearRetrievalTrackShapeFromCTX(XmlNodeList tracknodes, int? interval)
+        {
+            ExtractFishingTrackLine = true;
+            List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
+
+
+            if (tracknodes.Count < 2)
             {
                 return null;
             }
-
-        }
-        public static TripAndHauls TrackShapeFromCTX(XmlNodeList tracknodes, int? interval)
-        {
-            List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
-            Waypoint ptBefore = null;
-            double accumulatedDistance = 0;
-            Shape segment = null;
-            DateTime wptDateTime;
-            ExtractedFishingTrack eft = new ExtractedFishingTrack();
-            int counter = 0;
-            if (tracknodes.Count >= 2)
+            else
             {
+
+                //Shapefile sf = new Shapefile();
+                DateTime wptDateTime = DateTime.Now;
+                Waypoint pt1 = null;
+                Waypoint pt2 = null;
+                _candidateTrack = new Shape();
+                _eft = new ExtractedFishingTrack();
+                _trackingInterval = interval;
+                _detectedTracks = new List<DetectedTrack>();
+                int counter = 0;
                 foreach (XmlNode node in tracknodes)
                 {
-                    counter++;
                     var lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
                     var lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
                     var wptDate = node.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
                     var wptTime = node.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
                     wptDateTime = DateTime.Parse(wptDate) + DateTime.Parse(wptTime).TimeOfDay;
 
-
-                    if (_timeBefore < wptDateTime)
+                    if (counter > 0)
                     {
-
-                        Waypoint wpt = null;
-                        if (segment != null)
-                        {
-                            wpt = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                            double elevChange;
-                            double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                            TimeSpan timeElapsed = wptDateTime - _timeBefore;
-                            double speed = distance / timeElapsed.TotalMinutes;
-
-                            bool proceed = interval == null || interval == 0;
-                            if (!proceed)
-                            {
-                                proceed = (wptDateTime - _timeBefore).TotalSeconds < (int)interval * 2;
-                            }
-
-
-                            if (proceed &&
-                                counter < tracknodes.Count &&
-                                speed < Global.Settings.SpeedThresholdForRetrieving)
-                            {
-                                if (segment.numPoints == 0)
-                                {
-                                    segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-                                }
-                                segment.AddPoint(lon, lat);
-                                if (eft.SpeedAtWaypoints.Count == 0)
-                                {
-                                    eft.Start = wptDateTime;
-                                }
-                                eft.SpeedAtWaypoints.Add(speed);
-                                accumulatedDistance += distance;
-                            }
-                            else
-                            {
-                                if (counter == tracknodes.Count)
-                                {
-                                    segment.AddPoint(lon, lat);
-                                    eft.SpeedAtWaypoints.Add(speed);
-                                    accumulatedDistance += distance;
-                                }
-                                if (segment.numPoints >= 6 && PolylineSelfCrossingsCount(segment, 10, true) < 10)
-                                {
-                                    if (BSCBoundaryLine == null || !segment.Crosses(BSCBoundaryLine))
-                                    {
-                                        eft.TrackPointCountOriginal = segment.numPoints;
-                                        eft.TrackOriginal = segment;
-                                        eft.SegmentSimplified = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 20);
-                                        eft.Segment = segment;
-                                        eft.TrackPointCountSimplified = eft.SegmentSimplified.numPoints;
-                                        eft.LengthOriginal = accumulatedDistance;
-                                        eft.LengthSimplified = (double)GetPolyLineShapeLength(eft.SegmentSimplified);
-                                        eft.End = wptDateTime;
-                                        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                        detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = eft, Accept = false, Length = eft.LengthOriginal });
-                                    }
-                                }
-                                accumulatedDistance = 0;
-                                segment = null;
-                                eft = new ExtractedFishingTrack();
-                            }
-                        }
-
+                        pt2 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                        detectedTracks = MakeSegments(counter, pt1, pt2, counter >= tracknodes.Count - 1);
                     }
-                    if (_timeBefore < wptDateTime || segment == null)
-                    {
-                        _timeBefore = wptDateTime;
-                        ptBefore = new Waypoint { Longitude = lon, Latitude = lat, Time = _timeBefore };
-                    }
-
-                    if (segment == null)
-                    {
-                        segment = new Shape();
-                        segment.Create(ShpfileType.SHP_POLYLINE);
-                    }
-
-
-                }
-                var th = new TripAndHauls { Shapefile = null };
-                if (detectedTracks.Count > 0)
-                {
-                    counter = 0;
-                    DetectedTrack firstSegment = null;
-                    foreach (var tr in detectedTracks)
-                    {
-                        if (tr.ExtractedFishingTrack.LengthOriginal > Global.Settings.GearRetrievingMinLength &&
-                            tr.ExtractedFishingTrack.TrackPointCountOriginal > 6 &&
-                            tr.ExtractedFishingTrack.LengthOriginal < 3500)
-                        {
-                            tr.Accept = true;
-                        }
-                        if (counter > 0)
-                        {
-                            Point pt1 = firstSegment.ExtractedFishingTrack.Segment.Point[firstSegment.ExtractedFishingTrack.Segment.numPoints - 1];
-                            Point pt2 = tr.ExtractedFishingTrack.Segment.Point[0];
-                            double elevChange = 0;
-                            var distance = Waypoint.ComputeDistance(
-                                new Waypoint { Latitude = pt1.y, Longitude = pt1.x },
-                                new Waypoint { Latitude = pt2.y, Longitude = pt2.x },
-                                out elevChange);
-
-                            if (distance < 50 &&
-                                (firstSegment.ExtractedFishingTrack.LengthOriginal +
-                                tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
-                            {
-                                firstSegment.Accept = true;
-                                tr.Accept = true;
-                            }
-                        }
-                        firstSegment = tr;
-                        counter++;
-                    }
+                    pt1 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                    counter++;
                 }
 
-                th.Tracks = detectedTracks;
-                return th;
-            }
-            else
-            {
-                return null;
-            }
-        }
-        public static bool TrackShapeFromCTX(XmlNodeList tracknodes)
-        {
-            Waypoint ptBefore = null;
-            double accumulatedDistance = 0;
-            Shape segment = null;
-            XmlDocument doc = new XmlDocument();
-
-
-            //doc.LoadXml(ctxfile.XML);
-            //var tracknodes = doc.SelectNodes("//T");
-            ExtractedFishingTrack eft = new ExtractedFishingTrack();
-            _gearHaulExtractedTracks = new List<ExtractedFishingTrack>();
-
-
-            var ptIndex = 0;
-            foreach (XmlNode node in tracknodes)
-            {
-                var lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
-                var lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
-
-
-
-                var wptDate = node.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
-                var wptTime = node.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
-                var wptDateTime = DateTime.Parse(wptDate) + DateTime.Parse(wptTime).TimeOfDay;
-                Waypoint wpt = null;
-
-                if (ptIndex > 0)
-                {
-                    wpt = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                    double elevChange;
-                    double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                    TimeSpan timeElapsed = wptDateTime - _timeBefore;
-                    double speed = distance / timeElapsed.TotalMinutes;
-                    if (speed < Global.Settings.SpeedThresholdForRetrieving)
-                    {
-                        if (segment == null || segment.numPoints == 0)
-                        {
-                            segment = new Shape();
-                            segment.Create(ShpfileType.SHP_POLYLINE);
-
-                            segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-
-                        }
-                        segment.AddPoint(lon, lat);
-                        if (eft.SpeedAtWaypoints.Count == 0)
-                        {
-                            eft.Start = wptDateTime;
-                        }
-                        eft.SpeedAtWaypoints.Add(speed);
-                        accumulatedDistance += distance;
-                        //segmentIndex = segment.AddPoint(lon, lat);
-                    }
-                    else
-                    {
-                        if (accumulatedDistance >= Global.Settings.GearRetrievingMinLength)
-                        {
-                            //we have a potential haul segment
-                            eft.TrackPointCountOriginal = segment.numPoints;
-                            eft.TrackOriginal = segment;
-                            segment = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 30);
-                            eft.SegmentSimplified = segment;
-                            eft.TrackPointCountSimplified = segment.numPoints;
-                            eft.LengthOriginal = accumulatedDistance;
-                            eft.LengthSimplified = (double)GetPolyLineShapeLength(segment);
-                            eft.End = wptDateTime;
-                            eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                            if (eft.AverageSpeed > 12 &&
-                                eft.LengthSimplified >= Global.Settings.GearRetrievingMinLength &&
-                                eft.LengthOriginal < 3000)
-                            {
-                                if (BSCBoundaryLine == null)
-                                {
-                                    _gearHaulExtractedTracks.Add(eft);
-                                }
-                                else if (!segment.Crosses(BSCBoundaryLine))
-                                {
-                                    _gearHaulExtractedTracks.Add(eft);
-                                }
-                            }
-                        }
-
-                        ptIndex = 0;
-                        accumulatedDistance = 0;
-                        segment = new Shape();
-                        segment.Create(ShpfileType.SHP_POLYLINE);
-                        eft = new ExtractedFishingTrack();
-                    }
-                }
-
-                _timeBefore = wptDateTime;
-                ptBefore = new Waypoint { Longitude = lon, Latitude = lat, Time = _timeBefore };
-                ptIndex++;
-
-
-
+                return new FishingTripAndGearRetrievalTracks { TripShapefile = null, GearRetrievalTracks = detectedTracks };
             }
 
-            return _gearHaulExtractedTracks.Count > 0;
         }
 
-        public static TripAndHauls CreateTripAndHaulsFromGPX(GPXFile gpxFile)
+        public static FishingTripAndGearRetrievalTracks CreateTripAndHaulsFromGPX(GPXFile gpxFile)
         {
             ExtractFishingTrackLine = true;
             List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
@@ -764,23 +354,20 @@ namespace GPXManager.entities.mapping
                 else
                 {
                     Shapefile sf = new Shapefile();
-                    Shape segment = null;
                     DateTime wptDateTime = DateTime.Now;
-                    Waypoint ptBefore = null;
-                    ExtractedFishingTrack eft = new ExtractedFishingTrack();
-                    double accumulatedDistance = 0;
-                    int? interval = null;
+                    Waypoint pt1 = null;
+                    Waypoint pt2 = null;
+                    _candidateTrack = new Shape();
+                    _eft = new ExtractedFishingTrack();
                     if (gpxFile.GPSTimerInterval == null)
                     {
                         //ctxfile.CTXFile.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctxfile.CTXFile, true);
                     }
-                    interval = gpxFile.GPSTimerInterval;
-
+                    _trackingInterval = gpxFile.GPSTimerInterval;
+                    _detectedTracks = new List<DetectedTrack>();
                     if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
                     {
                         sf.EditAddField("User", FieldType.STRING_FIELD, 1, 1);
-                        //sf.EditAddField("Gear", FieldType.STRING_FIELD, 1, 1);
-                        //sf.EditAddField("LandingSite", FieldType.STRING_FIELD, 1, 1);
                         sf.EditAddField("Start", FieldType.STRING_FIELD, 1, 1);
                         sf.EditAddField("Finished", FieldType.STRING_FIELD, 1, 1);
                         sf.EditAddField("Interval", FieldType.INTEGER_FIELD, 1, 1);
@@ -793,149 +380,45 @@ namespace GPXManager.entities.mapping
                             int counter = 0;
                             foreach (var wlt in gpxFile.TrackWaypoinsInLocalTime)
                             {
-                                counter++;
                                 var lat = wlt.Latitude;
                                 var lon = wlt.Longitude;
                                 wptDateTime = wlt.Time;
                                 shp.AddPoint(lon, lat);
-                                if (ExtractFishingTrackLine)
+                                if (counter > 0)
                                 {
-                                    if (_timeBefore < wptDateTime)
-                                    {
-                                        Waypoint wpt = null;
-                                        if (segment != null)
-                                        {
-                                            wpt = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                                            double elevChange;
-                                            double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                                            TimeSpan timeElapsed = wptDateTime - _timeBefore;
-                                            double speed = distance / timeElapsed.TotalMinutes;
-
-
-                                            bool proceed = interval == null || interval == 0;
-                                            if (!proceed)
-                                            {
-                                                proceed = timeElapsed.TotalSeconds < (int)interval * 2;
-                                            }
-
-
-                                            if (proceed && counter < gpxFile.TrackWaypoinsInLocalTime.Count && speed < Global.Settings.SpeedThresholdForRetrieving)
-                                            {
-                                                if (segment.numPoints == 0)
-                                                {
-                                                    segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-                                                }
-                                                segment.AddPoint(lon, lat);
-                                                if (eft.SpeedAtWaypoints.Count == 0)
-                                                {
-                                                    eft.Start = wptDateTime;
-                                                }
-                                                eft.SpeedAtWaypoints.Add(speed);
-                                                accumulatedDistance += distance;
-                                            }
-                                            else
-                                            {
-                                                if (counter == gpxFile.TrackWaypoinsInLocalTime.Count)
-                                                {
-                                                    segment.AddPoint(lon, lat);
-                                                    eft.SpeedAtWaypoints.Add(speed);
-                                                    accumulatedDistance += distance;
-                                                }
-                                                if (segment.numPoints >= 6 && PolylineSelfCrossingsCount(segment, 10, true) < 10)
-                                                {
-                                                    if (BSCBoundaryLine == null || !segment.Crosses(BSCBoundaryLine))
-                                                    {
-                                                        eft.TrackPointCountOriginal = segment.numPoints;
-                                                        eft.TrackOriginal = segment;
-                                                        eft.SegmentSimplified = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 20);
-                                                        eft.Segment = segment;
-                                                        eft.TrackPointCountSimplified = eft.SegmentSimplified.numPoints;
-                                                        eft.LengthOriginal = accumulatedDistance;
-                                                        eft.LengthSimplified = (double)GetPolyLineShapeLength(eft.SegmentSimplified);
-                                                        eft.End = wptDateTime;
-                                                        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                                        detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = eft, Accept = false, Length = eft.LengthOriginal });
-                                                    }
-                                                }
-                                                accumulatedDistance = 0;
-                                                segment = null;
-                                                eft = new ExtractedFishingTrack();
-                                            }
-                                        }
-                                    }
-                                    if (_timeBefore < wptDateTime || segment == null)
-                                    {
-                                        _timeBefore = wptDateTime;
-                                        ptBefore = new Waypoint { Longitude = lon, Latitude = lat, Time = _timeBefore };
-                                    }
-
-                                    if (segment == null)
-                                    {
-                                        segment = new Shape();
-                                        segment.Create(ShpfileType.SHP_POLYLINE);
-                                    }
-
+                                    pt2 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                                    detectedTracks = MakeSegments(counter, pt1, pt2, counter >= gpxFile.TrackWaypoinsInLocalTime.Count - 1);
                                 }
+                                pt1 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
+                                counter++;
                             }
-
                             var shpIndex = sf.EditAddShape(shp);
                             sf.EditCellValue(sf.FieldIndexByName["User"], shpIndex, gpxFile.GPS.DeviceName);
-                            //sf.EditCellValue(sf.FieldIndexByName["Gear"], shpIndex, ctxfile.Gear);
-                            //sf.EditCellValue(sf.FieldIndexByName["LandingSite"], shpIndex, ctxfile.LandingSite);
                             sf.EditCellValue(sf.FieldIndexByName["Start"], shpIndex, gpxFile.DateRangeStart);
                             sf.EditCellValue(sf.FieldIndexByName["Finished"], shpIndex, gpxFile.DateRangeEnd);
-                            sf.EditCellValue(sf.FieldIndexByName["Interval"], shpIndex, interval);
+                            sf.EditCellValue(sf.FieldIndexByName["Interval"], shpIndex, _trackingInterval);
 
+                            var th = new FishingTripAndGearRetrievalTracks { TripShapefile = sf, Handle = shpIndex };
+                            th.TripShapefile = sf;
+                            th.GearRetrievalTracks = detectedTracks;
 
-
-                            var th = new TripAndHauls { Shapefile = sf, Handle = shpIndex };
-                            if (detectedTracks.Count > 0)
-                            {
-                                counter = 0;
-                                DetectedTrack firstSegment = null;
-                                foreach (var tr in detectedTracks)
-                                {
-                                    if (tr.ExtractedFishingTrack.LengthOriginal > Global.Settings.GearRetrievingMinLength &&
-                                        tr.ExtractedFishingTrack.TrackPointCountOriginal > 6 &&
-                                        tr.ExtractedFishingTrack.LengthOriginal < 3500)
-                                    {
-                                        tr.Accept = true;
-                                    }
-                                    if (counter > 0)
-                                    {
-                                        Point pt1 = firstSegment.ExtractedFishingTrack.Segment.Point[firstSegment.ExtractedFishingTrack.Segment.numPoints - 1];
-                                        Point pt2 = tr.ExtractedFishingTrack.Segment.Point[0];
-                                        double elevChange = 0;
-                                        var distance = Waypoint.ComputeDistance(
-                                            new Waypoint { Latitude = pt1.y, Longitude = pt1.x },
-                                            new Waypoint { Latitude = pt2.y, Longitude = pt2.x },
-                                            out elevChange);
-
-                                        if (distance < 50 &&
-                                            (firstSegment.ExtractedFishingTrack.LengthOriginal +
-                                            tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
-                                        {
-                                            firstSegment.Accept = true;
-                                            tr.Accept = true;
-                                        }
-                                    }
-                                    firstSegment = tr;
-                                    counter++;
-                                }
-                            }
-
-                            th.Tracks = detectedTracks;
                             return th;
                         }
                     }
                 }
-
             }
             return null;
         }
 
-        public static TripAndHauls CreateTripAndHaulsFromCTX(CTXFileSummaryView ctxfile)
+
+
+
+        /// <summary>
+        /// creates a shapefile of the entire CTX data and extracts the tracks of gear retrieval
+        /// </summary>
+        /// <param name="ctxfile"></param>
+        /// <returns></returns>
+        public static FishingTripAndGearRetrievalTracks CreateTripAndHaulsFromCTX(CTXFileSummaryView ctxfile)
         {
             ExtractFishingTrackLine = true;
             List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
@@ -956,19 +439,18 @@ namespace GPXManager.entities.mapping
                 {
 
                     Shapefile sf = new Shapefile();
-                    Shape segment = null;
                     DateTime wptDateTime = DateTime.Now;
                     Waypoint pt1 = null;
                     Waypoint pt2 = null;
-                    ExtractedFishingTrack eft = new ExtractedFishingTrack();
-                    double accumulatedDistance = 0;
-                    int? interval = null;
+                    _candidateTrack = new Shape();
+                    _eft = new ExtractedFishingTrack();
+                    //int? interval = null;
                     if (ctxfile.CTXFile.TrackingInterval == null)
                     {
                         ctxfile.CTXFile.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctxfile.CTXFile, true);
                     }
-                    interval = ctxfile.CTXFile.TrackingInterval;
-
+                    _trackingInterval = ctxfile.CTXFile.TrackingInterval;
+                    _detectedTracks = new List<DetectedTrack>();
 
                     if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
                     {
@@ -996,243 +478,149 @@ namespace GPXManager.entities.mapping
                                 if (counter > 0)
                                 {
                                     pt2 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                                    MakeSegments(counter, pt1, pt2, counter >= tracknodes.Count);
+                                    if (ExtractFishingTrackLine)
+                                    {
+                                        detectedTracks = MakeSegments(counter, pt1, pt2, counter >= tracknodes.Count - 1);
+                                    }
                                 }
                                 pt1 = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
                                 counter++;
-
-
                             }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static List<DetectedTrack> MakeSegments(int counter, Waypoint pt1, Waypoint pt2 = null, bool? done = null)
-        {
-            Shape segment = null;
-
-            double elevChange;
-            double distance = Waypoint.ComputeDistance(pt1, pt2, out elevChange);
-            TimeSpan timeElapsed = pt2.Time - pt1.Time;
-            double speed = distance / timeElapsed.TotalMinutes;
-            if (speed < Global.Settings.SpeedThresholdForRetrieving)
-            {
-                if (segment == null)
-                {
-                    segment = new Shape();
-                    segment.Create(ShpfileType.SHP_POLYLINE);
-                }
-
-                if (segment.numPoints == 0)
-                {
-                    segment.AddPoint(pt1.Longitude, pt1.Latitude);
-                }
-                segment.AddPoint(pt2.Longitude, pt2.Latitude);
-            }
-            else
-            {
-
-            }
-
-
-        }
-        public static TripAndHauls CreateTripAndHaulsFromCTX1(CTXFileSummaryView ctxfile)
-        {
-            ExtractFishingTrackLine = true;
-            List<DetectedTrack> detectedTracks = new List<DetectedTrack>();
-            if (ctxfile.XML.Length == 0)
-            {
-                return null;
-            }
-            else
-            {
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(ctxfile.XML);
-                var tracknodes = doc.SelectNodes("//T");
-                if (tracknodes.Count < 2)
-                {
-                    return null;
-                }
-                else
-                {
-
-                    Shapefile sf = new Shapefile();
-                    Shape segment = null;
-                    DateTime wptDateTime = DateTime.Now;
-                    Waypoint ptBefore = null;
-                    ExtractedFishingTrack eft = new ExtractedFishingTrack();
-                    double accumulatedDistance = 0;
-                    int? interval = null;
-                    if (ctxfile.CTXFile.TrackingInterval == null)
-                    {
-                        ctxfile.CTXFile.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctxfile.CTXFile, true);
-                    }
-                    interval = ctxfile.CTXFile.TrackingInterval;
-
-
-                    if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
-                    {
-                        sf.EditAddField("User", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("Gear", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("LandingSite", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("Start", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("Finished", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("Interval", FieldType.INTEGER_FIELD, 1, 1);
-                        sf.Key = "ctx_track";
-                        sf.GeoProjection = globalMapping.GeoProjection;
-
-                        Shape shp = new Shape();
-                        if (shp.Create(ShpfileType.SHP_POLYLINE))
-                        {
-                            int counter = 0;
-                            foreach (XmlNode node in tracknodes)
-                            {
-                                counter++;
-                                var lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
-                                var lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
-                                var wptDate = node.SelectSingleNode(".//A[@N='Date']").Attributes["V"].Value;
-                                var wptTime = node.SelectSingleNode(".//A[@N='Time']").Attributes["V"].Value;
-                                wptDateTime = DateTime.Parse(wptDate) + DateTime.Parse(wptTime).TimeOfDay;
-                                shp.AddPoint(lon, lat);
-
-                                if (ExtractFishingTrackLine)
-                                {
-                                    if (_timeBefore < wptDateTime)
-                                    {
-
-                                        Waypoint wpt = null;
-                                        if (segment != null)
-                                        {
-                                            wpt = new Waypoint { Longitude = lon, Latitude = lat, Time = wptDateTime };
-                                            double elevChange;
-                                            double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                                            TimeSpan timeElapsed = wptDateTime - _timeBefore;
-                                            double speed = distance / timeElapsed.TotalMinutes;
-
-                                            bool proceed = interval == null || interval == 0;
-                                            if (!proceed)
-                                            {
-                                                proceed = timeElapsed.TotalSeconds < (int)interval * 2;
-                                            }
-
-
-                                            if (proceed && counter < tracknodes.Count && speed < Global.Settings.SpeedThresholdForRetrieving)
-                                            {
-                                                if (segment.numPoints == 0)
-                                                {
-                                                    segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-                                                }
-                                                segment.AddPoint(lon, lat);
-                                                if (eft.SpeedAtWaypoints.Count == 0)
-                                                {
-                                                    eft.Start = wptDateTime;
-                                                }
-                                                eft.SpeedAtWaypoints.Add(speed);
-                                                accumulatedDistance += distance;
-                                            }
-                                            else
-                                            {
-                                                if (counter == tracknodes.Count)
-                                                {
-                                                    segment.AddPoint(lon, lat);
-                                                    eft.SpeedAtWaypoints.Add(speed);
-                                                    accumulatedDistance += distance;
-                                                }
-                                                if (segment.numPoints >= 6 && PolylineSelfCrossingsCount(segment, 10, true) < 10)
-                                                {
-                                                    if (BSCBoundaryLine == null || !segment.Crosses(BSCBoundaryLine))
-                                                    {
-                                                        eft.TrackPointCountOriginal = segment.numPoints;
-                                                        eft.TrackOriginal = segment;
-                                                        eft.SegmentSimplified = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 20);
-                                                        eft.Segment = segment;
-                                                        eft.TrackPointCountSimplified = eft.SegmentSimplified.numPoints;
-                                                        eft.LengthOriginal = accumulatedDistance;
-                                                        eft.LengthSimplified = (double)GetPolyLineShapeLength(eft.SegmentSimplified);
-                                                        eft.End = wptDateTime;
-                                                        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                                        detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = eft, Accept = false, Length = eft.LengthOriginal });
-                                                    }
-                                                }
-                                                accumulatedDistance = 0;
-                                                segment = null;
-                                                eft = new ExtractedFishingTrack();
-                                            }
-                                        }
-
-                                    }
-                                    if (_timeBefore < wptDateTime || segment == null)
-                                    {
-                                        _timeBefore = wptDateTime;
-                                        ptBefore = new Waypoint { Longitude = lon, Latitude = lat, Time = _timeBefore };
-                                    }
-
-                                    if (segment == null)
-                                    {
-                                        segment = new Shape();
-                                        segment.Create(ShpfileType.SHP_POLYLINE);
-                                    }
-
-                                }
-                            }
-
                             var shpIndex = sf.EditAddShape(shp);
                             sf.EditCellValue(sf.FieldIndexByName["User"], shpIndex, ctxfile.User);
                             sf.EditCellValue(sf.FieldIndexByName["Gear"], shpIndex, ctxfile.Gear);
                             sf.EditCellValue(sf.FieldIndexByName["LandingSite"], shpIndex, ctxfile.LandingSite);
                             sf.EditCellValue(sf.FieldIndexByName["Start"], shpIndex, ctxfile.DateStart);
                             sf.EditCellValue(sf.FieldIndexByName["Finished"], shpIndex, ctxfile.DateEnd);
-                            sf.EditCellValue(sf.FieldIndexByName["Interval"], shpIndex, interval);
+                            sf.EditCellValue(sf.FieldIndexByName["Interval"], shpIndex, _trackingInterval);
 
-
-
-                            var th = new TripAndHauls { Shapefile = sf, Handle = shpIndex };
-                            if (detectedTracks.Count > 0)
-                            {
-                                counter = 0;
-                                DetectedTrack firstSegment = null;
-                                foreach (var tr in detectedTracks)
-                                {
-                                    if (tr.ExtractedFishingTrack.LengthOriginal > Global.Settings.GearRetrievingMinLength &&
-                                        tr.ExtractedFishingTrack.TrackPointCountOriginal > 6 &&
-                                        tr.ExtractedFishingTrack.LengthOriginal < 3500)
-                                    {
-                                        tr.Accept = true;
-                                    }
-                                    if (counter > 0)
-                                    {
-                                        Point pt1 = firstSegment.ExtractedFishingTrack.Segment.Point[firstSegment.ExtractedFishingTrack.Segment.numPoints - 1];
-                                        Point pt2 = tr.ExtractedFishingTrack.Segment.Point[0];
-                                        double elevChange = 0;
-                                        var distance = Waypoint.ComputeDistance(
-                                            new Waypoint { Latitude = pt1.y, Longitude = pt1.x },
-                                            new Waypoint { Latitude = pt2.y, Longitude = pt2.x },
-                                            out elevChange);
-
-                                        if (distance < 50 &&
-                                            (firstSegment.ExtractedFishingTrack.LengthOriginal +
-                                            tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
-                                        {
-                                            firstSegment.Accept = true;
-                                            tr.Accept = true;
-                                        }
-                                    }
-                                    firstSegment = tr;
-                                    counter++;
-                                }
-                            }
-
-                            th.Tracks = detectedTracks;
+                            var th = new FishingTripAndGearRetrievalTracks { TripShapefile = sf, Handle = shpIndex };
+                            th.TripShapefile = sf;
+                            th.GearRetrievalTracks = detectedTracks;
                             return th;
                         }
                     }
                 }
-
-
             }
+            return null;
+        }
+
+        private static int? _trackingInterval;
+        private static ExtractedFishingTrack _eft;
+        private static Shape _candidateTrack;
+        private static double _accumulatedDistance;
+        private static List<DetectedTrack> _detectedTracks;
+
+        private static List<DetectedTrack> MakeSegments(int counter, Waypoint pt1, Waypoint pt2 = null, bool? done = null)
+        {
+            double elevChange;
+            double distance = Waypoint.ComputeDistance(pt1, pt2, out elevChange);
+            TimeSpan timeElapsed = pt2.Time - pt1.Time;
+            double speed = distance / timeElapsed.TotalMinutes;
+
+            bool intervalIsOk = _trackingInterval == null || _trackingInterval == 0;
+            if (!intervalIsOk)
+            {
+                intervalIsOk = timeElapsed.TotalSeconds < (int)_trackingInterval * 2;
+            }
+            if (pt1.Time < pt2.Time)
+            {
+                if (intervalIsOk && !(bool)done && speed < Global.Settings.SpeedThresholdForRetrieving)
+                {
+                    if (_candidateTrack == null)
+                    {
+                        _candidateTrack = new Shape();
+                        _candidateTrack.Create(ShpfileType.SHP_POLYLINE);
+                    }
+
+                    if (_candidateTrack.numPoints == 0)
+                    {
+                        _candidateTrack.AddPoint(pt1.Longitude, pt1.Latitude);
+                    }
+                    _candidateTrack.AddPoint(pt2.Longitude, pt2.Latitude);
+                    if (_eft.SpeedAtWaypoints.Count == 0)
+                    {
+                        _eft.Start = pt1.Time;
+                    }
+                    _eft.SpeedAtWaypoints.Add(speed);
+                    _accumulatedDistance += distance;
+                }
+                else
+                {
+                    if (_candidateTrack != null)
+                    {
+                        if (intervalIsOk && (bool)done)
+                        {
+                            _candidateTrack.AddPoint(pt2.Longitude, pt2.Latitude);
+                            _eft.SpeedAtWaypoints.Add(speed);
+                            _accumulatedDistance += distance;
+                        }
+
+                        if (_candidateTrack.numPoints >= 6 && PolylineSelfCrossingsCount(_candidateTrack, 10, true) < 10)
+                        {
+                            if (BSCBoundaryLine == null || !_candidateTrack.Crosses(BSCBoundaryLine))
+                            {
+                                _eft.TrackPointCountOriginal = _candidateTrack.numPoints;
+                                _eft.TrackOriginal = _candidateTrack;
+                                _eft.SegmentSimplified = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(_candidateTrack, 20);
+                                _eft.Segment = _candidateTrack;
+                                _eft.TrackPointCountSimplified = _eft.SegmentSimplified.numPoints;
+                                _eft.LengthOriginal = _accumulatedDistance;
+                                _eft.LengthSimplified = (double)GetPolyLineShapeLength(_eft.SegmentSimplified);
+                                _eft.End = pt2.Time;
+                                _eft.AverageSpeed = _eft.SpeedAtWaypoints.Average();
+                                _eft.FromDatabase = false;
+
+                                _detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = _eft, Accept = false, Length = _eft.LengthOriginal });
+                            }
+                        }
+                    }
+                    _accumulatedDistance = 0;
+                    _candidateTrack = null;
+                    _eft = new ExtractedFishingTrack();
+                }
+            }
+
+            if ((bool)done)
+            {
+                if (_detectedTracks != null && _detectedTracks.Count > 0)
+                {
+                    counter = 0;
+                    DetectedTrack firstSegment = null;
+                    foreach (var tr in _detectedTracks)
+                    {
+                        if (tr.ExtractedFishingTrack.LengthOriginal > Global.Settings.GearRetrievingMinLength &&
+                            tr.ExtractedFishingTrack.TrackPointCountOriginal > 6 &&
+                            tr.ExtractedFishingTrack.LengthOriginal < 3500)
+                        {
+                            tr.Accept = true;
+                        }
+                        if (counter > 0)
+                        {
+                            Point endpt1 = firstSegment.ExtractedFishingTrack.Segment.Point[firstSegment.ExtractedFishingTrack.Segment.numPoints - 1];
+                            Point endpt2 = tr.ExtractedFishingTrack.Segment.Point[0];
+                            elevChange = 0;
+                            distance = Waypoint.ComputeDistance(
+                                new Waypoint { Latitude = endpt1.y, Longitude = endpt1.x },
+                                new Waypoint { Latitude = endpt2.y, Longitude = endpt2.x },
+                                out elevChange);
+
+                            if (distance < 50 &&
+                                (firstSegment.ExtractedFishingTrack.LengthOriginal +
+                                tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
+                            {
+                                firstSegment.Accept = true;
+                                tr.Accept = true;
+                            }
+                        }
+                        firstSegment = tr;
+                        counter++;
+                    }
+                }
+
+                return _detectedTracks;
+            }
+
             return null;
         }
 
@@ -1380,9 +768,9 @@ namespace GPXManager.entities.mapping
             return sf;
         }
         public static bool ExtractFishingTrackLine { get; set; }
-        public static Shapefile FishingTrackLine(TripAndHauls th)
+        public static Shapefile FishingTrackLine(FishingTripAndGearRetrievalTracks th)
         {
-            if (ExtractFishingTrackLine && th.Tracks.Count > 0)
+            if (ExtractFishingTrackLine && th.GearRetrievalTracks.Count > 0)
             {
                 Shapefile sf = new Shapefile();
                 if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
@@ -1397,7 +785,7 @@ namespace GPXManager.entities.mapping
                     sf.GeoProjection = globalMapping.GeoProjection;
                     sf.Key = "fishing_trackline";
 
-                    foreach (var item in th.Tracks)
+                    foreach (var item in th.GearRetrievalTracks)
                     {
                         if (item.Accept)
                         {
@@ -1422,6 +810,65 @@ namespace GPXManager.entities.mapping
                 return sf;
             }
             return null;
+        }
+
+        private static Shapefile _fishingTrackLines;
+        public static Shapefile FishingTrackLines()
+        {
+            if (Entities.ExtractedFishingTrackViewModel.Count() > 0)
+            {
+                if (_fishingTrackLines == null)
+                {
+                    _fishingTrackLines = new Shapefile();
+                    if (_fishingTrackLines.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
+                    {
+                        _fishingTrackLines.GeoProjection = globalMapping.GeoProjection;
+                        _fishingTrackLines.Key = "extracted_tracks";
+                        _fishingTrackLines.EditAddField("ID", FieldType.INTEGER_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("DeviceName", FieldType.STRING_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("DateAdded", FieldType.DATE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("SourceType", FieldType.STRING_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("SourceID", FieldType.INTEGER_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("Start", FieldType.DATE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("End", FieldType.DATE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("LenOriginal", FieldType.DOUBLE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("LenSimplified", FieldType.DOUBLE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("TrckPtsOriginal", FieldType.INTEGER_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("TrckPtsSimplified", FieldType.INTEGER_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 1, 1);
+                        foreach (var item in Entities.ExtractedFishingTrackViewModel.GetAll())
+                        {
+                            var shp = new Shape();
+                            if (item.SerializedTrack.Length > 0 && shp.Create(ShpfileType.SHP_POLYLINE))
+                            {
+                                shp.CreateFromString(item.SerializedTrack);
+                            }
+                            var idx = _fishingTrackLines.EditAddShape(shp);
+                            if (idx >= 0)
+                            {
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["ID"], idx, item.ID);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["DeviceName"], idx, item.DeviceName);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["DateAdded"], idx, item.DateAdded);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["SourceType"], idx, item.TrackSourceTypeToString);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["SourceID"], idx, item.TrackSourceID);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["Start"], idx, item.Start);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["End"], idx, item.End);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["LenOriginal"], idx, item.LengthOriginal);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["LenSimplified"], idx, item.LengthSimplified);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["TrckPtsOriginal"], idx, item.TrackPointCountOriginal);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["TrckPtsSimplified"], idx, item.TrackPointCountSimplified);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["AvgSpeed"], idx, item.AverageSpeed);
+                            }
+                        }
+                    }
+                }
+                return _fishingTrackLines;
+            }
+            else
+            {
+                return null;
+            }
+
         }
         public static Shapefile FishingTrackLine()
         {
@@ -1664,13 +1111,8 @@ namespace GPXManager.entities.mapping
             return null;
         }
 
-        public static Shapefile TrackFromGPX(GPXFile gpxFile, out List<int> handles)
+        public static Shapefile TracksFromGPXFiles(GPXFile gpxFile, out List<int> handles)
         {
-            double accumulatedDistance = 0;
-            //int segmentIndex = 0;
-            Waypoint ptBefore = null;
-            Shape segment = null;
-            ExtractFishingTrackLine = true;
             handles = new List<int>();
             var shpIndex = -1;
             Shapefile sf;
@@ -1699,128 +1141,9 @@ namespace GPXManager.entities.mapping
                 var shp = new Shape();
                 if (shp.Create(ShpfileType.SHP_POLYLINE))
                 {
-                    ExtractedFishingTrack eft = new ExtractedFishingTrack();
-                    _gearHaulExtractedTracks = new List<ExtractedFishingTrack>();
                     foreach (var wlt in gpxFile.TrackWaypoinsInLocalTime)
                     {
                         var ptIndex = shp.AddPoint(wlt.Longitude, wlt.Latitude);
-                        if (ExtractFishingTrackLine)
-                        {
-                            Waypoint wpt = null;
-                            if (ptIndex > 0)
-                            {
-                                wpt = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Time = wlt.Time };
-                                double elevChange;
-                                double distance = Waypoint.ComputeDistance(ptBefore, wpt, out elevChange);
-                                TimeSpan timeElapsed = wlt.Time - _timeBefore;
-                                double speed = distance / timeElapsed.TotalMinutes;
-                                if (speed < Global.Settings.SpeedThresholdForRetrieving)
-                                {
-                                    if (segment == null || segment.numPoints == 0)
-                                    {
-                                        segment = new Shape();
-                                        segment.Create(ShpfileType.SHP_POLYLINE);
-
-                                        segment.AddPoint(ptBefore.Longitude, ptBefore.Latitude);
-
-                                    }
-                                    segment.AddPoint(wlt.Longitude, wlt.Latitude);
-                                    if (eft.SpeedAtWaypoints.Count == 0)
-                                    {
-                                        eft.Start = wlt.Time;
-                                    }
-                                    eft.SpeedAtWaypoints.Add(speed);
-                                    accumulatedDistance += distance;
-
-                                    //if (eft.SpeedAtWaypoints.Count == 0)
-                                    //{
-                                    //    eft.Start = wlt.Time;
-                                    //}
-                                    //eft.SpeedAtWaypoints.Add(speed);
-                                    //accumulatedDistance += distance;
-                                    //segmentIndex = segment.AddPoint(wlt.Longitude, wlt.Latitude);
-                                }
-                                else
-                                {
-                                    if (accumulatedDistance >= Global.Settings.GearRetrievingMinLength)
-                                    {
-                                        //we have a potential haul segment
-                                        //segment = PolylineNoSelfCrossing(segment, out int crossingCount);
-                                        eft.TrackPointCountOriginal = segment.numPoints;
-                                        eft.TrackOriginal = segment;
-                                        segment = DouglasPeucker.DouglasPeucker.DouglasPeuckerReduction(segment, 20);
-                                        eft.TrackPointCountSimplified = segment.numPoints;
-                                        eft.SegmentSimplified = segment;
-                                        eft.LengthOriginal = accumulatedDistance;
-                                        eft.LengthSimplified = (double)GetPolyLineShapeLength(segment);
-                                        eft.End = wlt.Time;
-                                        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-
-                                        if (eft.AverageSpeed > 12 &&
-                                            eft.LengthSimplified >= Global.Settings.GearRetrievingMinLength &&
-                                            eft.LengthOriginal < 3000)
-                                        {
-                                            if (BSCBoundaryLine == null)
-                                            {
-                                                _gearHaulExtractedTracks.Add(eft);
-                                            }
-                                            else if (!segment.Crosses(BSCBoundaryLine))
-                                            {
-                                                _gearHaulExtractedTracks.Add(eft);
-                                            }
-                                        }
-
-                                        //if (eft.AverageSpeed > 12 &&
-                                        //    eft.LengthSimplified >= Global.Settings.GearRetrievingMinLength &&
-                                        //    eft.LengthOriginal < 3000 &&
-                                        //    !segment.Crosses(BSCBoundaryLine))
-                                        //{
-                                        //    _gearHaulExtractedTracks.Add(eft);
-                                        //}
-                                        // }
-
-                                        //if (PolylineSelfCrossingsCount(segment, MaxSelfCrossings) <= MaxSelfCrossings)
-                                        //{
-                                        //    eft.Track = segment;
-                                        //    if (segment.numPoints > 20)
-                                        //    {
-
-
-                                        //        eft.Length = accumulatedDistance;
-                                        //        eft.End = wlt.Time;
-                                        //        eft.AverageSpeed = eft.SpeedAtWaypoints.Average();
-                                        //        _gearHaulExtractedTracks.Add(eft);
-                                        //    }
-                                        //}
-                                    }
-                                    else
-                                    {
-                                        //reset and start a new segment
-                                    }
-
-
-
-                                    ptIndex = 0;
-                                    accumulatedDistance = 0;
-                                    segment = new Shape();
-                                    segment.Create(ShpfileType.SHP_POLYLINE);
-                                    eft = new ExtractedFishingTrack();
-
-                                    //accumulatedDistance = 0;
-                                    //segment = new Shape();
-                                    //segment.Create(ShpfileType.SHP_POLYLINE);
-                                    //eft = new ExtractedFishingTrack();
-                                }
-                            }
-
-                            _timeBefore = wlt.Time;
-                            ptBefore = new Waypoint { Longitude = wlt.Longitude, Latitude = wlt.Latitude, Time = _timeBefore };
-                            if (ptIndex == 0)
-                            {
-                                segment = new Shape();
-                                segment.Create(ShpfileType.SHP_POLYLINE);
-                            }
-                        }
                     }
                 }
                 shpIndex = sf.EditAddShape(shp);

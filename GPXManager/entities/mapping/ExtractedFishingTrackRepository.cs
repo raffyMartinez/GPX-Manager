@@ -91,7 +91,7 @@ namespace GPXManager.entities.mapping
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                const string sql = "SELECT Max(RowID) AS max_id FROM extractedFishingTracks";
+                const string sql = "SELECT Max(ID) AS max_id FROM extractedFishingTracks";
                 using (OleDbCommand getMax = new OleDbCommand(sql, conn))
                 {
                     max_rec_no = (int)getMax.ExecuteScalar();
@@ -113,7 +113,7 @@ namespace GPXManager.entities.mapping
                                 DateEnd DateTime, 
                                 SourceType Int ,
                                 SourceID Int, 
-                                SerializedTrack VarChar, 
+                                SerializedTrack LongText, 
                                 LengthOriginal Double, 
                                 LenghtSimplified Double, 
                                 AverageSpeed Double,
@@ -168,8 +168,8 @@ namespace GPXManager.entities.mapping
                     update.Parameters.Add("@lengthOriginal", OleDbType.Double).Value = eft.LengthOriginal;
                     update.Parameters.Add("@lengthSimplified", OleDbType.Double).Value = eft.LengthSimplified;
                     update.Parameters.Add("@avaerageSpeed", OleDbType.Double).Value = eft.AverageSpeed;
-                    update.Parameters.Add("@pointCountOriginal", OleDbType.Integer).Value = eft.AverageSpeed;
-                    update.Parameters.Add("@pointCountSimplified", OleDbType.Integer).Value = eft.AverageSpeed;
+                    update.Parameters.Add("@pointCountOriginal", OleDbType.Integer).Value = eft.TrackPointCountOriginal;
+                    update.Parameters.Add("@pointCountSimplified", OleDbType.Integer).Value = eft.TrackPointCountSimplified;
                     try
                     {
                         success = update.ExecuteNonQuery() > 0;

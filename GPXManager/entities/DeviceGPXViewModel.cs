@@ -63,7 +63,7 @@ namespace GPXManager.entities
 
 
 
-                var summaryItem = new GPSDataSummary { GPS = item, NumberOfSavedTracks = listTracks.Count, NumberOfSavedWaypoints = listWpts.Count,NumberTrackLength500m=count500,NumberTrackLengthLess500m=countLess500 };
+                var summaryItem = new GPSDataSummary { GPS = item, NumberOfSavedTracks = listTracks.Count, NumberOfSavedWaypoints = listWpts.Count, NumberTrackLength500m = count500, NumberTrackLengthLess500m = countLess500 };
 
 
                 list.Add(summaryItem);
@@ -234,6 +234,10 @@ namespace GPXManager.entities
             {
                 foreach (var item in DeviceGPXCollection)
                 {
+                    //if(item.GPX=="")
+                    //{
+                    //    item.GPX = DeviceWaypointGPXes.getXML(item.RowID);
+                    //}
                     var gpxFile = Entities.GPXFileViewModel.ConvertToGPXFile(item);
                     AddToDictionary(gpxFile.GPS, gpxFile);
                 }
@@ -247,6 +251,10 @@ namespace GPXManager.entities
                 }
                 foreach (var item in DeviceGPXCollection.Where(t => t.GPS.DeviceID == gps.DeviceID))
                 {
+                    if (item.GPX == "")
+                    {
+                        item.GPX = DeviceWaypointGPXes.getXML(item.RowID);
+                    }
                     var gpxFile = Entities.GPXFileViewModel.ConvertToGPXFile(item);
                     if (!gpxFiles.Contains(gpxFile))
                     {
@@ -300,25 +308,41 @@ namespace GPXManager.entities
 
         public DeviceGPX GetDeviceGPX(int id)
         {
-            return DeviceGPXCollection.Where(t => t.RowID == id).FirstOrDefault();
+            var gpx = DeviceGPXCollection.Where(t => t.RowID == id).FirstOrDefault();
+            if (gpx.GPX == "")
+            {
+                gpx.GPX = DeviceWaypointGPXes.getXML(id);
+            }
+            return gpx;
+
         }
 
         public DeviceGPX GetDeviceGPX(DeviceGPX deviceGPX)
         {
-            return DeviceGPXCollection
+            var gpx = DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == deviceGPX.GPS.DeviceID)
                 .Where(t => t.Filename == deviceGPX.Filename)
                 .FirstOrDefault();
+
+            if (gpx.GPX == "")
+            {
+                gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+            }
+            return gpx;
         }
 
         public DeviceGPX GetDeviceGPX(GPS gps, string fileName)
         {
-            var g = DeviceGPXCollection
+            var gpx = DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
                 .Where(t => t.Filename == Path.GetFileName(fileName))
                 .FirstOrDefault();
 
-            return g;
+            if (gpx.GPX == "")
+            {
+                gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+            }
+            return gpx;
         }
 
         public List<GPXFile> ArchivedFilesByGPSByMonth(GPS gps, DateTime month)
@@ -329,12 +353,20 @@ namespace GPXManager.entities
                 .OrderByDescending(t => t.DateRangeStart)
                 .OrderByDescending(t => t.TrackCount)
                 .ToList();
+
+
         }
         public DeviceGPX GetDeviceGPX(GPS gps)
         {
-            return DeviceGPXCollection
+            var gpx = DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
                 .FirstOrDefault();
+
+            if (gpx.GPX == "")
+            {
+                gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+            }
+            return gpx;
         }
         public List<GPS> GetAllGPS()
         {
@@ -342,9 +374,14 @@ namespace GPXManager.entities
         }
         public DeviceGPX GetDeviceGPX(GPS gps, DateTime month_year)
         {
-            return DeviceGPXCollection
+            var gpx = DeviceGPXCollection
                 .Where(t => t.GPS.DeviceID == gps.DeviceID)
                 .FirstOrDefault();
+            if (gpx.GPX == "")
+            {
+                gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+            }
+            return gpx;
         }
 
         public List<DateTime> GetMonthsInArchive(GPS gps)
@@ -359,13 +396,33 @@ namespace GPXManager.entities
 
         public List<DeviceGPX> GetAllDeviceWaypointGPX()
         {
-            return DeviceGPXCollection.ToList();
+            var gpxes = DeviceGPXCollection.ToList();
+
+            foreach (var gpx in gpxes)
+            {
+                if (gpx.GPX == "")
+                {
+                    gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+                }
+            }
+
+            return gpxes;
         }
 
 
         public List<DeviceGPX> GetAllDeviceWaypointGPX(GPS gps)
         {
-            return DeviceGPXCollection.Where(t => t.GPS.DeviceID == gps.DeviceID).ToList();
+            var gpxes = DeviceGPXCollection.Where(t => t.GPS.DeviceID == gps.DeviceID).ToList();
+
+            foreach (var gpx in gpxes)
+            {
+                if (gpx.GPX == "")
+                {
+                    gpx.GPX = DeviceWaypointGPXes.getXML(gpx.RowID);
+                }
+            }
+
+            return gpxes;
         }
 
         public DeviceGPX CurrentEntity { get; set; }

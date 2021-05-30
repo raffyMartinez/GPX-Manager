@@ -176,6 +176,7 @@
     <Compile Include="entities\mapping\extension.cs" />
     <Compile Include="entities\mapping\ExtractedFishingTrack.cs" />
     <Compile Include="entities\mapping\ExtractedFishingTrackViewModel.cs" />
+    <Compile Include="entities\mapping\ExtractTrackResult.cs" />
     <Compile Include="entities\mapping\GearWaypoint.cs" />
     <Compile Include="entities\mapping\globalMapping.cs" />
     <Compile Include="entities\mapping\GPXMappingManager.cs" />
@@ -196,7 +197,7 @@
     <Compile Include="entities\mapping\ShapefileFieldSummary.cs" />
     <Compile Include="entities\mapping\ShapefileLabelHandler.cs" />
     <Compile Include="entities\mapping\ShapefileLayerHelper.cs" />
-    <Compile Include="entities\mapping\TripAndHauls.cs" />
+    <Compile Include="entities\mapping\FishingTripAndGearRetrievalTracks.cs" />
     <Compile Include="entities\mapping\TripMappingManager.cs" />
     <Compile Include="entities\mapping\Views\AOIWindow.xaml.cs">
       <DependentUpon>AOIWindow.xaml</DependentUpon>

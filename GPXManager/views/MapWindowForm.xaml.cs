@@ -212,14 +212,14 @@ namespace GPXManager.views
             }
         }
 
-        private string FileOpenDialogForShapefile( )
+        private string FileOpenDialogForShapefile()
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Title = "Open shapefile";
             ofd.Filter = "Shapefile (*.shp)|*.shp";
             ofd.DefaultExt = ".shp";
             var result = ofd.ShowDialog();
-            if (result==System.Windows.Forms.DialogResult.OK &&
+            if (result == System.Windows.Forms.DialogResult.OK &&
                 File.Exists(ofd.FileName))
             {
                 return ofd.FileName;
@@ -230,9 +230,15 @@ namespace GPXManager.views
         {
             switch (((WindowMenuItem)sender).Name)
             {
+                case "menuAddExtractedTracks":
+                    if (!MapWindowManager.AddExtractedTracksLayer())
+                    {
+                        System.Windows.MessageBox.Show("Extracted tracks not found", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    break;
                 case "menuAddBSCBoundary":
                     string feedfBack = "";
-                    
+
                     if (MapWindowManager.BSCBoundaryShapefile == null)
                     {
                         MapWindowManager.AddBSCBoundaryLineShapefile(FileOpenDialogForShapefile(), out feedfBack);
@@ -438,10 +444,10 @@ namespace GPXManager.views
                         File.Exists(ofd.FileName))
                     {
                         string feedBack = "";
-                        if(!MapWindowManager.AddShapefileLayer(ofd.FileName, out feedBack))
+                        if (!MapWindowManager.AddShapefileLayer(ofd.FileName, out feedBack))
                         {
-                           System.Windows.MessageBox.Show(feedBack, "GPX Manager", 
-                               MessageBoxButton.OK, MessageBoxImage.Information);
+                            System.Windows.MessageBox.Show(feedBack, "GPX Manager",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
                     break;

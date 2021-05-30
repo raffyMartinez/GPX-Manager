@@ -81,6 +81,7 @@ namespace GPXManager.entities.mapping.Views
                 }
                 else
                 {
+                    dataGridAttributes.DataContext = ShapefileAttributeTableManager.SetupAttributeTable(ShapeFile,true);
                     for (int x = 0; x < e.SelectedIndexes.Count(); x++)
                     {
                         foreach (DataRowView item in dataGridAttributes.Items)
