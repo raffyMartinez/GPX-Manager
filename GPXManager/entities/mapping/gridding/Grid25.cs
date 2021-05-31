@@ -6,6 +6,24 @@ using System.Threading.Tasks;
 using MapWinGIS;
 namespace GPXManager.entities.mapping.gridding
 {
+    public struct UTMPoint
+    {
+        public double Northing { get; set; }
+        public double Easting { get; set; }
+
+        public string ZoneLetter { get; set; }
+        public int ZoneNumber { get; set; }
+    }
+    public class UTMExtent
+    {
+        public UTMExtent(UTMPoint upperLeft, UTMPoint lowerRight)
+        {
+            UpperLeft = upperLeft;
+            LowerRight = lowerRight;
+        }
+        public UTMPoint UpperLeft { get; private set; }
+        public UTMPoint LowerRight { get; private set; }
+    }
     public enum UTMZone
     {
         UTMZone50N,
@@ -38,6 +56,15 @@ namespace GPXManager.entities.mapping.gridding
             }
         }
 
+        public static Extents ExtentToUTM(Extents ext)
+        {
+            LatLonUTMConverter llc = new LatLonUTMConverter("WGS 84");
+            var ul = llc.convertLatLngToUtm(ext.yMax, ext.xMin);
+            var lr = llc.convertLatLngToUtm(ext.yMin, ext.xMax);
+            ext = new Extents();
+            ext.SetBounds(ul.Easting, lr.Northing, 0, lr.Easting, ul.Northing, 0);
+            return ext;
+        }
         public static Shapefile CreateGrid25MajorGrid()
         {
             var sf = new Shapefile();

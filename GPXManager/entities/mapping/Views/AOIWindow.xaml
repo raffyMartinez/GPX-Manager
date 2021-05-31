@@ -31,6 +31,7 @@
                             <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
                             <MenuItem Header="Edit extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
                             <MenuItem Header="Remove" x:Name="menuAOIRemove" Click="OnMenuClick"/>
+                            <MenuItem Header="Make grid" x:Name="menuMakeGrid" Click="OnMenuClick"/>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                 </DataGrid>

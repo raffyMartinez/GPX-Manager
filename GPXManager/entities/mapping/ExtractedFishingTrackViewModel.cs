@@ -54,7 +54,7 @@ namespace GPXManager.entities.mapping
             {
                 sourceType = ExtractedTrackSourceType.TrackSourceTypeCTX;
                 id = ctx.RowID;
-                deviceName = Entities.CTXFileViewModel.GetFile(id).UserName;
+                deviceName = Entities.CTXFileViewModel.GetFile(id, false).UserName;
             }
             else if (gpx != null)
             {
@@ -82,7 +82,10 @@ namespace GPXManager.entities.mapping
                         {
                             result.GearRetrievalTracks = new List<DetectedTrack>();
                         }
-                        result.GearRetrievalTracks.Add(dt);
+                        //if (MapWindowManager.BSCBoundaryShapefile == null || !shp.Crosses(MapWindowManager.BSCBoundaryShapefile.Shape[0]))
+                        //{
+                            result.GearRetrievalTracks.Add(dt);
+                        //}
                     }
                 }
                 procced = result.GearRetrievalTracks != null;
@@ -93,25 +96,31 @@ namespace GPXManager.entities.mapping
                 if (ctx != null)
                 {
                     if (ctx.XML.Length == 0)
-                        return null;
-                    else
                     {
-                        XmlDocument doc = new XmlDocument();
-                        doc.LoadXml(ctx.XML);
-                        var tracknodes = doc.SelectNodes("//T");
-                        if (ctx.TrackingInterval == null)
+                        ctx.XML = Entities.CTXFileViewModel.GetXMLOfCTX(ctx);
+                        if (ctx.XML.Length == 0)
                         {
-                            ctx.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctx, true);
+                            return null;
                         }
-
-
-
-                        result = ShapefileFactory.GearRetrievalTrackShapeFromCTX(tracknodes, ctx.TrackingInterval);
-
-
-                        procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
-
                     }
+
+
+                    XmlDocument doc = new XmlDocument();
+                    doc.LoadXml(ctx.XML);
+                    var tracknodes = doc.SelectNodes("//T");
+                    if (ctx.TrackingInterval == null)
+                    {
+                        ctx.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctx, true);
+                    }
+
+
+
+                    result = ShapefileFactory.GearRetrievalTrackShapeFromCTX(tracknodes, ctx.TrackingInterval);
+
+
+                    //procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
+
+
                 }
                 else
                 {
@@ -122,10 +131,14 @@ namespace GPXManager.entities.mapping
                         gpxFile.GPSTimerInterval = Entities.DeviceGPXViewModel.GetDeviceGPX(id).TimerInterval;
                     }
                     result = ShapefileFactory.GearRetrievalTrackShapeFromGPX(gpxFile, gpxFile.GPSTimerInterval);
-                    procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
+                    //procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
 
                 }
+
+                procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
             }
+
+
 
             if (procced)
             {
@@ -160,121 +173,12 @@ namespace GPXManager.entities.mapping
             //ExtractTrackResult etr = new ExtractTrackResult { Success = result != null, ExtractedTracks = listOfExtractedTracks, SourceType = sourceType, SourceID = id };
             return listOfExtractedTracks;
         }
-        private List<ExtractedFishingTrack> CreateFromSource1(CTXFile ctx = null, DeviceGPX gpx = null, bool save = false)
-        {
-            FishingTripAndGearRetrievalTracks result = null;
-            List<ExtractedFishingTrack> listOfExtractedTracks = new List<ExtractedFishingTrack>();
-            if (ctx == null && gpx == null)
-                throw new ArgumentNullException("Error: Source is not specified");
-
-            int id = 0;
-            var deviceName = "";
-            bool procced = false;
-            ExtractedTrackSourceType sourceType = ExtractedTrackSourceType.TrackSourceTypeCTX;
-            if (ctx != null)
-            {
-                if (ctx.XML.Length == 0)
-                    return null;
-                else
-                {
-                    XmlDocument doc = new XmlDocument();
-                    doc.LoadXml(ctx.XML);
-                    var tracknodes = doc.SelectNodes("//T");
-                    if (ctx.TrackingInterval == null)
-                    {
-                        ctx.TrackingInterval = Entities.CTXFileViewModel.GetGPSTimerIntervalFromCTX(ctx, true);
-                    }
-
-                    var extractedTracks = Entities.ExtractedFishingTrackViewModel.GetTracks(sourceType, ctx.RowID);
-                    if (extractedTracks == null)
-                    {
-                        result = ShapefileFactory.GearRetrievalTrackShapeFromCTX(tracknodes, ctx.TrackingInterval);
-                    }
-                    else
-                    {
-                        result = new FishingTripAndGearRetrievalTracks { TripShapefile = null };
-                        foreach (var item in extractedTracks)
-                        {
-                            item.FromDatabase = true;
-                            var shp = new Shape();
-                            if (shp.Create(ShpfileType.SHP_POLYLINE))
-                            {
-                                shp.CreateFromString(item.SerializedTrack);
-                                item.SegmentSimplified = shp;
-                                item.TrackOriginal = null;
-                                DetectedTrack dt = new DetectedTrack { Shape = shp, ExtractedFishingTrack = item, Length = item.LengthOriginal, Accept = true };
-                                if (result.GearRetrievalTracks == null)
-                                {
-                                    result.GearRetrievalTracks = new List<DetectedTrack>();
-                                }
-                                result.GearRetrievalTracks.Add(dt);
-                            }
-                        }
-                    }
-
-                    procced = result != null && result.GearRetrievalTracks != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
-                    if (procced)
-                    {
-                        id = ctx.RowID;
-                        deviceName = Entities.CTXFileViewModel.GetFile(id).UserName;
-                    }
-                }
-            }
-            else
-            {
-                sourceType = ExtractedTrackSourceType.TrackSourceTypeGPX;
-                var gpxFile = Entities.GPXFileViewModel.ConvertToGPXFile(gpx);
-                id = gpx.RowID;
-                if (gpxFile.GPSTimerInterval == null)
-                {
-                    gpxFile.GPSTimerInterval = Entities.DeviceGPXViewModel.GetDeviceGPX(id).TimerInterval;
-                }
-                result = ShapefileFactory.GearRetrievalTrackShapeFromGPX(gpxFile, gpxFile.GPSTimerInterval);
-                procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
-                if (procced)
-                {
-                    deviceName = Entities.DeviceGPXViewModel.GetDeviceGPX(id).GPS.DeviceName;
-                }
-            }
-
-            if (procced)
-            {
-                foreach (var item in result.GearRetrievalTracks.Where(t => t.Accept))
-                {
-                    ExtractedFishingTrack extractedTrack = new ExtractedFishingTrack
-                    {
-                        DateAdded = DateTime.Now,
-                        TrackSourceType = sourceType,
-                        TrackSourceID = id,
-                        Start = item.ExtractedFishingTrack.Start,
-                        End = item.ExtractedFishingTrack.End,
-                        LengthOriginal = item.ExtractedFishingTrack.LengthOriginal,
-                        LengthSimplified = item.ExtractedFishingTrack.LengthSimplified,
-                        TrackPointCountOriginal = item.ExtractedFishingTrack.TrackPointCountOriginal,
-                        TrackPointCountSimplified = item.ExtractedFishingTrack.TrackPointCountSimplified,
-                        AverageSpeed = item.ExtractedFishingTrack.AverageSpeed,
-                        TrackOriginal = item.ExtractedFishingTrack.TrackOriginal,
-                        SegmentSimplified = item.ExtractedFishingTrack.SegmentSimplified,
-                        SerializedTrack = item.ExtractedFishingTrack.SegmentSimplified.SerializeToString(),
-                        DeviceName = deviceName
-                    };
-                    if (!save)
-                    {
-
-                        extractedTrack.ID = ++_idCounter;
-                    }
-                    listOfExtractedTracks.Add(extractedTrack);
-                }
-            }
-            //ExtractTrackResult etr = new ExtractTrackResult { Success = result != null, ExtractedTracks = listOfExtractedTracks, SourceType = sourceType, SourceID = id };
-            return listOfExtractedTracks;
-        }
 
         private async Task<List<ExtractedFishingTrack>> ExtractTracksFromSources(bool save = false, bool makeShapefile = false)
         {
             _counter = 0;
             var list = new List<ExtractedFishingTrack>();
-            var allCTXFiles = await Entities.CTXFileViewModel.GetAllAsync(true);
+            var allCTXFiles = await Entities.CTXFileViewModel.GetAllAsync(false);
             foreach (CTXFile cf in allCTXFiles)
             {
                 var list1 = CombineExtractedTracks(CreateFromSource(ctx: cf, save: save));
@@ -307,7 +211,7 @@ namespace GPXManager.entities.mapping
                     if (!item.FromDatabase)
                     {
                         item.ID = NextRecordNumber;
-                        if(AddRecordToRepo(item))
+                        if (AddRecordToRepo(item))
                         {
                             saveCount++;
                             if (TrackExtractedFromSourceCreated != null)

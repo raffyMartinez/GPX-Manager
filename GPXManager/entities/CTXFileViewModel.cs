@@ -86,10 +86,10 @@ namespace GPXManager.entities
                 return CTXFileCollection.OrderBy(t => t.DateStart).ToList();
             }
         }
-        public CTXFile GetFile(int id)
+        public CTXFile GetFile(int id, bool getXML = true)
         {
             var ctx = CTXFileCollection.FirstOrDefault(t => t.RowID == id);
-            if (ctx.XML == "")
+            if (getXML &&  ctx.XML == "")
             {
                 ctx.XML = GetXMLOfCTX(ctx);
             }

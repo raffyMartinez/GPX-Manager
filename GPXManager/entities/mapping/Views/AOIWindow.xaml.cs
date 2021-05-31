@@ -55,7 +55,8 @@ namespace GPXManager.entities.mapping.Views
             
             foreach(var aoi in Entities.AOIViewModel.AOICollection)
             {
-                aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey: "aoi_boundary"); 
+                aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey: "aoi_boundary");
+                Console.WriteLine(aoi.UTMExtent.LowerRight.Easting);
             }
 
             buttonOk.IsEnabled = false;
@@ -122,8 +123,26 @@ namespace GPXManager.entities.mapping.Views
                         MapWindowManager.MapLayersHandler.RemoveLayer(_aoi.MapLayerHandle);
                     }
                         break;
+                case "menuMakeGrid":
+                    gridding.Grid25.UTMZone = gridding.UTMZone.UTMZone51N;
+                    if (MapWindowManager.Grid25MajorGrid == null)
+                    {
+                        MapWindowManager.Grid25MajorGrid = gridding.Grid25.CreateGrid25MajorGrid();
+                        MapWindowManager.MapLayersHandler.AddLayer(gridding.Grid25.MajorGrid, "Major grid",false);
+                        MapWindowManager.MapLayersHandler.CurrentMapLayer.VisibleInLayersUI = false;
+                    }
+                    var grids = _aoi.MajorGridIntersect();
+                    _aoi.GenerateMinorGrids();
+                    if(!_aoi.GeneratedSubGrids())
+                    {
+                        MessageBox.Show("Subgrid size does not fit grid", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    MapWindowManager.MapLayersHandler.AddLayer(_aoi.Grid2Km, "2 km grid");
+                    MapWindowManager.MapLayersHandler.AddLayer(_aoi.SubGrids, "Sub grids");
+                    break;
             }
         }
+
 
         private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {

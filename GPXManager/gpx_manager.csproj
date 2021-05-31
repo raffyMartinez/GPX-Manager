@@ -183,6 +183,7 @@
     <Compile Include="entities\mapping\gridding\Class1.cs" />
     <Compile Include="entities\mapping\gridding\Grid25.cs" />
     <Compile Include="entities\mapping\LabelProperty.cs" />
+    <Compile Include="entities\mapping\LatLonUTMConverter.cs" />
     <Compile Include="entities\mapping\LayerEventArg.cs" />
     <Compile Include="entities\mapping\LineWidthFix.cs" />
     <Compile Include="entities\mapping\MapInterActionHandler.cs" />

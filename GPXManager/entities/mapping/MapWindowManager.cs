@@ -383,6 +383,7 @@ namespace GPXManager.entities.mapping
             }
         }
 
+        public static Shapefile Grid25MajorGrid { get; set; }
         public static bool AddExtractedTracksLayer()
         {
             if (Entities.ExtractedFishingTrackViewModel.Count() > 0)

@@ -1,6 +1,6 @@
 ﻿using MapWinGIS;
 
-namespace MapWinForms.forms
+namespace GPXManager.entities.mapping
 {
     public static class LineWidthFix
     {

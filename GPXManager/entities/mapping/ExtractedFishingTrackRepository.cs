@@ -108,6 +108,7 @@ namespace GPXManager.entities.mapping
                 string sql = @"CREATE TABLE extractedFishingTracks 
                              (
                                 ID Int NOT NULL PRIMARY KEY, 
+                                DeviceName VarChar,
                                 DateAdded DateTime, 
                                 DateStart DateTime, 
                                 DateEnd DateTime, 
@@ -151,14 +152,15 @@ namespace GPXManager.entities.mapping
             {
                 conn.Open();
                 var sql = $@"Insert into extractedFishingTracks 
-                            (ID, DateAdded, DateStart, DateEnd, SourceType,
+                            (ID, DeviceName, DateAdded, DateStart, DateEnd, SourceType,
                             SourceID, SerializedTrack, LengthOriginal, LenghtSimplified, AverageSpeed,
                             PointCountOriginal, PointCountSimplified)
-                            Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
                     update.Parameters.Add("@rowID", OleDbType.Integer).Value = eft.ID;
+                    update.Parameters.Add("@deviceName", OleDbType.VarChar).Value = eft.DeviceName;
                     update.Parameters.Add("@dateAdded", OleDbType.Date).Value = eft.DateAdded;
                     update.Parameters.Add("@dateStart", OleDbType.Date).Value = eft.Start;
                     update.Parameters.Add("@dateEnd", OleDbType.Date).Value = eft.End;
