@@ -1,5 +1,6 @@
 ﻿using GPXManager.views;
 using MapWinGIS;
+using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,7 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-
+using System.IO;
 
 namespace GPXManager.entities.mapping.Views
 {
@@ -398,7 +399,9 @@ namespace GPXManager.entities.mapping.Views
         }
         private void RefreshLayerGrid()
         {
-            dataGridLayers.DataContext = MapWindowManager.MapLayersViewModel.MapLayerCollection;
+            //dataGridLayers.DataContext = MapWindowManager.MapLayersViewModel.MapLayerCollection.Where(T => T.VisibleInLayersUI == true).ToList(); ;
+            //dataGridLayers.DataContext = MapWindowManager.MapLayersViewModel.MapLayerCollection;
+            dataGridLayers.DataContext = MapWindowManager.MapLayersViewModel.GetLayerUIVisibleLayers();
             dataGridLayers.Items.Refresh();
         }
 
@@ -423,6 +426,7 @@ namespace GPXManager.entities.mapping.Views
                     MapWindowManager.ShapeFileAttributesWindow = sfw;
                     break;
                 case "buttonRemove":
+                    MapLayersHandler.RemoveLayer(MapLayersHandler.CurrentMapLayer.Handle);
                     break;
 
                 case "buttonAdd":
@@ -435,6 +439,20 @@ namespace GPXManager.entities.mapping.Views
             var mnu = (MenuItem)sender;
             switch(mnu.Header)
             {
+                case "Export":
+                    VistaFolderBrowserDialog vfbd = new VistaFolderBrowserDialog();
+                    vfbd.Description = "Select folder to save exported shapefiles";
+                    vfbd.UseDescriptionForTitle = true;
+                    vfbd.ShowDialog();
+                    if (vfbd.SelectedPath.Length > 0 && Directory.Exists(vfbd.SelectedPath))
+                    {
+                        string fileName = $@"{vfbd.SelectedPath}\{MapLayersHandler.CurrentMapLayer.Name}.shp";
+                       if( ((Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject).SaveAs(fileName))
+                        {
+                            MessageBox.Show($"{System.IO.Path.GetFileName(fileName)} was successfully exported", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                    }
+                    break;
                 case "Properties":
 
                     break;

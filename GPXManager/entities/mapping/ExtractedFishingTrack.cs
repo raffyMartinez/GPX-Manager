@@ -76,6 +76,8 @@ namespace GPXManager.entities.mapping
         public int TrackPointCountOriginal { get; set; }
         public int TrackPointCountSimplified { get; set; }
 
+        public string SerializedTrackUTM { get; set; }
+
         public bool FromDatabase { get; set; }
         public string DeviceName { get; set; }
         public string Duration

@@ -42,20 +42,87 @@ namespace GPXManager.entities.mapping
                             aoi.LowerRightX = double.Parse(dr["LowerRightX"].ToString());
                             aoi.LowerRightY = double.Parse(dr["LowerRightY"].ToString());
                             aoi.Name = dr["AOIName"].ToString();
+                            aoi.GridFileName = dr["GridFileName"].ToString();
                             aoi.ID = int.Parse(dr["RowID"].ToString());
                             aoi.Visibility = true;
                             thisList.Add(aoi);
                         }
                     }
                 }
+                catch (OleDbException dbex)
+                {
+
+                }
                 catch (Exception ex)
                 {
-                    Logger.Log(ex);
+                    switch (ex.HResult)
+                    {
+                        case -2147024809:
+                            if (AddField(ex.Message.Split(' ', '\'')[2]))
+                            {
+                                return getAOIs();
+                            }
+                            break;
+                        default:
+                            Logger.Log(ex);
+                            break;
+                    }
 
                 }
             }
             return thisList;
         }
+
+
+        private bool AddField(string name)
+        {
+            switch (name)
+            {
+                case "GridFileName":
+                    return AddColumn(name, "VarChar", 255);
+            }
+            return false;
+        }
+
+        private bool AddColumn(string colName, string type, int? length = null)
+        {
+            string sql = "";
+            if (type == "bool")
+            {
+                sql = $"ALTER TABLE aoi ADD COLUMN {colName} BIT DEFAULT 0";
+            }
+            else if (type == "VarChar")
+            {
+                sql = $"ALTER TABLE aoi ADD COLUMN {colName} {type}({length})";
+            }
+            else
+            {
+                sql = $"ALTER TABLE aoi ADD COLUMN {colName} {type}";
+            }
+            using (var con = new OleDbConnection(Global.ConnectionString))
+            {
+                con.Open();
+                OleDbCommand myCommand = new OleDbCommand();
+                myCommand.Connection = con;
+                myCommand.CommandText = sql;
+                try
+                {
+                    myCommand.ExecuteNonQuery();
+                }
+                catch (InvalidOperationException)
+                {
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    return false;
+                }
+                myCommand.Connection.Close();
+                return true;
+            }
+        }
+
         public int MaxRecordNumber()
         {
             int max_rec_no = 0;
@@ -76,14 +143,15 @@ namespace GPXManager.entities.mapping
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
             {
                 conn.Open();
-                var sql = $@"Insert into aoi(UpperLeftX, UpperLeftY, LowerRightX, LowerRightY, AOIName, RowID)
+                var sql = $@"Insert into aoi(UpperLeftX, UpperLeftY, LowerRightX, LowerRightY, AOIName, RowID, GridFileName)
                            Values (
                                {aoi.UpperLeftX},
                                {aoi.UpperLeftY},
                                {aoi.LowerRightX},
                                {aoi.LowerRightY},
                                '{aoi.Name}',
-                               {aoi.ID}
+                               {aoi.ID},
+                               '{aoi.GridFileName}'
                            )";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -104,7 +172,8 @@ namespace GPXManager.entities.mapping
                                 UpperLeftY = {aoi.UpperLeftY},
                                 LowerRightX = {aoi.LowerRightX},
                                 LowerRightY = {aoi.LowerRightY},
-                                AOIName = '{aoi.Name}'
+                                AOIName = '{aoi.Name}',
+                                GridFileName = '{aoi.GridFileName}'
                             WHERE RowID = {aoi.ID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {

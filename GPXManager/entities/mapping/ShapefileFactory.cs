@@ -55,7 +55,7 @@ namespace GPXManager.entities.mapping
                 if (sf.EditAddShape(extent.ToShape()) >= 0)
                 {
                     sf.DefaultDrawingOptions.FillTransparency = 0.25F;
-                    sf.Key = "bsc_aoi";
+                    sf.Key = $"{aoi.Name}_aoi_boundary";
                     return sf;
                 }
             }
@@ -511,6 +511,23 @@ namespace GPXManager.entities.mapping
         private static double _accumulatedDistance;
         private static List<DetectedTrack> _detectedTracks;
 
+        private static string SerializeShape2UTM(Shape shp)
+        {
+            if (shp.numPoints > 1)
+            {
+                string convertedString = "3;0;";
+                LatLonUTMConverter converter = new LatLonUTMConverter("WGS 84");
+                for (int x = 0; x < shp.numPoints; x++)
+                {
+                    var converted = converter.convertLatLngToUtm(shp.Point[x].y, shp.Point[x].x);
+                    convertedString += $"{ converted.Easting}|{converted.Northing}|";
+                }
+                return convertedString;
+            }
+
+            return "";
+
+        }
         private static List<DetectedTrack> MakeSegments(int counter, Waypoint pt1, Waypoint pt2 = null, bool? done = null)
         {
             double elevChange;
@@ -570,7 +587,7 @@ namespace GPXManager.entities.mapping
                                 _eft.End = pt2.Time;
                                 _eft.AverageSpeed = _eft.SpeedAtWaypoints.Average();
                                 _eft.FromDatabase = false;
-
+                                _eft.SerializedTrackUTM = SerializeShape2UTM(_eft.SegmentSimplified);
                                 _detectedTracks.Add(new DetectedTrack { ExtractedFishingTrack = _eft, Accept = false, Length = _eft.LengthOriginal });
                             }
                         }

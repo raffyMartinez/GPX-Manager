@@ -59,6 +59,7 @@
                 <ContextMenu>
                     <MenuItem Header="Properties" Click="OnMenuClick"/>
                     <MenuItem Header="Zoom to layer" Click="OnMenuClick"/>
+                    <MenuItem Header="Export" Click="OnMenuClick"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>    
         </DataGrid>

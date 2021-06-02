@@ -719,6 +719,8 @@ namespace GPXManager.entities.mapping
             }
         }
 
+        public GeoProjection GeoProjection { get; set; }
+
         /// <summary>
         /// Handles the opening of map layer files from a file open dialog
         /// </summary>
@@ -748,7 +750,15 @@ namespace GPXManager.entities.mapping
                             if (reproject)
                             {
                                 int reprojectCount = 0;
-                                var sf = shapefile.Reproject(MapControl.GeoProjection, reprojectCount);
+                                Shapefile sf;
+                                if (GeoProjection != null)
+                                {
+                                    sf = shapefile.Reproject(GeoProjection, reprojectCount);
+                                }
+                                else
+                                {
+                                    sf = shapefile.Reproject(MapControl.GeoProjection, reprojectCount);
+                                }
                                 if (reprojectCount > 0 || sf.NumShapes > 0)
                                 {
                                     shapefile = sf;
@@ -894,7 +904,8 @@ namespace GPXManager.entities.mapping
         /// <param name="sf"></param>
         /// <returns></returns>
         public int AddLayer(Shapefile sf, string layerName = "", bool isVisible = true, bool uniqueLayer = false,
-            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey = "", bool rejectIfExisting = false)
+            fad3MappingMode mappingMode = fad3MappingMode.defaultMode, string layerKey = "",
+            bool rejectIfExisting = false, bool showInLayersUI = true)
         {
             if (rejectIfExisting && layerName.Length > 0 && Exists(layerName))
             {
@@ -918,11 +929,11 @@ namespace GPXManager.entities.mapping
                 _currentMapLayer = SetMapLayer(h, layerName, isVisible, true, sf.GeoProjection, "ShapefileClass", sf.Filename);
                 _currentMapLayer.LayerKey = layerKey;
                 _currentMapLayer.MappingMode = mappingMode;
-
+                _currentMapLayer.VisibleInLayersUI = showInLayersUI;
 
                 if (LayerRead != null)
                 {
-                    LayerEventArg lp = new LayerEventArg(h, layerName, true, true, _currentMapLayer.LayerType);
+                    LayerEventArg lp = new LayerEventArg(h, layerName, isVisible, showInLayersUI, _currentMapLayer.LayerType);
                     LayerRead(this, lp);
                 }
                 //LineWidthFix.FixLineWidth(sf);
@@ -949,7 +960,7 @@ namespace GPXManager.entities.mapping
 
                         if (LayerRead != null)
                         {
-                            LayerEventArg lp = new LayerEventArg(h, layerName, true, true, _currentMapLayer.LayerType);
+                            LayerEventArg lp = new LayerEventArg(h, layerName, isVisible, showInLayersUI, _currentMapLayer.LayerType);
                             LayerRead(this, lp);
                         }
                         //LineWidthFix.FixLineWidth(sf);

@@ -43,6 +43,9 @@ namespace GPXManager.entities
             }
             set { _latestTripCount = value; } 
         }
+
+        public string SaveFolderForGrids { get; set; }
+        public int? GridSize { get; set; }
         public string BingAPIKey { get; set; }
         public string MDBPath { get; set; }
         public string ComputerGPXFolder { get; set; }

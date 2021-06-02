@@ -180,8 +180,8 @@
     <Compile Include="entities\mapping\GearWaypoint.cs" />
     <Compile Include="entities\mapping\globalMapping.cs" />
     <Compile Include="entities\mapping\GPXMappingManager.cs" />
-    <Compile Include="entities\mapping\gridding\Class1.cs" />
     <Compile Include="entities\mapping\gridding\Grid25.cs" />
+    <Compile Include="entities\mapping\gridding\GridMapping.cs" />
     <Compile Include="entities\mapping\LabelProperty.cs" />
     <Compile Include="entities\mapping\LatLonUTMConverter.cs" />
     <Compile Include="entities\mapping\LayerEventArg.cs" />
@@ -202,6 +202,12 @@
     <Compile Include="entities\mapping\TripMappingManager.cs" />
     <Compile Include="entities\mapping\Views\AOIWindow.xaml.cs">
       <DependentUpon>AOIWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="entities\mapping\Views\GridMappingWindow.xaml.cs">
+      <DependentUpon>GridMappingWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="entities\mapping\Views\MakeAOIGridWindow.xaml.cs">
+      <DependentUpon>MakeAOIGridWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="entities\mapping\Views\MapLayersWindow.xaml.cs">
       <DependentUpon>MapLayersWindow.xaml</DependentUpon>
@@ -302,6 +308,14 @@
     </Compile>
     <Compile Include="views\ZoomBorder.cs" />
     <Page Include="entities\mapping\Views\AOIWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="entities\mapping\Views\GridMappingWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="entities\mapping\Views\MakeAOIGridWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

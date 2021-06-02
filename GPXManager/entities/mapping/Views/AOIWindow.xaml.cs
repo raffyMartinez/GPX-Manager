@@ -14,6 +14,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.IO;
+using MapWinGIS;
 
 namespace GPXManager.entities.mapping.Views
 {
@@ -25,6 +27,7 @@ namespace GPXManager.entities.mapping.Views
         private int _gridRow;
         private AOI _aoi;
         private bool _editingAOI;
+        //private Shapefile _gridShapefile;
         public AOIWindow()
         {
             InitializeComponent();
@@ -43,6 +46,16 @@ namespace GPXManager.entities.mapping.Views
             rowAOIName.Height = new GridLength(60);
         }
 
+        //public Shapefile GridShapefile
+        //{
+        //    get { return _gridShapefile; }
+        //    set
+        //    {
+
+        //        _gridShapefile = value;
+        //    }
+        //}
+
         public void ShowAOIList()
         {
             rowAOIList.Height = new GridLength(1, GridUnitType.Star);
@@ -52,11 +65,17 @@ namespace GPXManager.entities.mapping.Views
             dataGridAOIs.Columns.Add(new DataGridCheckBoxColumn { Header = "Visibility", Binding = new Binding("Visibility") });
             dataGridAOIs.Columns.Add(new DataGridTextColumn { Header = "AOI name", Binding = new Binding("Name") });
             dataGridAOIs.DataContext = Entities.AOIViewModel.AOICollection.OrderBy(t => t.Name).ToList();
-            
-            foreach(var aoi in Entities.AOIViewModel.AOICollection)
+
+            foreach (var aoi in Entities.AOIViewModel.AOICollection)
             {
-                aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey: "aoi_boundary");
-                Console.WriteLine(aoi.UTMExtent.LowerRight.Easting);
+                var h = aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey:aoi.ShapeFile.Key);
+                aoi.AOIHandle = h;
+                var sf = (MapWinGIS.Shapefile)MapWindowManager.MapLayersHandler[h].LayerObject;
+
+                sf.DefaultDrawingOptions.LineColor = new MapWinGIS.Utils().ColorByName(MapWinGIS.tkMapColor.Red);
+                sf.DefaultDrawingOptions.FillVisible = false;
+
+
             }
 
             buttonOk.IsEnabled = false;
@@ -73,36 +92,52 @@ namespace GPXManager.entities.mapping.Views
         }
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonCancel":
                     MapWindowManager.MapLayersHandler.RemoveLayer(AOIManager._hAOI);
                     Close();
                     break;
                 case "buttonOk":
-                    if(textBoxAOIName.Text.Length>0)
+                    if (textBoxAOIName.Text.Length > 0)
                     {
                         _aoi = AOIManager.SaveAOI(textBoxAOIName.Text);
-                        
+
                         if (_aoi != null)
                         {
                             Close();
                         }
                     }
-                    else if(_editingAOI)
+                    else if (_editingAOI)
                     {
                         _aoi = AOIManager.SaveAOI(_aoi.Name, true);
-                         buttonOk.IsEnabled = _aoi==null;
-                        
+                        buttonOk.IsEnabled = _aoi == null;
+
                     }
                     break;
             }
         }
 
+
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
-            switch(((MenuItem)sender).Name)
+            switch (((MenuItem)sender).Name)
             {
+                case "menuLoadGrid":
+                    break;
+                case "menuGridMapping":
+                    GridMappingWindow gmw = GridMappingWindow.GetInstance();
+                    gmw.AOI = _aoi;
+                    gmw.Owner = this;
+                    if(gmw.Visibility==Visibility.Visible)
+                    {
+                        gmw.BringIntoView();
+                    }
+                    else
+                    {
+                        gmw.Show();
+                    }
+                    break;
                 case "menuAOIZoom":
                     if (_aoi != null)
                     {
@@ -110,7 +145,7 @@ namespace GPXManager.entities.mapping.Views
                     }
                     break;
                 case "menuAOIEditExtent":
-                    if(_aoi !=null)
+                    if (_aoi != null)
                     {
                         _editingAOI = true;
                         AOIManager.Edit(_aoi);
@@ -122,28 +157,35 @@ namespace GPXManager.entities.mapping.Views
                     {
                         MapWindowManager.MapLayersHandler.RemoveLayer(_aoi.MapLayerHandle);
                     }
-                        break;
-                case "menuMakeGrid":
-                    gridding.Grid25.UTMZone = gridding.UTMZone.UTMZone51N;
-                    if (MapWindowManager.Grid25MajorGrid == null)
+                    break;
+                case "menuShowGrid":
+
+                    if (_aoi.GridFileName != null && _aoi.GridFileName.Length > 0 && File.Exists(_aoi.GridFileName))
                     {
-                        MapWindowManager.Grid25MajorGrid = gridding.Grid25.CreateGrid25MajorGrid();
-                        MapWindowManager.MapLayersHandler.AddLayer(gridding.Grid25.MajorGrid, "Major grid",false);
-                        MapWindowManager.MapLayersHandler.CurrentMapLayer.VisibleInLayersUI = false;
+                        menuGridMapping.IsEnabled = _aoi.CreateGridFromFileName(_aoi.GridFileName);
                     }
-                    var grids = _aoi.MajorGridIntersect();
-                    _aoi.GenerateMinorGrids();
-                    if(!_aoi.GeneratedSubGrids())
+                    else
                     {
-                        MessageBox.Show("Subgrid size does not fit grid", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MakeAOIGridWindow mgw = MakeAOIGridWindow.GetInstance();
+                        mgw.AOI = _aoi;
+                        mgw.Owner = this;
+                        if (mgw.Visibility == Visibility.Visible)
+                        {
+                            mgw.BringIntoView();
+                        }
+                        else
+                        {
+                            mgw.Show();
+                        }
                     }
-                    MapWindowManager.MapLayersHandler.AddLayer(_aoi.Grid2Km, "2 km grid");
-                    MapWindowManager.MapLayersHandler.AddLayer(_aoi.SubGrids, "Sub grids");
                     break;
             }
         }
 
-
+        public void GridIsLoaded()
+        {
+            menuGridMapping.IsEnabled = true;
+        }
         private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
 
@@ -151,12 +193,13 @@ namespace GPXManager.entities.mapping.Views
 
         private void OnGridSelectedCellChanged(object sender, SelectedCellsChangedEventArgs e)
         {
+            menuGridMapping.IsEnabled = false;
             if (dataGridAOIs.SelectedCells.Count == 1)
             {
                 DataGridCellInfo cell = dataGridAOIs.SelectedCells[0];
                 _gridRow = dataGridAOIs.Items.IndexOf(cell.Item);
                 _aoi = (AOI)dataGridAOIs.Items[_gridRow];
-                
+                menuGridMapping.IsEnabled = _aoi.GridIsLoaded;
             }
 
         }

@@ -45,6 +45,7 @@ namespace GPXManager.entities.mapping
                             eft.LengthSimplified = (double)dr["LenghtSimplified"];
                             eft.AverageSpeed = (double)dr["AverageSpeed"];
                             eft.SerializedTrack = dr["SerializedTrack"].ToString();
+                            eft.SerializedTrackUTM = dr["SerializedTrackUTM"].ToString();
                             eft.TrackPointCountOriginal = (int)dr["PointCountOriginal"];
                             eft.TrackPointCountSimplified = (int)dr["PointCountSimplified"];
                             list.Add(eft);
@@ -115,6 +116,7 @@ namespace GPXManager.entities.mapping
                                 SourceType Int ,
                                 SourceID Int, 
                                 SerializedTrack LongText, 
+                                SerializedTrackUTM LongText,
                                 LengthOriginal Double, 
                                 LenghtSimplified Double, 
                                 AverageSpeed Double,
@@ -129,7 +131,7 @@ namespace GPXManager.entities.mapping
                 {
                     cmd.ExecuteNonQuery();
                 }
-                catch (OleDbException)
+                catch (OleDbException dbex)
                 {
                     //ignore
                 }
@@ -154,8 +156,8 @@ namespace GPXManager.entities.mapping
                 var sql = $@"Insert into extractedFishingTracks 
                             (ID, DeviceName, DateAdded, DateStart, DateEnd, SourceType,
                             SourceID, SerializedTrack, LengthOriginal, LenghtSimplified, AverageSpeed,
-                            PointCountOriginal, PointCountSimplified)
-                            Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            PointCountOriginal, PointCountSimplified, SerializedTrackUTM)
+                            Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -172,6 +174,7 @@ namespace GPXManager.entities.mapping
                     update.Parameters.Add("@avaerageSpeed", OleDbType.Double).Value = eft.AverageSpeed;
                     update.Parameters.Add("@pointCountOriginal", OleDbType.Integer).Value = eft.TrackPointCountOriginal;
                     update.Parameters.Add("@pointCountSimplified", OleDbType.Integer).Value = eft.TrackPointCountSimplified;
+                    update.Parameters.Add("@serializedUTM", OleDbType.VarWChar).Value = eft.SerializedTrackUTM;
                     try
                     {
                         success = update.ExecuteNonQuery() > 0;

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GPXManager.entities.mapping.gridding;
+using System.IO;
+
 
 namespace GPXManager.entities.mapping
 {
@@ -15,6 +17,8 @@ namespace GPXManager.entities.mapping
     {
         private List<int> _selectedMajorGridIndices;
         private Extents _extentUTM;
+
+        public int AOIHandle { get; set; }
         public List<int> MajorGridIntersect()
         {
             var refIndeces = new object();
@@ -23,23 +27,27 @@ namespace GPXManager.entities.mapping
             _selectedMajorGridIndices = ((int[])refIndeces).ToList();
             return _selectedMajorGridIndices;
         }
-
+        public bool GridIsLoaded { get; set; }
+        public string GridFileName { get; set; }
         public Shapefile Grid2Km { get; private set; }
         public Shapefile SubGrids { get; private set; }
-        public bool GeneratedSubGrids(int gridSideMeters = 400)
+        public int GridSizeMeters{get;set;}
+        public bool GeneratedSubGrids()
         {
-            var floor = Math.Floor(2000.0 / (double)gridSideMeters);
+                        GridIsLoaded = false;
+            var floor = Math.Floor(2000.0 / (double)GridSizeMeters);
 
-            if (floor * gridSideMeters == 2000)
+            if (floor * GridSizeMeters == 2000)
             {
-                Shapefile sfSubGrid = new Shapefile();
+                SubGrids = new Shapefile();
 
-                if (sfSubGrid.CreateNewWithShapeID("", ShpfileType.SHP_POLYGON))
+                if (SubGrids.CreateNewWithShapeID("", ShpfileType.SHP_POLYGON))
                 {
-                    sfSubGrid.GeoProjection = MapWindowManager.Grid25MajorGrid.GeoProjection;
-                    sfSubGrid.EditAddField("CellID", FieldType.INTEGER_FIELD, 1, 1);
-                    sfSubGrid.EditAddField("CellNo", FieldType.INTEGER_FIELD, 1, 1);
-                    sfSubGrid.EditAddField("Name", FieldType.STRING_FIELD, 1, 1);
+                    SubGrids.GeoProjection = MapWindowManager.Grid25MajorGrid.GeoProjection;
+                    SubGrids.EditAddField("CellID", FieldType.INTEGER_FIELD, 1, 1);
+                    SubGrids.EditAddField("CellNo", FieldType.INTEGER_FIELD, 1, 1);
+                    SubGrids.EditAddField("Name", FieldType.STRING_FIELD, 1, 1);
+                    SubGrids.Key = $"subgrid_{Name}";
                     var numShapes = Grid2Km.NumShapes;
                     int id = 0;
                     for (int x = 0; x < numShapes; x++)
@@ -48,43 +56,116 @@ namespace GPXManager.entities.mapping
                         var ext = cell50km.Extents;
                         var parentName = Grid2Km.CellValue[Grid2Km.FieldIndexByName["Name"], x];
 
-                        var steps = 2000 / gridSideMeters;
+                        var steps = 2000 / GridSizeMeters;
                         for (int r = 0; r < steps; r++)
                         {
-                            var top = ext.yMax - (gridSideMeters * r);
+                            var top = ext.yMax - (GridSizeMeters * r);
 
 
                             for (int c = 0; c < steps; c++)
                             {
-                                var left = ext.xMin + (gridSideMeters * c);
+                                var left = ext.xMin + (GridSizeMeters * c);
 
                                 Shape cell = new Shape();
                                 if (cell.Create(ShpfileType.SHP_POLYGON))
                                 {
                                     cell.AddPoint(left, top);
-                                    cell.AddPoint(left + gridSideMeters, top);
-                                    cell.AddPoint(left + gridSideMeters, top - gridSideMeters);
-                                    cell.AddPoint(left, top - gridSideMeters);
+                                    cell.AddPoint(left + GridSizeMeters, top);
+                                    cell.AddPoint(left + GridSizeMeters, top - GridSizeMeters);
+                                    cell.AddPoint(left, top - GridSizeMeters);
                                     cell.AddPoint(left, top);
                                 }
                                 id++;
-                                int idx = sfSubGrid.EditAddShape(cell);
+                                int idx = SubGrids.EditAddShape(cell);
                                 if (idx >= 0)
                                 {
                                     int cellNo = (r * steps) + c + 1;
-                                    sfSubGrid.EditCellValue(sfSubGrid.FieldIndexByName["CellID"], idx, id);
-                                    sfSubGrid.EditCellValue(sfSubGrid.FieldIndexByName["CellNo"], idx,cellNo);
-                                    sfSubGrid.EditCellValue(sfSubGrid.FieldIndexByName["Name"], idx, $"{parentName}-{cellNo}");
+                                    SubGrids.EditCellValue(SubGrids.FieldIndexByName["CellID"], idx, id);
+                                    SubGrids.EditCellValue(SubGrids.FieldIndexByName["CellNo"], idx, cellNo);
+                                    SubGrids.EditCellValue(SubGrids.FieldIndexByName["Name"], idx, $"{parentName}-{cellNo}");
                                 }
                             }
                         }
                     }
-                    SubGrids = sfSubGrid;
-                    return true;
+
+                    GridIsLoaded = true;
                 }
 
             }
-            return false;
+            return GridIsLoaded;
+        }
+
+        public string GridLayerName
+        {
+            get
+            {
+                return $"grids_{Name.Replace(' ', '_')}_{GridSizeMeters}";
+            }
+        }
+
+        public bool CreateGridFromFileName(string fileName, string layerName = "")
+        {
+            GridIsLoaded = false;
+            string utmZone = "";
+            //var prjFile = $@"{Path.GetDirectoryName(fileName)}\{Path.GetFileNameWithoutExtension(fileName)}.prj";
+            var prjFile = fileName.Replace(".shp", ".prj");
+            using (StreamReader sr = File.OpenText($"{prjFile}"))
+            {
+                string s = String.Empty;
+                while ((s = sr.ReadLine()) != null)
+                {
+                    switch (s.Substring(8, 21))
+                    {
+                        case "WGS_1984_UTM_Zone_51N":
+                            utmZone = "51N";
+                            break;
+
+                        case "WGS_1984_UTM_Zone_50N":
+                            utmZone = "50M";
+                            break;
+
+                        default:
+                            switch (s.Substring(17, 12))
+                            {
+                                case "UTM zone 51N":
+                                    utmZone = "51N";
+                                    break;
+
+                                case "UTM zone 50N":
+                                    utmZone = "50M";
+                                    break;
+                            }
+                            break;
+                    }
+                }
+            }
+            switch (utmZone)
+            {
+                case "51N":
+                    Grid25.UTMZone = UTMZone.UTMZone51N;
+                    break;
+                case "50N":
+                    Grid25.UTMZone = UTMZone.UTMZone50N;
+                    break;
+            }
+            if (utmZone.Length > 0)
+            {
+                MapWindowManager.MapLayersHandler.GeoProjection = MapWindowManager.Grid25MajorGrid.GeoProjection;
+            }
+            if (layerName.Length == 0)
+            {
+                layerName = Path.GetFileName(fileName.Replace(".shp", ""));
+            }
+            var result = MapWindowManager.MapLayersHandler.FileOpenHandler(fileName, layerName, true, $"subgrid_{Name}");
+            if (result.success)
+            {
+                var sf = (Shapefile)MapWindowManager.MapLayersHandler.get_MapLayer(layerName).LayerObject;
+                sf.DefaultDrawingOptions.FillVisible = false;
+                sf.DefaultDrawingOptions.LineColor = new MapWinGIS.Utils().ColorByName(MapWinGIS.tkMapColor.DarkGray);
+                SubGrids = sf;
+                GridIsLoaded = true;
+            }
+            return GridIsLoaded;
         }
         public void GenerateMinorGrids()
         {

@@ -69,13 +69,34 @@ namespace GPXManager.entities.mapping.Views
             {
                 if (e.SelectedIndexes.Count() == 1)
                 {
-                    foreach (DataRowView item in dataGridAttributes.Items)
+                    if (dataGridAttributes.Items.Count == 1)
                     {
-
-                        if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                        dataGridAttributes.DataContext = ShapefileAttributeTableManager.SetupAttributeTable(ShapeFile, true);
+                        for (int x = 0; x < e.SelectedIndexes.Count(); x++)
                         {
-                            dataGridAttributes.SelectedItem = item;
-                            dataGridAttributes.ScrollIntoView(dataGridAttributes.SelectedItem);
+                            foreach (DataRowView item in dataGridAttributes.Items)
+                            {
+                                if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                                {
+                                    //dataGridAttributes.SelectedItem = item;
+                                    dataGridAttributes.SelectedItems.Add(item);
+                                    //break;
+                                }
+                            }
+                        }
+                        var t = dataGridAttributes.LayoutTransform;
+                        
+                    }
+                    else
+                    {
+                        foreach (DataRowView item in dataGridAttributes.Items)
+                        {
+
+                            if (item.Row.Field<int>("MWShapeID") == e.SelectedIndexes[0])
+                            {
+                                dataGridAttributes.SelectedItem = item;
+                                dataGridAttributes.ScrollIntoView(dataGridAttributes.SelectedItem);
+                            }
                         }
                     }
                 }

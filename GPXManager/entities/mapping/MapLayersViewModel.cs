@@ -25,18 +25,29 @@ namespace GPXManager.entities.mapping
         public ObservableCollection<MapLayer> MapLayerCollection{ get; set; }
         void IDropTarget.DragOver(IDropInfo dropInfo)
         {
-            MapWindowManager.MapWindowForm.Title = "Draggin' over";
+            //MapWindowManager.MapWindowForm.Title = "Draggin' over";
         }
 
         void IDropTarget.Drop(IDropInfo dropInfo)
         {
-            MapWindowManager.MapWindowForm.Title = "Droppin'";
+            //MapWindowManager.MapWindowForm.Title = "Droppin'";
         }
 
         public MapLayer FirstLayer()
         {
             return MapLayerCollection[0];
         }
+
+        public ObservableCollection<MapLayer>GetLayerUIVisibleLayers()
+        {
+            var obs = new ObservableCollection<MapLayer>();
+            foreach(var item in MapLayerCollection.Where(t=>t.VisibleInLayersUI))
+            {
+                obs.Add(item);
+            }
+            return obs;
+        }
+
 
         public void RefreshCollection()
         {

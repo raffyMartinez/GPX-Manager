@@ -131,7 +131,8 @@ namespace GPXManager.entities
         public static bool SetSettings(string computerGPXFolder, string deviceGPXFolder, 
               string backendPath, int hoursGMTOffset, string bingAPIKey, int countLatestTrip,
               int countLatestGPXFiles, string logImagesFolder, string pathToCyertrackerExe, 
-              string ctxBackupPath, string ctxDownloadFolder, int speedThreshold, int MinGearRetrievingLength)
+              string ctxBackupPath, string ctxDownloadFolder, int speedThreshold, 
+              int MinGearRetrievingLength, int gridSize, string gridFolder)
         {
             Settings = new Settings
             {
@@ -148,6 +149,9 @@ namespace GPXManager.entities
                 CTXDownloadFolder = ctxDownloadFolder,
                 SpeedThresholdForRetrieving = speedThreshold,
                 GearRetrievingMinLength = MinGearRetrievingLength,
+                GridSize = gridSize,
+                SaveFolderForGrids = gridFolder
+                
             };
 
             SaveGlobalSettings();

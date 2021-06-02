@@ -44,6 +44,8 @@ namespace GPXManager.views
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
+
+            radioButtonGPX.IsChecked = true;
             if (Global.Settings != null)
             {
                 textBoxBackendPath.Text = Global.Settings.MDBPath;
@@ -62,7 +64,18 @@ namespace GPXManager.views
                 {
                     textBoxCybertrackerPath.Text = Global.Settings.PathToCybertrackerExe;
                 }
-
+                if(Global.Settings.GridSize!=null)
+                {
+                    textBoxSizeOfGrid.Text = ((int)Global.Settings.GridSize).ToString();
+                }
+                else
+                {
+                    textBoxSizeOfGrid.Text = "400";
+                }
+                if(Global.Settings.SaveFolderForGrids!=null)
+                {
+                    textBoxGridSaveFolder.Text = Global.Settings.SaveFolderForGrids;
+                }
 
             }
             else
@@ -88,7 +101,8 @@ namespace GPXManager.views
                 textBoxCTXDownloadFolder.Text.Length > 0 &&
                 textSpeedThreshold.Text.Length > 0 &&
                 textGearRetrievalMainLength.Text.Length > 0 &&
-                textBoxCybertrackerPath.Text.Length > 0)
+                textBoxCybertrackerPath.Text.Length > 0 &&
+                textBoxSizeOfGrid.Text.Length>0)
             {
                 return int.TryParse(textBoxHoursOffsetGMT.Text, out int v);
             }
@@ -115,7 +129,9 @@ namespace GPXManager.views
                           textBoxCTXBackupPath.Text,
                           textBoxCTXDownloadFolder.Text,
                           int.Parse(textSpeedThreshold.Text),
-                          int.Parse(textGearRetrievalMainLength.Text)
+                          int.Parse(textGearRetrievalMainLength.Text),
+                          int.Parse(textBoxSizeOfGrid.Text),
+                          textBoxGridSaveFolder.Text
                           );
 
                         DialogResult = true;
@@ -187,6 +203,37 @@ namespace GPXManager.views
                     {
                         textBoxBackendPath.Text = ofd.FileName;
                     }
+                    break;
+            }
+        }
+
+        private void OnRadioChecked(object sender, RoutedEventArgs e)
+        {
+            panelGPX.Visibility = Visibility.Collapsed;
+            panelCTX.Visibility = Visibility.Collapsed;
+            panelBackend.Visibility = Visibility.Collapsed;
+            panelBing.Visibility = Visibility.Collapsed;
+            panelGridMaps.Visibility = Visibility.Collapsed;
+            panelOtherSettings.Visibility = Visibility.Collapsed;
+            switch(((RadioButton)sender).Name)
+            {
+                case "radioButtonGPX":
+                    panelGPX.Visibility = Visibility.Visible;
+                    break;
+                case "radioButtonCTX":
+                    panelCTX.Visibility=Visibility.Visible;
+                    break;
+                case "radioButtonDBBackend":
+                    panelBackend.Visibility = Visibility.Visible;
+                    break;
+                case "radioButtonGridMaps":
+                    panelGridMaps.Visibility = Visibility.Visible;
+                    break;
+                case "radioButtonBingMaps":
+                    panelBing.Visibility = Visibility.Visible;
+                    break;
+                case "radioButtonOthers":
+                    panelOtherSettings.Visibility = Visibility.Visible;
                     break;
             }
         }

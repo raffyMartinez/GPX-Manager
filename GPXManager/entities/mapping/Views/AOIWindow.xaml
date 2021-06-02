@@ -24,14 +24,16 @@
                 <Label Content="List of AOIs" Margin="20 0"/>
                 <DataGrid x:Name="dataGridAOIs" Height="250" Margin="20 0"  
                           AutoGenerateColumns="False" ItemsSource="{Binding}"
-                          SelectionUnit="Cell" CanUserAddRows="False" ContextMenuOpening="OnContextMenuOpening"
+                          SelectionUnit="Cell" CanUserAddRows="False" 
                           SelectedCellsChanged="OnGridSelectedCellChanged">
                     <DataGrid.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
                             <MenuItem Header="Edit extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
                             <MenuItem Header="Remove" x:Name="menuAOIRemove" Click="OnMenuClick"/>
-                            <MenuItem Header="Make grid" x:Name="menuMakeGrid" Click="OnMenuClick"/>
+                            <MenuItem Header="Show grid" x:Name="menuShowGrid" Click="OnMenuClick"/>
+                            <!--<MenuItem Header="Load grid" x:Name="menuLoadGrid" Click="OnMenuClick"/>-->
+                            <MenuItem Header="Grid mapping" x:Name="menuGridMapping" Click="OnMenuClick" IsEnabled="false"/>
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                 </DataGrid>

@@ -160,7 +160,8 @@ namespace GPXManager.entities.mapping
                         SegmentSimplified = item.ExtractedFishingTrack.SegmentSimplified,
                         SerializedTrack = item.ExtractedFishingTrack.SegmentSimplified.SerializeToString(),
                         DeviceName = deviceName,
-                        FromDatabase = item.ExtractedFishingTrack.FromDatabase
+                        FromDatabase = item.ExtractedFishingTrack.FromDatabase,
+                        SerializedTrackUTM = item.ExtractedFishingTrack.SerializedTrackUTM
                     };
                     if (!save)
                     {
@@ -303,6 +304,8 @@ namespace GPXManager.entities.mapping
             }
             return null;
         }
+
+
 
         public Shapefile ExtractedFishingTracksSF { get; private set; }
         public ExtractedFishingTrackViewModel()

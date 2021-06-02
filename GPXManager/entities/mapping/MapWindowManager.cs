@@ -48,6 +48,22 @@ namespace GPXManager.entities.mapping
         public static MapLayersViewModel MapLayersViewModel { get; set; }
         public static MapLayersHandler MapLayersHandler { get; private set; }
         public static MapInterActionHandler MapInterActionHandler { get; private set; }
+
+        public static int[] SelectedTrackIndexes { get; private set; }
+
+        public static List<Shape> SelectedTracks { get; private set; } = new List<Shape>();
+        public static void SelectTracksInAOI(AOI aoi)
+        {
+            Callback cb = new Callback();
+            var selectedTracks = new object();
+            var ext = ((Shapefile)MapLayersHandler[aoi.AOIHandle].LayerObject).Extents;
+            ExtractedTracksShapefile.SelectShapes(ext ,0, SelectMode.INTERSECTION, ref selectedTracks);
+            SelectedTrackIndexes = (int[])selectedTracks;
+            for(int x=0;x<SelectedTrackIndexes.Count();x++)
+            {
+                SelectedTracks.Add(ExtractedTracksShapefile.Shape[SelectedTrackIndexes[x]]);
+            }
+        }
         public static Shapefile Coastline
         {
             get
@@ -389,7 +405,9 @@ namespace GPXManager.entities.mapping
             if (Entities.ExtractedFishingTrackViewModel.Count() > 0)
             {
                 var sf = ShapefileFactory.FishingTrackLines();
+                ExtractedTracksShapefile = sf;
                 return MapLayersHandler.AddLayer(sf, "Fishing tracks", layerKey: sf.Key, uniqueLayer: true) >= 0;
+
             }
             return false;
         }

@@ -5,109 +5,136 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
-        Title="Settings" Height="658.06" Width="652.689" ResizeMode="NoResize">
-    <Grid Margin="0,0,0.4,-28.8">
+        Title="Settings" Height="541.26" Width="652.689" ResizeMode="NoResize">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition/>
             <RowDefinition Height="30"/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
+        <Label Content="Settings" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+
+        <!--form buttons-->
         <StackPanel Grid.Column="1"  Grid.RowSpan="2">
             <Button Content="OK" x:Name="buttonOk" Click="OnButtonClick" Margin="20 30 10 10" Height="25"/>
             <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Margin="20 10 10 10" Height="25"/>
         </StackPanel>
-        <Grid Margin="5">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition Height="110"/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <StackPanel>
-                <Label Content="GPX folder in computer *" />
-                <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                    <TextBox x:Name="textBoxGPXFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
-                    <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocate" Margin="20 0 0 0" VerticalAlignment="Center"/>
-                </WrapPanel>
+
+        <!--form body-->
+        <StackPanel Grid.Row="1">
+            <RadioButton Content="GPX" Margin="10" x:Name="radioButtonGPX" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Visible" x:Name="panelGPX">
+                <StackPanel>
+                    <Label Content="GPX folder in computer *" />
+                    <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBox x:Name="textBoxGPXFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
+                        <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocate" Margin="20 0 0 0" VerticalAlignment="Center"/>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel>
+                    <Label Content="Logbook image folder *" />
+                    <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBox x:Name="textLogImageFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
+                        <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocateImageLog" Margin="20 0 0 0" VerticalAlignment="Center"/>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Left">
+                    <Label Content="GPX folder in device *"/>
+                    <TextBox x:Name="textBoxGPXFolderDevice" Height="25" Margin="10 0 0 0" Width="400"/>
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Left">
+                    <Label Content="Number of latest GPX files to show *"/>
+                    <TextBox x:Name="textLatestGPXFileCount" Height="25" Margin="10 0 0 0" Width="100" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <StackPanel Grid.Row="7">
+                    <Label Content="Number of latest trips to show *"/>
+                    <TextBox x:Name="textLatestTripCount" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="1">
-                <Label Content="Logbook image folder *" />
-                <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                    <TextBox x:Name="textLogImageFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
-                    <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocateImageLog" Margin="20 0 0 0" VerticalAlignment="Center"/>
-                </WrapPanel>
+
+
+            <RadioButton Content="CTX" Margin="10" x:Name="radioButtonCTX" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Collapsed" x:Name="panelCTX">
+                <StackPanel>
+                    <Label Content="Path to Cybertracker exe *"/>
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBox x:Name="textBoxCybertrackerPath" Height="25" Margin="10 0 0 0" Width="400"/>
+                        <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCybertracker"/>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel Grid.Row="5">
+                    <Label Content="Cybertracker download folder *"/>
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBox x:Name="textBoxCTXDownloadFolder" Height="25" Margin="10 0 0 0" Width="400"/>
+                        <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCTXDownloadFolder"/>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel Grid.Row="6">
+                    <Label Content="Cybertracker files backup folder *"/>
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBox x:Name="textBoxCTXBackupPath" Height="25" Margin="10 0 0 0" Width="400"/>
+                        <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCTXBackup"/>
+                    </WrapPanel>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="2" HorizontalAlignment="Left">
-                <Label Content="GPX folder in device *"/>
-                <TextBox x:Name="textBoxGPXFolderDevice" Height="25" Margin="10 0 0 0" Width="400"/>
+
+
+            <RadioButton Content="Database backend" Margin="10" x:Name="radioButtonDBBackend" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Collapsed" x:Name="panelBackend">
+                <StackPanel Grid.Row="3">
+                    <Label Content="Path to backend database *"/>
+                    <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <TextBox x:Name="textBoxBackendPath" Height="25" Margin="10 0 0 0" Width="400"/>
+                        <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateBackend"/>
+                    </WrapPanel>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="3">
-                <Label Content="Path to backend database *"/>
-                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <TextBox x:Name="textBoxBackendPath" Height="25" Margin="10 0 0 0" Width="400"/>
-                    <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateBackend"/>
-                </WrapPanel>
+
+
+            <RadioButton Content="Grid maps" Margin="10"  x:Name="radioButtonGridMaps" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Collapsed" x:Name="panelGridMaps">
+                <StackPanel>
+                    <Label Content="Grid maps savefolder *" />
+                    <WrapPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <TextBox x:Name="textBoxGridSaveFolder" Height="25" Margin="10 0 0 0 " Width="400" VerticalAlignment="Center"/>
+                        <Button Content="Locate" Height="25" Width="75" Click="OnButtonClick" x:Name="buttonLocateGridSaveFolder" Margin="20 0 0 0" VerticalAlignment="Center"/>
+                    </WrapPanel>
+                </StackPanel>
+                <StackPanel Grid.Row="7">
+                    <Label Content="Size of grid *"/>
+                    <TextBox x:Name="textBoxSizeOfGrid" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="4">
-                <Label Content="Path to Cybertracker exe *"/>
-                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <TextBox x:Name="textBoxCybertrackerPath" Height="25" Margin="10 0 0 0" Width="400"/>
-                    <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCybertracker"/>
-                </WrapPanel>
+
+            <RadioButton Content="Bing maps" Margin="10" x:Name="radioButtonBingMaps" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Collapsed" x:Name="panelBing">
+                <StackPanel>
+                    <Label Content="Bing API Key"/>
+                    <TextBox x:Name="textBoxBingAPIKey" Height="25" Margin="10 0 0 0 " Width="450" HorizontalAlignment="Left"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Grid.Row="5">
-                <Label Content="Cybertracker download folder *"/>
-                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <TextBox x:Name="textBoxCTXDownloadFolder" Height="25" Margin="10 0 0 0" Width="400"/>
-                    <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCTXDownloadFolder"/>
-                </WrapPanel>
+
+            <RadioButton Content="Other settings" Margin="10" x:Name="radioButtonOthers" Checked="OnRadioChecked"/>
+            <StackPanel Visibility="Collapsed" x:Name="panelOtherSettings">
+                <StackPanel Grid.Row="7">
+                    <Label Content="Hours offset from GMT *"/>
+                    <TextBox x:Name="textBoxHoursOffsetGMT" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <StackPanel Grid.Row="7">
+                    <Label Content="Gear retrieval max speed (meters per minute) *"/>
+                    <TextBox x:Name="textSpeedThreshold" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <StackPanel Grid.Row="7">
+                    <Label Content="Gear retrieval min length (meters) *"/>
+                    <TextBox x:Name="textGearRetrievalMainLength" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
+
             </StackPanel>
-            <StackPanel Grid.Row="6">
-                <Label Content="Cybertracker files backup folder *"/>
-                <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                    <TextBox x:Name="textBoxCTXBackupPath" Height="25" Margin="10 0 0 0" Width="400"/>
-                    <Button Content="Locate" Height="25" Width="75" Margin="20 0 0 0" Click="OnButtonClick" x:Name="buttonLocateCTXBackup"/>
-                </WrapPanel>
-            </StackPanel>
-            <StackPanel Grid.Row="7">
-                <Label Content="Hours offset from GMT *"/>
-                <TextBox x:Name="textBoxHoursOffsetGMT" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left"/>
-            </StackPanel>
-            <StackPanel Grid.Row="8">
-                <Label Content="Bing API Key"/>
-                <TextBox x:Name="textBoxBingAPIKey" Height="25" Margin="10 0 0 0 " Width="450" HorizontalAlignment="Left"/>
-            </StackPanel>
-            <Grid Grid.Row="9">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Label Content="Number of latest trips to show"/>
-                <Label Content="Number of latest GPX files to show" Grid.Column="1"/>
-                <Label Content="Gear retrieval max speed (meters per minute) *" Grid.Row="2"/>
-                <Label Content="Gear retrieval min length (meters) *" Grid.Row="2" Grid.Column="1"/>
-                <TextBox x:Name="textLatestTripCount" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left" Grid.Row="1"/>
-                <TextBox x:Name="textLatestGPXFileCount" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="1"/>
-                <TextBox x:Name="textSpeedThreshold" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left" Grid.Row="3"/>
-                <TextBox x:Name="textGearRetrievalMainLength" Height="25" Margin="10 0 0 0 " Width="50" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1"/>
-            </Grid>
-            <Label Grid.Row="11" Content="Fields with * are required" VerticalContentAlignment="Center"/>
-        </Grid>
+
+        </StackPanel>
     </Grid>
+
 </Window>
