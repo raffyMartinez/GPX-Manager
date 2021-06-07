@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Management;
 using System.Xml;
+using System.Windows.Controls;
 
 namespace GPXManager.entities
 {
@@ -46,6 +47,12 @@ namespace GPXManager.entities
                 return "Valid XML";
             }
         }
+
+        //public static DataGridCell GetCell(this DataGrid grid, int row, int column)
+        //{
+        //    DataGridRow rowContainer = grid.GetRow(row);
+        //    return grid.GetCell(rowContainer, column);
+        //}
         public static string IsValidXMLFile(string xmlFile)
         {
             string xml = File.OpenText(xmlFile).ReadToEnd();

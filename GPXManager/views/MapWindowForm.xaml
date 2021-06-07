@@ -41,7 +41,8 @@
                     <MenuItem Header="Map tiles visible" x:Name="menuMapTilesVisible" IsCheckable="True" Checked="OnMenuChecked" Unchecked="OnMenuChecked"/>
                     <MenuItem Header="Select provider" x:Name="menuMapTilesSelectProvider" Click="OnMenuClick"/>
                 </MenuItem>
-                <MenuItem Header="Label islands" x:Name="menuIslandLabels" Click="OnMenuClick"/>
+                <MenuItem Header="Label islands" x:Name="menuIslandLabels" Click="OnMenuClick" IsEnabled="False"/>
+                <MenuItem Header="Clean extracted tracks" x:Name="menuCleanExtractedtracks" Click="OnMenuClick" />
             </MenuItem>
         </Menu>
 
@@ -85,10 +86,14 @@
                     <Image Source="pack://application:,,,/Resources/map screen grey.png" OpacityMask="White" />
                 </Button>
 
+                <Button x:Name="buttonAOI" Click="OnToolbarButtonClick" ToolTip="AOI">
+                    <Image Source="pack://application:,,,/Resources/aoi.png" OpacityMask="White" />
+                </Button>
+
 
                 <Button x:Name="buttonExit" Click="OnToolbarButtonClick" ToolTip="Close">
                     <Image Source="pack://application:,,,/Resources/exit.png" OpacityMask="White" />
-                </Button>                
+                </Button>
 
 
             </ToolBar>

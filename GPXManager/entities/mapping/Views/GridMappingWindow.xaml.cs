@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
+
 namespace GPXManager.entities.mapping.Views
 {
     /// <summary>
@@ -33,46 +34,57 @@ namespace GPXManager.entities.mapping.Views
         }
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Owner.Focus();
             _instance = null;
 
         }
 
-
+        public bool MultipleAOIs { get; set; }
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
-            if (AOI != null)
-            {
-                labelTitle.Content = $"Grid mapping of BSC fishery in {AOI.Name}";
-                MapWindowManager.SelectTracksInAOI(AOI);
-            }
+            labelTitle.Content = "Grid mapping of AOIs";
         }
 
         public AOI AOI { get; set; }
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
             Button b = (Button)sender;
-            if (b.Name == "buttonMapCancel")
+            if (b.Name == "buttonMapClose")
             {
                 Close();
             }
-            else if (MapWindowManager.SelectedTrackIndexes.Count() > 0)
+            else
             {
-                gridding.GridMapping.AOI = AOI;
-                gridding.GridMapping.SelectedTrackIndexes = MapWindowManager.SelectedTrackIndexes;
-                gridding.GridMapping.SelectedTracks = MapWindowManager.SelectedTracks;
-                switch (b.Name)
+                foreach (var aoi in Entities.AOIViewModel.GetSelectedAOIs())
                 {
-                    case "buttonMapUndersized":
-                        break;
-                    case "buttonMapBerried":
-                        break;
-                    case "buttonMapEffort":
-                        var count = gridding.GridMapping.ComputeFishingFrequency();
+                    if (gridding.Grid25.ProjectionIsWGS84(aoi.SubGrids.GeoProjection.Name))
+                    {
+                        MapWindowManager.SelectTracksInAOI(aoi);
+                        aoi.GridMapping.SelectedTrackIndexes = MapWindowManager.SelectedTrackIndexes;
 
-                        MessageBox.Show($"{count} cells were computed for frequency");
-                        break;
-                    case "buttonMapCPUE":
-                        break;
+                        if (MapWindowManager.SelectedTrackIndexes.Count() > 0)
+                        {
+                            aoi.GridMapping.SelectedTracks = MapWindowManager.SelectedTracks;
+                            if ((bool)checkMapEffort.IsChecked)
+                            {
+
+                                var count = aoi.GridMapping.ComputeFishingFrequency();
+                                if(count>0)
+                                {
+                                    aoi.EffortGridColumn = "Hits";
+                                }
+                                textStatus.Text += $"{count} cells were computed for frequency (effort) for {aoi.Name}\r\n";
+                            }
+                        }
+                        else
+                        {
+                            textStatus.Text += $"{aoi.Name} does not contain fishing tracks\r\n";
+                        }
+                    }
+                    else
+                    {
+                        textStatus.Text += $"{aoi.Name} grids is not projected to WGS84\r\n";
+                    }
                 }
             }
 

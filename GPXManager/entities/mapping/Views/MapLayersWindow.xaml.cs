@@ -158,7 +158,7 @@ namespace GPXManager.entities.mapping.Views
                 int columnIndex = cell.Column.DisplayIndex;
                 int rowIndex = FindRowIndex(row);
 
-
+                //we clicked on visibility checkbox if column is zero
                 if(columnIndex==0 && value!=null)
                 {
                     MapLayersHandler.EditLayer(CurrentLayer.Handle, CurrentLayer.Name, !(bool)value);
@@ -337,7 +337,7 @@ namespace GPXManager.entities.mapping.Views
 
                 foreach (var item in dataGridLayers.Items)
                 {
-                    if (((MapLayer)item).Handle == CurrentLayer.Handle)
+                    if (CurrentLayer!=null && ((MapLayer)item).Handle == CurrentLayer.Handle)
                     {
                         if (!inMouseUp)
                         {

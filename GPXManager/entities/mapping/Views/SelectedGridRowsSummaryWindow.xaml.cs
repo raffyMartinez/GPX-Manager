@@ -65,23 +65,28 @@ namespace GPXManager.entities.mapping.Views
             var listShapeIndexes = MapWindowManager.MapLayersHandler.SelectedShapesIndexes();
             if (listShapeIndexes != null)
             {
+                int counter = 0;
                 foreach (int item in listShapeIndexes)
                 {
                     foreach (var key in _dictSFColumns.Keys)
                     {
-                        switch (_dictNameFieldIndexType[key])
+                        if (counter > 0)
                         {
-                            case "Double":
-                                ((List<double>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
-                                break;
-                            case "Int":
-                                ((List<int>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
-                                break;
-                            case "DateTime":
-                                ((List<DateTime>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
-                                break;
+                            switch (_dictNameFieldIndexType[key])
+                            {
+                                case "Double":
+                                    ((List<double>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
+                                    break;
+                                case "Int":
+                                    ((List<int>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
+                                    break;
+                                case "DateTime":
+                                    ((List<DateTime>)_dictSFColumns[key]).Add(_sf.CellValue[key, item]);
+                                    break;
+                            }
                         }
                     }
+                    counter++;
                 }
             }
 

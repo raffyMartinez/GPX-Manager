@@ -132,6 +132,10 @@
     <Compile Include="entities\CTXUserSummary.cs" />
     <Compile Include="entities\DetectDeviceEventArg.cs" />
     <Compile Include="entities\EntitiesChangedEventArg.cs" />
+    <Compile Include="entities\mapping\CategoryItem.cs" />
+    <Compile Include="entities\mapping\ClassifiedItem.cs" />
+    <Compile Include="entities\mapping\Colors.cs" />
+    <Compile Include="entities\mapping\ColorSchemes.cs" />
     <Compile Include="entities\mapping\DetectedTrack.cs" />
     <Compile Include="entities\mapping\ExtractTrackEventArgs.cs" />
     <Compile Include="entities\mapping\ExtractedFishingTrackRepository.cs" />
@@ -182,6 +186,10 @@
     <Compile Include="entities\mapping\GPXMappingManager.cs" />
     <Compile Include="entities\mapping\gridding\Grid25.cs" />
     <Compile Include="entities\mapping\gridding\GridMapping.cs" />
+    <Compile Include="entities\mapping\JenksFisher.cs" />
+    <Compile Include="entities\mapping\usercontrols\ImageCombo.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="entities\mapping\LabelProperty.cs" />
     <Compile Include="entities\mapping\LatLonUTMConverter.cs" />
     <Compile Include="entities\mapping\LayerEventArg.cs" />
@@ -203,6 +211,9 @@
     <Compile Include="entities\mapping\Views\AOIWindow.xaml.cs">
       <DependentUpon>AOIWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="entities\mapping\Views\FormatGridMapWindow.xaml.cs">
+      <DependentUpon>FormatGridMapWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="entities\mapping\Views\GridMappingWindow.xaml.cs">
       <DependentUpon>GridMappingWindow.xaml</DependentUpon>
     </Compile>
@@ -214,6 +225,9 @@
     </Compile>
     <Compile Include="entities\mapping\Views\SelectedGridRowsSummaryWindow.xaml.cs">
       <DependentUpon>SelectedGridRowsSummaryWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="entities\mapping\Views\SelectGridFileWindow.xaml.cs">
+      <DependentUpon>SelectGridFileWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="entities\mapping\Views\SelectTileProviderWindow.xaml.cs">
       <DependentUpon>SelectTileProviderWindow.xaml</DependentUpon>
@@ -311,6 +325,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="entities\mapping\Views\FormatGridMapWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="entities\mapping\Views\GridMappingWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -324,6 +342,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="entities\mapping\Views\SelectedGridRowsSummaryWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="entities\mapping\Views\SelectGridFileWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -472,6 +494,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\add.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\colorschemes.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\aoi.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\delete.png">

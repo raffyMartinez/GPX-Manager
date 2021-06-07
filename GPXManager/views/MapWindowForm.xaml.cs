@@ -146,7 +146,6 @@ namespace GPXManager.views
 
         private void OnMapShapeSelected(MapInterActionHandler s, LayerEventArg e)
         {
-            Title = "not found";
             if (CurrentLayer != null && CurrentLayer.LayerType == "ShapefileClass" && LayerSelector != null)
             {
                 SelectedShapeIndexes = e.SelectedIndexes.ToList();
@@ -230,23 +229,46 @@ namespace GPXManager.views
         {
             switch (((WindowMenuItem)sender).Name)
             {
+                case "menuCleanExtractedtracks":
+                    if (MapWindowManager.ExtractedTracksShapefile != null && MapWindowManager.BSCBoundaryShapefile != null)
+                    {
+                        var result = Entities.ExtractedFishingTrackViewModel.CleanupUsingBoundary(MapWindowManager.BSCBoundaryShapefile);
+
+                        string message = "No tracks were removed during the cleanup";
+                        if (result > 0)
+                        {
+                            message = $"Cleanup resulted in {result} tracks removed";
+                        }
+
+                        System.Windows.Forms.MessageBox.Show(message, "GPX Manager", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show("Extracted track and boundary must be loaded", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    break;
                 case "menuAddExtractedTracks":
                     if (!MapWindowManager.AddExtractedTracksLayer())
                     {
                         System.Windows.MessageBox.Show("Extracted tracks not found", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+
                     break;
                 case "menuAddBSCBoundary":
                     string feedfBack = "";
 
-                    if (MapWindowManager.BSCBoundaryShapefile == null)
+                    if (!MapWindowManager.SetBoundaryShapefile())
                     {
-                        MapWindowManager.AddBSCBoundaryLineShapefile(FileOpenDialogForShapefile(), out feedfBack);
+                        if (MapWindowManager.BSCBoundaryShapefile == null)
+                        {
+                            MapWindowManager.AddBSCBoundaryLineShapefile(FileOpenDialogForShapefile(), out feedfBack);
+                        }
+                        if (feedfBack.Length > 0)
+                        {
+                            System.Windows.MessageBox.Show(feedfBack, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                     }
-                    if (feedfBack.Length > 0)
-                    {
-                        System.Windows.MessageBox.Show(feedfBack, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+
                     break;
                 case "menuEdit":
                     break;
@@ -275,14 +297,19 @@ namespace GPXManager.views
                     AOIManager.AddNew();
                     break;
                 case "menuAOIList":
-                    aoiw = new AOIWindow();
-                    aoiw.ShowAOIList();
-                    aoiw.Owner = this;
-                    aoiw.Show();
+                    ShowAOIList();
                     break;
                 case "menuIslandLabels":
                     break;
             }
+        }
+
+        private void ShowAOIList()
+        {
+            var aoiw = new AOIWindow();
+            aoiw.ShowAOIList();
+            aoiw.Owner = this;
+            aoiw.Show();
         }
 
         private void OnMenuChecked(object sender, RoutedEventArgs e)
@@ -346,6 +373,9 @@ namespace GPXManager.views
 
             switch (((System.Windows.Controls.Button)sender).Name)
             {
+                case "buttonAOI":
+                    ShowAOIList();
+                    break;
                 case "buttonDataScreen":
                     Visibility = Visibility.Hidden;
                     if (MapWindowManager.MapLayersWindow != null)

@@ -17,27 +17,134 @@ namespace GPXManager.entities.mapping
     {
         private List<int> _selectedMajorGridIndices;
         private Extents _extentUTM;
+        private string _gridLayerName;
+        private int _gridSizeMeters;
+        private bool _gridIsLoaded;
 
-        public int AOIHandle { get; set; }
-        public List<int> MajorGridIntersect()
+        public AOI()
         {
+            GridMapping = new GridMapping(this);
+            Selected = false;
+        }
+        public GridMapping GridMapping { get; internal set; }
+        public int AOIHandle { get; set; }
+
+        public string ErrorMsg { get; internal set; }
+        public List<int> MajorGridIntersect(int? forcedZoneNumber=null)
+        {
+            ErrorMsg = "";
             var refIndeces = new object();
-            _extentUTM = Grid25.ExtentToUTM(ShapeFile.Extents);
+            _extentUTM = Grid25.ExtentToUTM(ShapeFile.Extents, forcedZoneNumber);
             MapWindowManager.Grid25MajorGrid.SelectShapes(_extentUTM, 0, SelectMode.INTERSECTION, ref refIndeces);
             _selectedMajorGridIndices = ((int[])refIndeces).ToList();
-            return _selectedMajorGridIndices;
+            if (Grid25.ZonesFromConversion[0].ZoneNumber == Grid25.ZonesFromConversion[1].ZoneNumber)
+            {
+                return _selectedMajorGridIndices;
+            }
+            else
+            {
+                ErrorMsg = "Extent of AOI spans multiple UTM zones";
+                return null;
+            }
         }
-        public bool GridIsLoaded { get; set; }
+        public bool GridIsLoaded { get { return _gridIsLoaded; }
+            set 
+            {
+                _gridIsLoaded=value; 
+                if(!_gridIsLoaded)
+                {
+                    _gridSizeMeters = 0;
+                }
+            } 
+        }
+        public int GridHandle { get; set; }
         public string GridFileName { get; set; }
         public Shapefile Grid2Km { get; private set; }
         public Shapefile SubGrids { get; private set; }
-        public int GridSizeMeters{get;set;}
-        public bool GeneratedSubGrids()
-        {
-                        GridIsLoaded = false;
-            var floor = Math.Floor(2000.0 / (double)GridSizeMeters);
 
-            if (floor * GridSizeMeters == 2000)
+        public Dictionary<string, List<double>> GetColumnValues()
+        {
+            Dictionary<string, List<double>> dict = new Dictionary<string, List<double>>();
+            List<double> values = new List<double>();
+            int indx;
+            if(EffortGridColumn.Length>0)
+            {
+                indx = SubGrids.FieldIndexByName[EffortGridColumn];
+                
+                for(int x=0;x<SubGrids.NumShapes;x++)
+                {
+                    values.Add(SubGrids.CellValue[indx, x]);
+                }
+                dict.Add(EffortGridColumn, values);
+
+            }
+
+            if(CPUEGridColumn.Length>0)
+            {
+                indx = SubGrids.FieldIndexByName[CPUEGridColumn];
+                for (int x = 0; x < SubGrids.NumShapes; x++)
+                {
+                    values.Add(SubGrids.CellValue[indx, x]);
+                }
+                dict.Add(CPUEGridColumn, values);
+            }
+
+            if (BerriedGridColumn.Length > 0)
+            {
+                indx = SubGrids.FieldIndexByName[BerriedGridColumn];
+                for (int x = 0; x < SubGrids.NumShapes; x++)
+                {
+                    values.Add(SubGrids.CellValue[indx, x]);
+                }
+                dict.Add(BerriedGridColumn, values);
+            }
+
+            if (UndersizedGridColumn.Length > 0)
+            {
+                indx = SubGrids.FieldIndexByName[UndersizedGridColumn];
+                for (int x = 0; x < SubGrids.NumShapes; x++)
+                {
+                    values.Add(SubGrids.CellValue[indx, x]);
+                }
+                dict.Add(UndersizedGridColumn, values);
+            }
+
+            return dict;
+        }
+        public string EffortGridColumn { get; set; }
+        public string CPUEGridColumn { get; set; }
+        public string UndersizedGridColumn { get; set; }
+        public string BerriedGridColumn { get; set; }
+       
+        public string GridSize
+        {
+            get
+            {
+                if(_gridSizeMeters==0)
+                {
+                    return "";
+                }
+                else
+                {
+                    return _gridSizeMeters.ToString();
+                }
+            }
+        }
+        public int GridSizeMeters
+        {
+            get { return _gridSizeMeters; }
+            set
+            {
+                _gridSizeMeters = value;
+                _gridLayerName = $"grid_{Name.Replace(' ', '_')}_{_gridSizeMeters}";
+            }
+        }
+        public bool GeneratedSubGrids(int gridSize)
+        {
+            GridIsLoaded = false;
+            var floor = Math.Floor(2000.0 / (double)gridSize);
+
+            if (floor * gridSize == 2000)
             {
                 SubGrids = new Shapefile();
 
@@ -56,23 +163,23 @@ namespace GPXManager.entities.mapping
                         var ext = cell50km.Extents;
                         var parentName = Grid2Km.CellValue[Grid2Km.FieldIndexByName["Name"], x];
 
-                        var steps = 2000 / GridSizeMeters;
+                        var steps = 2000 / gridSize;
                         for (int r = 0; r < steps; r++)
                         {
-                            var top = ext.yMax - (GridSizeMeters * r);
+                            var top = ext.yMax - (gridSize * r);
 
 
                             for (int c = 0; c < steps; c++)
                             {
-                                var left = ext.xMin + (GridSizeMeters * c);
+                                var left = ext.xMin + (gridSize * c);
 
                                 Shape cell = new Shape();
                                 if (cell.Create(ShpfileType.SHP_POLYGON))
                                 {
                                     cell.AddPoint(left, top);
-                                    cell.AddPoint(left + GridSizeMeters, top);
-                                    cell.AddPoint(left + GridSizeMeters, top - GridSizeMeters);
-                                    cell.AddPoint(left, top - GridSizeMeters);
+                                    cell.AddPoint(left + (int)gridSize, top);
+                                    cell.AddPoint(left + (int)gridSize, top - gridSize);
+                                    cell.AddPoint(left, top - gridSize);
                                     cell.AddPoint(left, top);
                                 }
                                 id++;
@@ -95,15 +202,39 @@ namespace GPXManager.entities.mapping
             return GridIsLoaded;
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+        public List<string> GridFileNames { get; set; } = new List<string>();
+
+        public string GetGridFileNameOfGridSize(string grid_size)
+        {
+            foreach(var item in GridFileNames)
+            {
+                var arr = item.Split('_');
+                if(arr[arr.Length-1]==grid_size)
+                {
+                    return item;
+                }
+            }
+            return "";
+        }
+        public bool Selected { get; set; }
         public string GridLayerName
         {
             get
             {
-                return $"grids_{Name.Replace(' ', '_')}_{GridSizeMeters}";
+                if (_gridLayerName == null || _gridLayerName.Length == 0)
+                {
+                    _gridLayerName = $"grid_{Name.Replace(' ', '_')}_{GridSizeMeters}";
+                }
+                return _gridLayerName;
             }
+            set { _gridLayerName = value; }
         }
 
-        public bool CreateGridFromFileName(string fileName, string layerName = "")
+        public bool CreateGridFromFileName(string fileName)
         {
             GridIsLoaded = false;
             string utmZone = "";
@@ -152,20 +283,33 @@ namespace GPXManager.entities.mapping
             {
                 MapWindowManager.MapLayersHandler.GeoProjection = MapWindowManager.Grid25MajorGrid.GeoProjection;
             }
-            if (layerName.Length == 0)
-            {
-                layerName = Path.GetFileName(fileName.Replace(".shp", ""));
-            }
-            var result = MapWindowManager.MapLayersHandler.FileOpenHandler(fileName, layerName, true, $"subgrid_{Name}");
+
+            GridLayerName = Path.GetFileName(fileName.Replace(".shp", ""));
+
+
+            var result = MapWindowManager.MapLayersHandler.FileOpenHandler(fileName, GridLayerName, true, $"subgrid_{Name}");
             if (result.success)
             {
-                var sf = (Shapefile)MapWindowManager.MapLayersHandler.get_MapLayer(layerName).LayerObject;
+                GridHandle = MapWindowManager.MapLayersHandler.get_MapLayer(GridLayerName).Handle;
+                var sf = (Shapefile)MapWindowManager.MapLayersHandler.get_MapLayer(GridLayerName).LayerObject;
+                GridSizeMeters = GetGridSizeFromShape(sf.Shape[0]);
                 sf.DefaultDrawingOptions.FillVisible = false;
                 sf.DefaultDrawingOptions.LineColor = new MapWinGIS.Utils().ColorByName(MapWinGIS.tkMapColor.DarkGray);
                 SubGrids = sf;
                 GridIsLoaded = true;
             }
+
             return GridIsLoaded;
+
+
+        }
+
+        public int GetGridSizeFromShape(Shape shp)
+        {
+            Waypoint pt1 = new Waypoint { Latitude = shp.Point[0].y, Longitude = shp.Point[0].x };
+            Waypoint pt2 = new Waypoint { Latitude = shp.Point[1].y, Longitude = shp.Point[1].x };
+            double elevChange;
+            return (int)Waypoint.ComputeDistance(pt1, pt2, out elevChange);
         }
         public void GenerateMinorGrids()
         {
@@ -325,7 +469,21 @@ namespace GPXManager.entities.mapping
         public int MapLayerHandle { get; set; } = -1;
         public int ID { get; set; }
 
-        public bool Visibility { get; set; }
+        private bool _visibility;
+        public bool Visibility { get {return _visibility; } 
+            set 
+            {
+                
+                _visibility=value;
+                if (MapWindowManager.MapLayersHandler != null)
+                {
+                    MapWindowManager.MapLayersHandler[AOIHandle].Visible = _visibility;
+                    MapWindowManager.MapLayersHandler[GridHandle].Visible = _visibility;
+                }
+            }
+        }
+
+   
 
         public Shapefile ShapeFile
         {

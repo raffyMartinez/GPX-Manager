@@ -34,6 +34,7 @@ namespace GPXManager.entities.mapping.Views
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _instance = null;
+            Owner.Focus();
         }
 
         public AOI AOI { get; set; }
@@ -88,23 +89,45 @@ namespace GPXManager.entities.mapping.Views
                     if (proceed)
                     {
                         gridding.Grid25.UTMZone = gridding.UTMZone.UTMZone51N;
-                        if (MapWindowManager.Grid25MajorGrid == null)
+                        if (MapWindowManager.Grid25MajorGrid == null ||
+                            MapWindowManager.Grid25MajorGrid.GeoProjection.ProjectionName != "WGS 84 / UTM zone 51N")
                         {
+                            gridding.Grid25.UTMZone = gridding.UTMZone.UTMZone51N;
                             MapWindowManager.Grid25MajorGrid = gridding.Grid25.CreateGrid25MajorGrid();
 
                         }
 
                         var grids = AOI.MajorGridIntersect();
+                        if (grids == null)
+                        {
+                            int minZoneNumber = mapping.gridding.Grid25.ZonesFromConversion.Min(t => t.ZoneNumber);
+                            if (minZoneNumber == 50)
+                            {
+                                gridding.Grid25.UTMZone = gridding.UTMZone.UTMZone50N;
+                                MapWindowManager.Grid25MajorGrid = gridding.Grid25.CreateGrid25MajorGrid();
+                            }
+                            grids = AOI.MajorGridIntersect(minZoneNumber);
+                            if (AOI.ErrorMsg.Length > 0)
+                            {
+                                MessageBox.Show(AOI.ErrorMsg, "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                                return;
+                            }
+                        }
+
                         AOI.GenerateMinorGrids();
-                        if (!AOI.GeneratedSubGrids())
+                        if (!AOI.GeneratedSubGrids(int.Parse(textBoxGridSize.Text)))
                         {
                             MessageBox.Show("Subgrid size does not fit grid", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         else
                         {
+
+                            AOI.GridSizeMeters = int.Parse(textBoxGridSize.Text);
+
                             int h = MapWindowManager.MapLayersHandler.AddLayer(AOI.SubGrids, $"{AOI.GridLayerName}");
                             if (h >= 0)
                             {
+                                AOI.GridHandle = h;
                                 var sf = (MapWinGIS.Shapefile)MapWindowManager.MapLayersHandler[h].LayerObject;
                                 sf.Key = $"subgrid_{AOI.Name}";
                                 sf.DefaultDrawingOptions.FillVisible = false;
@@ -130,13 +153,14 @@ namespace GPXManager.entities.mapping.Views
                                     }
                                 }
                                 ((AOIWindow)Owner).GridIsLoaded();
-                                ((Window)Owner).Focus();
+                                Owner.Focus();
                                 Close();
                             }
                         }
                     }
                     break;
                 case "buttonCancel":
+                    Owner.Focus();
                     Close();
                     break;
                 case "buttonGridSaveLocation":

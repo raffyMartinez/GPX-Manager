@@ -37,7 +37,16 @@ namespace GPXManager.entities.mapping
         private bool _tilesVisible = false;
         private List<int> _selectedShapeIndexes;
 
+        public ColorSchemes LayerColors;
 
+        private void SetLayerColorSchemes()
+        {
+
+            LayerColors = new ColorSchemes(ColorSchemeType.Layer);
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(Properties.Resources.colorschemes);
+            LayerColors.LoadXML(doc);
+        }
         public List<int> SelectedShapesIndexes()
         {
             if (_currentMapLayer.LayerType == "ShapefileClass")
@@ -408,6 +417,15 @@ namespace GPXManager.entities.mapping
             return _currentMapLayer;
         }
 
+        public MapLayer get_MapLayerByKey(string key)
+        {
+            foreach (MapLayer item in MapLayerDictionary.Values)
+            {
+                if (item.LayerKey == key)
+                    return item;
+            }
+            return null;
+        }
         public MapLayer get_MapLayer(string Name)
         {
             foreach (MapLayer item in MapLayerDictionary.Values)
@@ -486,7 +504,7 @@ namespace GPXManager.entities.mapping
             _axmap = mapControl;
             _axmap.LayerAdded += OnMapLayerAdded;
             _axmap.ProjectionMismatch += OnProjectionMismatch;
-            //SetLayerColorSchemes();
+            SetLayerColorSchemes();
         }
 
         /// <summary>
@@ -624,6 +642,7 @@ namespace GPXManager.entities.mapping
         {
             try
             {
+
                 MapLayerDictionary[layerHandle].Dispose();
                 MapLayerDictionary.Remove(layerHandle);
 
@@ -718,7 +737,17 @@ namespace GPXManager.entities.mapping
                     return $"{arr[1]}{arr[3]}w";
             }
         }
-
+        public bool IsLayerLoadedInMap(string layerKey)
+        {
+            foreach(var item in LayerDictionary)
+            {
+                if(item.Value.LayerKey==layerKey)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public GeoProjection GeoProjection { get; set; }
 
         /// <summary>

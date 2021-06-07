@@ -1,5 +1,5 @@
 ﻿using System;
- namespace GPXManager.entities.mapping
+namespace GPXManager.entities.mapping
 {
     //Port from javascript to c#
     //Javascript source:
@@ -101,6 +101,7 @@
                 return "Z";
         }
 
+        public int? ForcedZoneNumber { get; set; }
         public UTMResult convertLatLngToUtm(double latitude, double longitude)
         {
             if (status)
@@ -114,35 +115,42 @@
             var LatRad = toRadians(latitude);
             var LongRad = toRadians(LongTemp);
 
-            if (LongTemp >= 8 && LongTemp <= 13 && latitude > 54.5 && latitude < 58)
+            if (ForcedZoneNumber != null)
             {
-                ZoneNumber = 32;
-            }
-            else if (latitude >= 56.0 && latitude < 64.0 && LongTemp >= 3.0 && LongTemp < 12.0)
-            {
-                ZoneNumber = 32;
+                ZoneNumber = (int)ForcedZoneNumber;
             }
             else
             {
-                ZoneNumber = (int)((LongTemp + 180) / 6) + 1;
-
-                if (latitude >= 72.0 && latitude < 84.0)
+                if (LongTemp >= 8 && LongTemp <= 13 && latitude > 54.5 && latitude < 58)
                 {
-                    if (LongTemp >= 0.0 && LongTemp < 9.0)
+                    ZoneNumber = 32;
+                }
+                else if (latitude >= 56.0 && latitude < 64.0 && LongTemp >= 3.0 && LongTemp < 12.0)
+                {
+                    ZoneNumber = 32;
+                }
+                else
+                {
+                    ZoneNumber = (int)((LongTemp + 180) / 6) + 1;
+
+                    if (latitude >= 72.0 && latitude < 84.0)
                     {
-                        ZoneNumber = 31;
-                    }
-                    else if (LongTemp >= 9.0 && LongTemp < 21.0)
-                    {
-                        ZoneNumber = 33;
-                    }
-                    else if (LongTemp >= 21.0 && LongTemp < 33.0)
-                    {
-                        ZoneNumber = 35;
-                    }
-                    else if (LongTemp >= 33.0 && LongTemp < 42.0)
-                    {
-                        ZoneNumber = 37;
+                        if (LongTemp >= 0.0 && LongTemp < 9.0)
+                        {
+                            ZoneNumber = 31;
+                        }
+                        else if (LongTemp >= 9.0 && LongTemp < 21.0)
+                        {
+                            ZoneNumber = 33;
+                        }
+                        else if (LongTemp >= 21.0 && LongTemp < 33.0)
+                        {
+                            ZoneNumber = 35;
+                        }
+                        else if (LongTemp >= 33.0 && LongTemp < 42.0)
+                        {
+                            ZoneNumber = 37;
+                        }
                     }
                 }
             }

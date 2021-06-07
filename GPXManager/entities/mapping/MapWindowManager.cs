@@ -52,17 +52,28 @@ namespace GPXManager.entities.mapping
         public static int[] SelectedTrackIndexes { get; private set; }
 
         public static List<Shape> SelectedTracks { get; private set; } = new List<Shape>();
-        public static void SelectTracksInAOI(AOI aoi)
+        public static bool SelectTracksInAOI(AOI aoi)
         {
-            Callback cb = new Callback();
-            var selectedTracks = new object();
-            var ext = ((Shapefile)MapLayersHandler[aoi.AOIHandle].LayerObject).Extents;
-            ExtractedTracksShapefile.SelectShapes(ext ,0, SelectMode.INTERSECTION, ref selectedTracks);
-            SelectedTrackIndexes = (int[])selectedTracks;
-            for(int x=0;x<SelectedTrackIndexes.Count();x++)
+            if (ExtractedTracksShapefile == null)
             {
-                SelectedTracks.Add(ExtractedTracksShapefile.Shape[SelectedTrackIndexes[x]]);
+                return false;
             }
+            else
+            {
+                SelectedTracks.Clear();
+                Callback cb = new Callback();
+                var selectedTracks = new object();
+                var ext = ((Shapefile)MapLayersHandler[aoi.AOIHandle].LayerObject).Extents;
+                ExtractedTracksShapefile.SelectShapes(ext, 0, SelectMode.INTERSECTION, ref selectedTracks);
+                SelectedTrackIndexes = (int[])selectedTracks;
+                for (int x = 0; x < SelectedTrackIndexes.Count(); x++)
+                {
+                    SelectedTracks.Add(ExtractedTracksShapefile.Shape[SelectedTrackIndexes[x]]);
+                }
+            }
+
+            return SelectedTrackIndexes.Count() > 0;
+
         }
         public static Shapefile Coastline
         {
@@ -369,8 +380,12 @@ namespace GPXManager.entities.mapping
             feedBack = "Folder for LGU boundary not found";
             return false;
         }
+
         private static Shapefile _bscBoundaryShapefile;
-        public static Shapefile BSCBoundaryShapefile
+
+
+        public static Shapefile BSCBoundaryShapefile { get; set; }
+        public static Shapefile BSCBoundaryShapefile1
         {
             get
             {
@@ -399,6 +414,21 @@ namespace GPXManager.entities.mapping
             }
         }
 
+        public static Shape BSCBoundaryLine
+        {
+            get
+            {
+                if (BSCBoundaryShapefile == null)
+                {
+                    return null;
+                }
+                else
+                {
+                    return BSCBoundaryShapefile.Shape[0];
+                }
+            }
+        }
+
         public static Shapefile Grid25MajorGrid { get; set; }
         public static bool AddExtractedTracksLayer()
         {
@@ -406,13 +436,34 @@ namespace GPXManager.entities.mapping
             {
                 var sf = ShapefileFactory.FishingTrackLines();
                 ExtractedTracksShapefile = sf;
+                sf.DefaultDrawingOptions.LineColor = new Utils().ColorByName(tkMapColor.Cornsilk);
                 return MapLayersHandler.AddLayer(sf, "Fishing tracks", layerKey: sf.Key, uniqueLayer: true) >= 0;
+
+            }
+            return false;
+        }
+
+        public static bool SetBoundaryShapefile()
+        {
+            var boundaryFolder = $@"{LayersFolder}\BSCBoundaryLine";
+            if (Directory.Exists(boundaryFolder))
+            {
+                var boundarySF = Directory.GetFiles(boundaryFolder, "*.shp");
+                if (boundarySF.Length == 1)
+                {
+                    MapLayersHandler.FileOpenHandler(boundarySF[0], "BSC boundary", layerkey: "bsc_boundary");
+                    BSCBoundaryShapefile = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+                    return true;
+                }
 
             }
             return false;
         }
         public static bool AddBSCBoundaryLineShapefile(string inSF, out string feedBack)
         {
+
+
+
             var boundaryFolder = $@"{LayersFolder}\BSCBoundaryLine";
             if (File.Exists(inSF))
             {
@@ -444,6 +495,8 @@ namespace GPXManager.entities.mapping
                     }
                 }
             }
+
+
 
             feedBack = "Folder for LGU boundary not found";
             return false;
@@ -595,14 +648,17 @@ namespace GPXManager.entities.mapping
             get { return _selectedShapedIDs; }
             set
             {
-                _selectedShapedIDs = value;
-                var sf = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
-                sf.SelectNone();
-                foreach (var h in _selectedShapedIDs)
+                if (MapLayersHandler.CurrentMapLayer != null)
                 {
-                    sf.ShapeSelected[h] = true;
+                    _selectedShapedIDs = value;
+                    var sf = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+                    sf.SelectNone();
+                    foreach (var h in _selectedShapedIDs)
+                    {
+                        sf.ShapeSelected[h] = true;
+                    }
+                    MapLayersHandler.MapControl.Redraw();
                 }
-                MapLayersHandler.MapControl.Redraw();
             }
         }
 

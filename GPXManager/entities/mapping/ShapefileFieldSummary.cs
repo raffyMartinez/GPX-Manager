@@ -19,7 +19,7 @@ namespace GPXManager.entities.mapping
                     Max = listInt.Max();
                     Min = listInt.Min();
                     Sum = listInt.Sum();
-                    Count = listInt.Count();
+                    Count = listInt.Count()+1;
                     Average = listInt.Average();
                     MaxAsString = ((int)Max).ToString();
                     MinAsString = ((int)Min).ToString();
@@ -31,7 +31,7 @@ namespace GPXManager.entities.mapping
                     Max = listDouble.Max();
                     Min = listDouble.Min();
                     Sum = listDouble.Sum();
-                    Count = listDouble.Count();
+                    Count = listDouble.Count()+1;
                     Average = listDouble.Average();
                     MaxAsString = ((double)Max).ToString("000.00");
                     MinAsString = ((double)Min).ToString("000.00");
@@ -43,7 +43,7 @@ namespace GPXManager.entities.mapping
                     var dt = (List<DateTime>)list;
                     First = dt.Min();
                     Last = dt.Max();
-                    Count = dt.Count();
+                    Count = dt.Count()+1;
                     MaxAsString = ((DateTime)Last).ToString("MMM-dd-yyyy HH:mm");
                     MinAsString = ((DateTime)First).ToString("MMM-dd-yyyy HH:mm");
                     TimeSpan = (DateTime)Last - (DateTime)First;

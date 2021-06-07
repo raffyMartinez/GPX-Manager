@@ -62,27 +62,37 @@ namespace GPXManager.entities.mapping.Views
 
             dataGridAOIs.Columns.Clear();
             dataGridAOIs.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new Binding("ID") });
-            dataGridAOIs.Columns.Add(new DataGridCheckBoxColumn { Header = "Visibility", Binding = new Binding("Visibility") });
+            //dataGridAOIs.Columns.Add(new DataGridCheckBoxColumn { Header = "Visibility", Binding = new Binding("Visibility") });
             dataGridAOIs.Columns.Add(new DataGridTextColumn { Header = "AOI name", Binding = new Binding("Name") });
-            dataGridAOIs.DataContext = Entities.AOIViewModel.AOICollection.OrderBy(t => t.Name).ToList();
+            dataGridAOIs.Columns.Add(new DataGridTextColumn { Header = "Grid size", Binding = new Binding("GridSize") });
+            dataGridAOIs.Columns.Add(new DataGridCheckBoxColumn { Header = "Select", Binding = new Binding("Selected") });
+            SetDataGridContext();
 
             foreach (var aoi in Entities.AOIViewModel.AOICollection)
             {
-                var h = aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey:aoi.ShapeFile.Key);
+                var h = aoi.MapLayerHandle = MapWindowManager.MapLayersHandler.AddLayer(aoi.ShapeFile, aoi.Name, uniqueLayer: true, layerKey: aoi.ShapeFile.Key);
                 aoi.AOIHandle = h;
-                var sf = (MapWinGIS.Shapefile)MapWindowManager.MapLayersHandler[h].LayerObject;
+                var sf = (Shapefile)MapWindowManager.MapLayersHandler[h].LayerObject;
 
                 sf.DefaultDrawingOptions.LineColor = new MapWinGIS.Utils().ColorByName(MapWinGIS.tkMapColor.Red);
+                sf.DefaultDrawingOptions.LineWidth = 2f;
                 sf.DefaultDrawingOptions.FillVisible = false;
 
 
             }
 
             buttonOk.IsEnabled = false;
-            //buttonCancel.Content = "Close";
+        }
+
+        private void SetDataGridContext()
+        {
+            dataGridAOIs.DataContext = Entities.AOIViewModel.AOICollection.OrderBy(t => t.Name).ToList();
         }
         private void OnWindowClosing(object sender, CancelEventArgs e)
         {
+            Entities.AOIViewModel.UnloadAllAOIBouindaries();
+            Entities.AOIViewModel.UnloadAllGrids();
+            Owner.Focus();
             MapWindowManager.ResetCursor();
         }
 
@@ -90,10 +100,55 @@ namespace GPXManager.entities.mapping.Views
         {
 
         }
+
+
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch (((Button)sender).Name)
+            Button btn = (Button)sender;
+            switch (btn.Name)
             {
+                case "buttonProcessGrid":
+                case "buttonShowGrid":
+                case "buttonFormatMaps":
+                    if (Entities.AOIViewModel.CountSelected() > 0)
+                    {
+                        switch (btn.Name)
+                        {
+                            case "buttonShowGrid":
+                                Entities.AOIViewModel.SetGridFilenamesOfCommonSize();
+                                if (Entities.AOIViewModel.CommonGridSizes.Count == 1)
+                                {
+                                    foreach (var aoi in Entities.AOIViewModel.GetSelectedAOIs())
+                                    {
+                                        var file = aoi.GetGridFileNameOfGridSize(Entities.AOIViewModel.CommonGridSizes[0]);
+                                        aoi.CreateGridFromFileName(file);
+                                    }
+                                }
+                                SetDataGridContext();
+                                break;
+                            case "buttonProcessGrid":
+                                var griddedAOICount = Entities.AOIViewModel.GetSelectedAOIs().Count(t => t.SubGrids != null);
+                                if (griddedAOICount == Entities.AOIViewModel.CountSelected())
+                                {
+                                    ShowGridMappingWindow(mulitpleAOIs: true);
+                                }
+                                else
+                                {
+                                    MessageBox.Show("All selected AOIs must have a grid", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                                }
+                                break;
+                            case "buttonFormatMaps":
+                                FormatGridMapWindow fmw = new FormatGridMapWindow(_aoi);
+                                fmw.ShowDialog();
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("At least one AOI must be selected", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+
+                    break;
                 case "buttonCancel":
                     MapWindowManager.MapLayersHandler.RemoveLayer(AOIManager._hAOI);
                     Close();
@@ -118,25 +173,67 @@ namespace GPXManager.entities.mapping.Views
             }
         }
 
-
+        private void ShowGridMappingWindow(bool mulitpleAOIs = false)
+        {
+            if (MapWindowManager.MapLayersHandler.IsLayerLoadedInMap("extracted_tracks"))
+            {
+                GridMappingWindow gmw = GridMappingWindow.GetInstance();
+                gmw.MultipleAOIs = mulitpleAOIs;
+                if (!mulitpleAOIs)
+                {
+                    gmw.AOI = _aoi;
+                }
+                gmw.Owner = this;
+                if (gmw.Visibility == Visibility.Visible)
+                {
+                    gmw.BringIntoView();
+                }
+                else
+                {
+                    gmw.Show();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Extracted tracks is not in the map", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
             switch (((MenuItem)sender).Name)
             {
-                case "menuLoadGrid":
-                    break;
-                case "menuGridMapping":
-                    GridMappingWindow gmw = GridMappingWindow.GetInstance();
-                    gmw.AOI = _aoi;
-                    gmw.Owner = this;
-                    if(gmw.Visibility==Visibility.Visible)
+                case "menuFormatMap":
+                    bool proceed = false;
+                    foreach (var aoi in Entities.AOIViewModel.GetAllAOI())
                     {
-                        gmw.BringIntoView();
+
+                        if (aoi.GridIsLoaded && aoi.GridMapping.HasGriddedData)
+                        {
+                            proceed = true;
+                            break;
+                        }
+                    }
+
+
+                    if (!proceed)
+                    {
+                        MessageBox.Show("There is no gridded map", "GPXC Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        gmw.Show();
+                        FormatGridMapWindow fmw = new FormatGridMapWindow(_aoi);
+                        fmw.ShowDialog();
                     }
+
+                    break;
+                case "menuEditGrid":
+                    MakeGrid();
+                    menuEditGrid.IsEnabled = false;
+                    menuShowGrid.IsEnabled = false;
+                    menuRemoveGrid.IsEnabled = true;
+                    break;
+                case "menuGridMapping":
+                    ShowGridMappingWindow();
                     break;
                 case "menuAOIZoom":
                     if (_aoi != null)
@@ -152,54 +249,109 @@ namespace GPXManager.entities.mapping.Views
                         buttonOk.IsEnabled = true;
                     }
                     break;
-                case "menuAOIRemove":
+                case "menuRemoveGrid":
                     if (_aoi != null)
                     {
-                        MapWindowManager.MapLayersHandler.RemoveLayer(_aoi.MapLayerHandle);
+                        //MapWindowManager.MapLayersHandler.RemoveLayer(_aoi.MapLayerHandle);
+                        MapWindowManager.MapLayersHandler.RemoveLayer(_aoi.GridLayerName);
+                        _aoi.GridIsLoaded = false;
+                        menuRemoveGrid.IsEnabled = false;
+                        menuShowGrid.IsEnabled = !_aoi.GridIsLoaded;
+                        menuEditGrid.IsEnabled = !_aoi.GridIsLoaded;
+                        SetDataGridContext();
                     }
                     break;
                 case "menuShowGrid":
 
                     if (_aoi.GridFileName != null && _aoi.GridFileName.Length > 0 && File.Exists(_aoi.GridFileName))
                     {
-                        menuGridMapping.IsEnabled = _aoi.CreateGridFromFileName(_aoi.GridFileName);
-                    }
-                    else
-                    {
-                        MakeAOIGridWindow mgw = MakeAOIGridWindow.GetInstance();
-                        mgw.AOI = _aoi;
-                        mgw.Owner = this;
-                        if (mgw.Visibility == Visibility.Visible)
+                        var files = Entities.AOIViewModel.GetAOISubGridFileNames(_aoi);
+                        if (files.Count > 1)
                         {
-                            mgw.BringIntoView();
+                            var selectedFile = "";
+                            SelectGridFileWindow sgw = new SelectGridFileWindow();
+                            sgw.GridFiles = files;
+                            if ((bool)sgw.ShowDialog())
+                            {
+                                selectedFile = sgw.SelectedFile;
+                                menuGridMapping.IsEnabled = _aoi.CreateGridFromFileName(selectedFile);
+                            }
+
                         }
                         else
                         {
-                            mgw.Show();
+                            menuGridMapping.IsEnabled = _aoi.CreateGridFromFileName(_aoi.GridFileName);
                         }
+
+
+
                     }
+                    else
+                    {
+                        MakeGrid();
+                    }
+                    SetDataGridContext();
+                    menuShowGrid.IsEnabled = !_aoi.GridIsLoaded;
+                    menuEditGrid.IsEnabled = menuShowGrid.IsEnabled;
+                    menuRemoveGrid.IsEnabled = _aoi.GridIsLoaded;
                     break;
             }
+
+
         }
 
+        private void MakeGrid()
+        {
+            MakeAOIGridWindow mgw = MakeAOIGridWindow.GetInstance();
+            mgw.AOI = _aoi;
+            mgw.Owner = this;
+            if (mgw.Visibility == Visibility.Visible)
+            {
+                mgw.BringIntoView();
+            }
+            else
+            {
+                mgw.Show();
+            }
+        }
         public void GridIsLoaded()
         {
             menuGridMapping.IsEnabled = true;
+            SetDataGridContext();
         }
         private void OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
-
+            if (menuGridMapping.IsEnabled)
+            {
+                menuFormatMap.IsEnabled = _aoi.GridMapping.IsBerriedMapped ||
+                    _aoi.GridMapping.IsCPUEMapped ||
+                    _aoi.GridMapping.IsFishingInternsityMapped ||
+                    _aoi.GridMapping.IsUndersizedMapped;
+            }
         }
 
         private void OnGridSelectedCellChanged(object sender, SelectedCellsChangedEventArgs e)
         {
+            menuRemoveGrid.IsEnabled = false;
+            menuShowGrid.IsEnabled = true;
             menuGridMapping.IsEnabled = false;
+            menuEditGrid.IsEnabled = false;
+            menuFormatMap.IsEnabled = false;
             if (dataGridAOIs.SelectedCells.Count == 1)
             {
                 DataGridCellInfo cell = dataGridAOIs.SelectedCells[0];
                 _gridRow = dataGridAOIs.Items.IndexOf(cell.Item);
                 _aoi = (AOI)dataGridAOIs.Items[_gridRow];
                 menuGridMapping.IsEnabled = _aoi.GridIsLoaded;
+                menuRemoveGrid.IsEnabled = _aoi.GridIsLoaded;
+                menuEditGrid.IsEnabled = _aoi.GridFileName != null && _aoi.GridFileName.Length > 0 && !_aoi.GridIsLoaded;
+                menuShowGrid.IsEnabled = !_aoi.GridIsLoaded;
+
+                menuFormatMap.IsEnabled = _aoi.GridMapping.IsBerriedMapped ||
+                    _aoi.GridMapping.IsCPUEMapped ||
+                    _aoi.GridMapping.IsFishingInternsityMapped ||
+                    _aoi.GridMapping.IsUndersizedMapped;
+
             }
 
         }

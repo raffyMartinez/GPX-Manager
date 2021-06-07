@@ -171,7 +171,14 @@ namespace GPXManager.entities.mapping
                         t = typeof(bool);
                         break;
                 }
-                dt.Columns.Add(new DataColumn { Caption = fieldCaption, DataType = t, ColumnName = fieldCaption });
+                try
+                {
+                    dt.Columns.Add(new DataColumn { Caption = fieldCaption, DataType = t, ColumnName = fieldCaption });
+                }
+                catch(Exception ex)
+                {
+
+                }
             }
 
 

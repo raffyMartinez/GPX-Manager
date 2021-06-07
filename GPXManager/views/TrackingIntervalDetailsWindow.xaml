@@ -15,7 +15,7 @@
             <RowDefinition Height="40"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        <Label Content="This is a label" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+        <Label Content="Details of tracking interval" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
         <DataGrid Grid.Row="1" Margin="10" Name="dataGrid" ItemsSource="{Binding}"/>
         <Button Content="Ok" Grid.Column="1" Grid.Row="1"  Height="30" Margin="10" VerticalAlignment="Top" IsCancel="True" Click="OnButtonClick"/>
     </Grid>

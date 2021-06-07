@@ -7,18 +7,39 @@ using MapWinGIS;
 
 namespace GPXManager.entities.mapping.gridding
 {
-    public static class GridMapping
+    public  class GridMapping
     {
-        public static Dictionary<string, int> CellsSweptByTrackDict { get; private set; } = new Dictionary<string, int>();
-        public static AOI AOI { get; set; }
+        public GridMapping(AOI aoi)
+        {
+            AOI = aoi;
+        }
+        public bool HasGriddedData { get; internal set; }
+        public  bool IsFishingInternsityMapped { get; internal set; }
+        public  bool IsUndersizedMapped{ get; internal set; }
+        public  bool IsBerriedMapped { get; internal set; }
+        public  bool IsCPUEMapped { get; internal set; }
 
-        public static List<Shape> SelectedTracks { get; set; }
-        public static int[] SelectedTrackIndexes { get; set; }
+        public  Dictionary<string, int> CellsSweptByTrackDict { get; private set; } = new Dictionary<string, int>();
+        public  AOI AOI { get; set; }
 
-        public static int ComputeFishingFrequency()
+        public  List<Shape> SelectedTracks { get; set; }
+        public  int[] SelectedTrackIndexes { get; set; }
+
+        public  int ComputeFishingFrequency()
         {
             int counter = 0;
-            var fldIndex = AOI.SubGrids.EditAddField("Hits", FieldType.INTEGER_FIELD, 1, 1);
+
+
+            //if the field exists, we delete it so that the old data is also deleted
+            var fldIndex = AOI.SubGrids.FieldIndexByName["Hits"];
+            if(fldIndex>=0)
+            {
+                AOI.SubGrids.EditDeleteField(fldIndex);
+            }
+
+            //then we add the Hits field, with emtpy data
+            fldIndex = AOI.SubGrids.EditAddField("Hits", FieldType.INTEGER_FIELD, 1, 1);
+
             if (fldIndex >= 0)
             {
                 foreach (var shp in SelectedTracks)
@@ -55,6 +76,8 @@ namespace GPXManager.entities.mapping.gridding
                     }
                 }
             }
+            HasGriddedData = true;
+            IsFishingInternsityMapped = counter > 0;
             return counter;
         }
     }

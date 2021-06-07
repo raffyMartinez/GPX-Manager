@@ -41,10 +41,10 @@ namespace GPXManager.entities.mapping.gridding
         public static UTMZone UTMZone
         {
             get { return _utmZone; }
-            set 
+            set
             {
-                _utmZone = value; 
-                switch(_utmZone)
+                _utmZone = value;
+                switch (_utmZone)
                 {
                     case UTMZone.UTMZone50N:
                         GeoProjecction = tkWgs84Projection.Wgs84_UTM_zone_50N;
@@ -56,11 +56,30 @@ namespace GPXManager.entities.mapping.gridding
             }
         }
 
-        public static Extents ExtentToUTM(Extents ext)
+        public static bool ProjectionIsWGS84(string projectionName)
         {
+            switch (projectionName)
+            {
+                case "WGS 84":
+                    return true;
+                case "GCS_WGS_1984":
+                    return true;
+                default:
+                    return false;
+            }
+
+        }
+
+        public static List<LatLonUTMConverter.UTMResult> ZonesFromConversion { get; set; } = new List<LatLonUTMConverter.UTMResult>();
+        public static Extents ExtentToUTM(Extents ext, int? forcedZoneNumber=null)
+        {
+            ZonesFromConversion.Clear();
             LatLonUTMConverter llc = new LatLonUTMConverter("WGS 84");
+            llc.ForcedZoneNumber = forcedZoneNumber;
             var ul = llc.convertLatLngToUtm(ext.yMax, ext.xMin);
             var lr = llc.convertLatLngToUtm(ext.yMin, ext.xMax);
+            ZonesFromConversion.Add(ul);
+            ZonesFromConversion.Add(lr);
             ext = new Extents();
             ext.SetBounds(ul.Easting, lr.Northing, 0, lr.Easting, ul.Northing, 0);
             return ext;

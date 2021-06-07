@@ -61,9 +61,114 @@ namespace GPXManager.entities.mapping
         private MapLayersHandler _parent;
         public Size SymbolSize { get; set; }
 
-        //public Dictionary<string, ClassifiedItem> ClassificationItems = new Dictionary<string, ClassifiedItem>();
 
-        
+        public Dictionary<string, ClassifiedItem> ClassificationItems = new Dictionary<string, ClassifiedItem>();
+
+
+
+        public ClassificationType ClassificationType
+        {
+            get { return _classificationType; }
+            set
+            {
+                var sf = LayerObject as Shapefile;
+                ClassificationItems.Clear();
+                _classificationType = value;
+                if (_classificationType != ClassificationType.None)
+                {
+                    switch (sf.Field[sf.Categories.ClassificationField].Type)
+                    {
+                        case FieldType.BOOLEAN_FIELD:
+                            ClassifiedValueDataType = typeof(bool);
+                            break;
+
+                        case FieldType.DATE_FIELD:
+                            ClassifiedValueDataType = typeof(DateTime);
+                            break;
+
+                        case FieldType.DOUBLE_FIELD:
+                            ClassifiedValueDataType = typeof(double);
+                            break;
+
+                        case FieldType.INTEGER_FIELD:
+                            ClassifiedValueDataType = typeof(int);
+                            break;
+
+                        case FieldType.STRING_FIELD:
+                            ClassifiedValueDataType = typeof(string);
+                            break;
+                    }
+                }
+
+                switch (_classificationType)
+                {
+                    case ClassificationType.EqualCount:
+                        break;
+
+                    case ClassificationType.EqualIntervals:
+                        break;
+
+                    case ClassificationType.EqualSumOfValues:
+                        break;
+
+                    case ClassificationType.NaturalBreaks:
+                    case ClassificationType.JenksFisher:
+
+                        for (int n = 0; n < sf.Categories.Count; n++)
+                        {
+                            double? min = null;
+                            double? max = null;
+                            string range = "";
+                            if (sf.Categories.Item[n].MinValue != null)
+                            {
+                                min = (double)sf.Categories.Item[n]?.MinValue;
+                                if (n == 0 && min == 0 && IgnoreZeroWhenClassifying)
+                                {
+                                    min = 1;
+                                }
+                                max = (double)sf.Categories.Item[n]?.MaxValue;
+                            }
+
+                            if (min != null)
+                            {
+                                range = $"{min}-{max - 1}";
+                            }
+                            else
+                            {
+                                min = (double)sf.Categories.Item[n - 1]?.MinValue;
+                                max = (double)sf.Categories.Item[n - 1]?.MaxValue;
+                                if (min == max)
+                                {
+                                    range = min.ToString();
+                                }
+                                else
+                                {
+                                    range = $"{min}-{max}";
+                                }
+                                ClassificationItems[(n).ToString()].Caption = range;
+                                range = "";
+                                break;
+                            }
+
+                            if (range.Length > 0)
+                            {
+                                ClassifiedItem cl = new ClassifiedItem(range);
+                                cl.DrawingOptions = sf.Categories.Item[n].DrawingOptions;
+                                ClassificationItems.Add((n + 1).ToString(), cl);
+                            }
+                        }
+                        break;
+
+                    case ClassificationType.StandardDeviation:
+                        break;
+
+                    case ClassificationType.UniqueValues:
+                        break;
+                }
+                _parent.LayerFinishedClassification();
+            }
+        }
+
 
         public bool IsPointDatabaseLayer
         {

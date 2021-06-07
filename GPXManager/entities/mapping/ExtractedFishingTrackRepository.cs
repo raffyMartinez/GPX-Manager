@@ -84,7 +84,29 @@ namespace GPXManager.entities.mapping
 
         public bool Delete(int id)
         {
-            return true;
+            bool success = false;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+                var sql = $"Delete * from extractedFishingTracks where ID={id}";
+                using (OleDbCommand update = new OleDbCommand(sql, conn))
+                {
+                    try
+                    {
+                        success = update.ExecuteNonQuery() > 0;
+                    }
+                    catch (OleDbException)
+                    {
+                        success = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                        success = false;
+                    }
+                }
+            }
+            return success;
         }
         public int MaxRecordNumber()
         {

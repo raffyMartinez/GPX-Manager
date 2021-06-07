@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using MapWinGIS;
 using System.Xml;
+using GPXManager.entities;
 
 namespace GPXManager.entities.mapping
 {
@@ -28,6 +29,57 @@ namespace GPXManager.entities.mapping
         public int Count()
         {
             return ExtractedFishingTrackCollection.Count;
+        }
+
+        public int CleanupUsingBoundary(Shapefile bscBoundary)
+        {
+            if (MapWindowManager.ExtractedTracksShapefile != null)
+            {
+                if (MapWindowManager.ExtractedTracksShapefile.StartEditingShapes())
+                {
+                    var crossingTracks = new object();
+                    var callback = new Callback();
+                    MapWindowManager.ExtractedTracksShapefile.SelectByShapefile(bscBoundary, tkSpatialRelation.srCrosses, false, ref crossingTracks, callback);
+                    var crossingTracks2 = (int[])crossingTracks;
+                    int counter = 0;
+                    int idx = MapWindowManager.ExtractedTracksShapefile.FieldIndexByName["ID"];
+                    List<int> IDsForDelete = new List<int>();
+                    for (int y = 0; y < crossingTracks2.Count(); y++)
+                    {
+                        MapWindowManager.ExtractedTracksShapefile.ShapeSelected[crossingTracks2[y]] = true;
+                        IDsForDelete.Add(MapWindowManager.ExtractedTracksShapefile.CellValue[idx, crossingTracks2[y]]);
+                    }
+
+                    foreach (var item in IDsForDelete)
+                    {
+                        for (int z = 0; z < MapWindowManager.ExtractedTracksShapefile.NumShapes; z++)
+                        {
+                            bool found = false;
+                            if ((int)(MapWindowManager.ExtractedTracksShapefile.CellValue[idx, z]) == item)
+                            {
+                                if (MapWindowManager.ExtractedTracksShapefile.EditDeleteShape(z))
+                                {
+
+                                    found = true;
+                                    if (DeleteRecordFromRepo(item))
+                                    {
+                                        counter++;
+                                    }
+                                    break;
+
+                                }
+                            }
+                            if (found) break;
+                        }
+                    }
+                    if (counter > 0 &&
+                        MapWindowManager.ExtractedTracksShapefile.StopEditingShapes())
+                    {
+                        return counter;
+                    }
+                }
+            }
+            return 0;
         }
 
         public List<ExtractedFishingTrack> GetTracks(ExtractedTrackSourceType sourceType, int sourceID)
@@ -84,7 +136,7 @@ namespace GPXManager.entities.mapping
                         }
                         //if (MapWindowManager.BSCBoundaryShapefile == null || !shp.Crosses(MapWindowManager.BSCBoundaryShapefile.Shape[0]))
                         //{
-                            result.GearRetrievalTracks.Add(dt);
+                        result.GearRetrievalTracks.Add(dt);
                         //}
                     }
                 }
@@ -95,7 +147,7 @@ namespace GPXManager.entities.mapping
 
                 if (ctx != null)
                 {
-                    if (ctx.XML.Length == 0)
+                    if (ctx.XML != null && ctx.XML.Length == 0)
                     {
                         ctx.XML = Entities.CTXFileViewModel.GetXMLOfCTX(ctx);
                         if (ctx.XML.Length == 0)
@@ -392,16 +444,18 @@ namespace GPXManager.entities.mapping
             }
             return _editSuccess;
         }
-
         public bool DeleteRecordFromRepo(ExtractedFishingTrack eft)
         {
-            if (eft == null)
-                throw new Exception("Error: The argument is Null");
+            return DeleteRecordFromRepo(eft.ID);
+        }
+        public bool DeleteRecordFromRepo(int id)
+        {
+
 
             int index = 0;
             while (index < ExtractedFishingTrackCollection.Count)
             {
-                if (ExtractedFishingTrackCollection[index].ID == eft.ID)
+                if (ExtractedFishingTrackCollection[index].ID == id)
                 {
                     ExtractedFishingTrackCollection.RemoveAt(index);
                     break;

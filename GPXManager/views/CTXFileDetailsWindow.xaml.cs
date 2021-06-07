@@ -91,6 +91,7 @@ namespace GPXManager.views
         {
             _instance = null;
             this.SavePlacement();
+            Owner.Focus();
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)

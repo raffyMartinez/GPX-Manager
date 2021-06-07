@@ -5,11 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
+
 namespace GPXManager.entities.mapping
 {
-     public class AOIViewModel
+    public class AOIViewModel
     {
-        public ObservableCollection<AOI> AOICollection{ get; set; }
+        public ObservableCollection<AOI> AOICollection { get; set; }
         private AOIRepository AOIs { get; set; }
 
         public AOIViewModel()
@@ -50,19 +52,106 @@ namespace GPXManager.entities.mapping
                     break;
             }
         }
+
+        public List<string> GetAOISubGridFileNames(AOI aoi)
+        {
+            List<string> gridShapeFiles = new List<string>();
+            DirectoryInfo folder = new DirectoryInfo($"{Global.Settings.SaveFolderForGrids}");
+            if (folder.Exists) // else: Invalid folder!
+            {
+                string search = $"grid_{aoi.Name.Replace(' ', '_')}_*.shp";
+                FileInfo[] files = folder.GetFiles(search);
+
+                foreach (FileInfo file in files)
+                {
+                    gridShapeFiles.Add(file.FullName);
+                }
+            }
+            return gridShapeFiles;
+        }
+
+        public List<string> CommonGridSizes { get; set; } = new List<string>();
+        public void SetGridFilenamesOfCommonSize()
+        {
+            CommonGridSizes.Clear();
+            Dictionary<string, int> dictGridSize_Count = new Dictionary<string, int>();
+            DirectoryInfo folder = new DirectoryInfo($"{Global.Settings.SaveFolderForGrids}");
+            if (folder.Exists)
+            {
+                foreach (var aoi in GetSelectedAOIs())
+                {
+                    aoi.GridFileNames.Clear();
+                    string search = $"grid_{aoi.Name.Replace(' ', '_')}_*.shp";
+                    FileInfo[] files = folder.GetFiles(search);
+
+                    foreach (FileInfo file in files)
+                    {
+                        var arr = file.FullName.Split('_');
+                        string size = arr[arr.Length - 1];
+                        if (!dictGridSize_Count.Keys.Contains(size))
+                        {
+                            dictGridSize_Count.Add(size, 1);
+                        }
+                        else
+                        {
+                            dictGridSize_Count[size]++;
+                        }
+
+                        aoi.GridFileNames.Add(file.FullName);
+                    }
+                }
+            }
+
+
+            foreach (var item in dictGridSize_Count)
+            {
+                if (item.Value == CountSelected())
+                {
+                    CommonGridSizes.Add(item.Key);
+                }
+            }
+        }
+        public int CountSelected()
+        {
+            return AOICollection.Count(t => t.Selected == true);
+        }
+
+        public List<AOI> GetSelectedAOIs()
+        {
+            return AOICollection.Where(t => t.Selected == true).ToList();
+        }
+        public void UnloadAllAOIBouindaries()
+        {
+            foreach (var aoi in AOICollection)
+            {
+                MapWindowManager.MapLayersHandler.RemoveLayer(aoi.AOIHandle);
+            }
+        }
+        public void UnloadAllGrids()
+        {
+            foreach (var aoi in AOICollection)
+            {
+                if (aoi.GridIsLoaded)
+                {
+                    MapWindowManager.MapLayersHandler.RemoveLayer(aoi.GridHandle);
+                }
+                aoi.GridSizeMeters = 0;
+                aoi.GridIsLoaded = false;
+            }
+        }
         public List<AOI> GetAllAOI()
         {
             return AOICollection.ToList();
         }
         public bool AOINameExist(string name)
         {
-            return AOICollection.Where(t => t.Name == name).FirstOrDefault() != null; 
+            return AOICollection.Where(t => t.Name == name).FirstOrDefault() != null;
         }
         public AOI CurrentEntity { get; set; }
 
         public AOI GetAOI(int id)
         {
-            CurrentEntity = AOICollection.FirstOrDefault(n => n.ID== id);
+            CurrentEntity = AOICollection.FirstOrDefault(n => n.ID == id);
             return CurrentEntity;
 
         }

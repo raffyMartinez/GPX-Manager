@@ -538,7 +538,8 @@ namespace GPXManager.entities.mapping
             bool intervalIsOk = _trackingInterval == null || _trackingInterval == 0;
             if (!intervalIsOk)
             {
-                intervalIsOk = timeElapsed.TotalSeconds < (int)_trackingInterval * 2;
+                //we add 5 to allow small variations in tracking interval
+                intervalIsOk = timeElapsed.TotalSeconds <= ((int)_trackingInterval * 2) + 5;
             }
             if (pt1.Time < pt2.Time)
             {
@@ -575,7 +576,7 @@ namespace GPXManager.entities.mapping
 
                         if (_candidateTrack.numPoints >= 6 && PolylineSelfCrossingsCount(_candidateTrack, 10, true) < 10)
                         {
-                            if (BSCBoundaryLine == null || !_candidateTrack.Crosses(BSCBoundaryLine))
+                            if (MapWindowManager.BSCBoundaryLine == null || !_candidateTrack.Crosses(MapWindowManager.BSCBoundaryLine))
                             {
                                 _eft.TrackPointCountOriginal = _candidateTrack.numPoints;
                                 _eft.TrackOriginal = _candidateTrack;
@@ -834,7 +835,7 @@ namespace GPXManager.entities.mapping
         {
             if (Entities.ExtractedFishingTrackViewModel.Count() > 0)
             {
-                if (_fishingTrackLines == null)
+                if (_fishingTrackLines == null || _fishingTrackLines.NumShapes == 0)
                 {
                     _fishingTrackLines = new Shapefile();
                     if (_fishingTrackLines.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
