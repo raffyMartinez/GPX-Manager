@@ -41,11 +41,12 @@ namespace GPXManager.views
         private void OnWindowClosed(object sender, EventArgs e)
         {
             ((MainWindow)Owner).ChildFormClosed();
+            _instance = null;
         }
 
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _instance = null;
+            //_instance = null;
 
         }
 

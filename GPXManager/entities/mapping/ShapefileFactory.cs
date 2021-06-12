@@ -623,12 +623,22 @@ namespace GPXManager.entities.mapping
                                 new Waypoint { Latitude = endpt2.y, Longitude = endpt2.x },
                                 out elevChange);
 
+                            var totalLength = firstSegment.ExtractedFishingTrack.LengthOriginal + tr.ExtractedFishingTrack.LengthOriginal;
                             if (distance < 50 &&
-                                (firstSegment.ExtractedFishingTrack.LengthOriginal +
-                                tr.ExtractedFishingTrack.LengthOriginal) > Global.Settings.GearRetrievingMinLength)
+                                totalLength > Global.Settings.GearRetrievingMinLength)
                             {
+                                for (int i = 0; i < tr.ExtractedFishingTrack.SegmentSimplified.numPoints; i++)
+                                {
+                                    var pt = tr.ExtractedFishingTrack.SegmentSimplified.Point[i];
+                                    firstSegment.ExtractedFishingTrack.SegmentSimplified.AddPoint(pt.x, pt.y);
+                                }
+                                firstSegment.Length = totalLength;
+                                firstSegment.ExtractedFishingTrack.TrackPointCountOriginal += tr.ExtractedFishingTrack.TrackPointCountOriginal;
+                                firstSegment.ExtractedFishingTrack.SerializedTrack = firstSegment.ExtractedFishingTrack.SegmentSimplified.SerializeToString();
+                                firstSegment.ExtractedFishingTrack.TrackPointCountSimplified = firstSegment.ExtractedFishingTrack.SegmentSimplified.numPoints;
                                 firstSegment.Accept = true;
-                                tr.Accept = true;
+                                firstSegment.ExtractedFishingTrack.CombinedTrack = true;
+                                tr.Accept = false;
                             }
                         }
                         firstSegment = tr;
@@ -666,7 +676,7 @@ namespace GPXManager.entities.mapping
                             sf.EditAddField("Departed", FieldType.DATE_FIELD, 1, 1);
                             sf.EditAddField("Arrived", FieldType.DATE_FIELD, 1, 1);
                             sf.EditAddField("Filename", FieldType.STRING_FIELD, 1, 1);
-                            sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 1, 1);
+                            sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 10, 12);
 
                             sf.Key = "trip_track";
                             sf.GeoProjection = globalMapping.GeoProjection;
@@ -718,8 +728,8 @@ namespace GPXManager.entities.mapping
                 {
                     sf.EditAddField("Name", FieldType.INTEGER_FIELD, 1, 1);
                     sf.EditAddField("Time", FieldType.DATE_FIELD, 1, 1);
-                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 1, 1);
-                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 10, 12);
+                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.Key = "ctx_track_vertices";
                     sf.GeoProjection = globalMapping.GeoProjection;
                     GPXMappingManager.TrackVerticesShapefile = sf;
@@ -763,8 +773,10 @@ namespace GPXManager.entities.mapping
                                 double distance = Waypoint.ComputeDistance(_wptBefore, wptNow, out elevChange);
                                 TimeSpan timeElapsed = wptDateTime - _timeBefore;
                                 double speed = distance / timeElapsed.TotalMinutes;
-                                sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, distance);
-                                sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, speed);
+                                if (sf.EditCellValue(sf.FieldIndexByName["Distance"], shpIndex, distance))
+                                {
+                                    sf.EditCellValue(sf.FieldIndexByName["Speed"], shpIndex, speed);
+                                }
                             }
                             else
                             {
@@ -793,11 +805,11 @@ namespace GPXManager.entities.mapping
                 Shapefile sf = new Shapefile();
                 if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
                 {
-                    sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.EditAddField("DateStart", FieldType.DATE_FIELD, 1, 1);
                     sf.EditAddField("DateEnd", FieldType.DATE_FIELD, 1, 1);
                     sf.EditAddField("Duration", FieldType.STRING_FIELD, 30, 1);
-                    sf.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.EditAddField("TrackPts", FieldType.INTEGER_FIELD, 1, 1);
                     sf.EditAddField("TrackPtsSimplified", FieldType.INTEGER_FIELD, 1, 1);
                     sf.GeoProjection = globalMapping.GeoProjection;
@@ -819,6 +831,7 @@ namespace GPXManager.entities.mapping
                     }
                 }
 
+                sf.SelectionAppearance = tkSelectionAppearance.saDrawingOptions;
                 sf.SelectionDrawingOptions.FillTransparency = 1f;
                 sf.SelectionDrawingOptions.FillVisible = false;
                 sf.SelectionDrawingOptions.FillBgTransparent = true;
@@ -847,13 +860,16 @@ namespace GPXManager.entities.mapping
                         _fishingTrackLines.EditAddField("DateAdded", FieldType.DATE_FIELD, 1, 1);
                         _fishingTrackLines.EditAddField("SourceType", FieldType.STRING_FIELD, 1, 1);
                         _fishingTrackLines.EditAddField("SourceID", FieldType.INTEGER_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("Gear", FieldType.STRING_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("LandingSite", FieldType.STRING_FIELD, 1, 1);
                         _fishingTrackLines.EditAddField("Start", FieldType.DATE_FIELD, 1, 1);
                         _fishingTrackLines.EditAddField("End", FieldType.DATE_FIELD, 1, 1);
-                        _fishingTrackLines.EditAddField("LenOriginal", FieldType.DOUBLE_FIELD, 1, 1);
-                        _fishingTrackLines.EditAddField("LenSimplified", FieldType.DOUBLE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("LenOriginal", FieldType.DOUBLE_FIELD, 10, 12);
+                        _fishingTrackLines.EditAddField("LenSimplified", FieldType.DOUBLE_FIELD, 10, 12);
                         _fishingTrackLines.EditAddField("TrckPtsOriginal", FieldType.INTEGER_FIELD, 1, 1);
                         _fishingTrackLines.EditAddField("TrckPtsSimplified", FieldType.INTEGER_FIELD, 1, 1);
-                        _fishingTrackLines.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 1, 1);
+                        _fishingTrackLines.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 10, 12);
+                        _fishingTrackLines.EditAddField("Combined", FieldType.BOOLEAN_FIELD, 1, 1);
                         foreach (var item in Entities.ExtractedFishingTrackViewModel.GetAll())
                         {
                             var shp = new Shape();
@@ -869,6 +885,8 @@ namespace GPXManager.entities.mapping
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["DateAdded"], idx, item.DateAdded);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["SourceType"], idx, item.TrackSourceTypeToString);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["SourceID"], idx, item.TrackSourceID);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["Gear"], idx, item.Gear);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["LandingSite"], idx, item.LandingSite);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["Start"], idx, item.Start);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["End"], idx, item.End);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["LenOriginal"], idx, item.LengthOriginal);
@@ -876,6 +894,7 @@ namespace GPXManager.entities.mapping
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["TrckPtsOriginal"], idx, item.TrackPointCountOriginal);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["TrckPtsSimplified"], idx, item.TrackPointCountSimplified);
                                 _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["AvgSpeed"], idx, item.AverageSpeed);
+                                _fishingTrackLines.EditCellValue(_fishingTrackLines.FieldIndexByName["Combined"], idx, item.CombinedTrack);
                             }
                         }
                     }
@@ -895,11 +914,11 @@ namespace GPXManager.entities.mapping
                 Shapefile sf = new Shapefile();
                 if (sf.CreateNewWithShapeID("", ShpfileType.SHP_POLYLINE))
                 {
-                    sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.EditAddField("DateStart", FieldType.DATE_FIELD, 1, 1);
                     sf.EditAddField("DateEnd", FieldType.DATE_FIELD, 1, 1);
                     sf.EditAddField("Duration", FieldType.STRING_FIELD, 30, 1);
-                    sf.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.EditAddField("TrackPts", FieldType.INTEGER_FIELD, 1, 1);
                     sf.EditAddField("TrackPtsSimplified", FieldType.INTEGER_FIELD, 1, 1);
                     sf.GeoProjection = globalMapping.GeoProjection;
@@ -974,8 +993,8 @@ namespace GPXManager.entities.mapping
                 {
                     sf.EditAddField("Name", FieldType.INTEGER_FIELD, 1, 1);
                     sf.EditAddField("Time", FieldType.DATE_FIELD, 1, 1);
-                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 1, 1);
-                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 1, 1);
+                    sf.EditAddField("Distance", FieldType.DOUBLE_FIELD, 10, 12);
+                    sf.EditAddField("Speed", FieldType.DOUBLE_FIELD, 10, 12);
                     sf.Key = "gpx_track_vertices";
                     sf.GeoProjection = globalMapping.GeoProjection;
                     GPXMappingManager.TrackVerticesShapefile = sf;
@@ -1143,7 +1162,7 @@ namespace GPXManager.entities.mapping
                     {
                         sf.EditAddField("GPS", FieldType.STRING_FIELD, 1, 1);
                         sf.EditAddField("Filename", FieldType.STRING_FIELD, 1, 1);
-                        sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 1, 1);
+                        sf.EditAddField("Length", FieldType.DOUBLE_FIELD, 10, 12);
                         sf.EditAddField("DateStart", FieldType.DATE_FIELD, 1, 1);
                         sf.EditAddField("DateEnd", FieldType.DATE_FIELD, 1, 1);
                         sf.Key = "gpxfile_track";

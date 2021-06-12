@@ -210,10 +210,11 @@ namespace GPXManager.entities.mapping
 
         public string GetGridFileNameOfGridSize(string grid_size)
         {
+            var size = grid_size.Split('.')[0];
             foreach(var item in GridFileNames)
             {
-                var arr = item.Split('_');
-                if(arr[arr.Length-1]==grid_size)
+                var arr = item.Split('_','.');
+                if(arr[arr.Length-2]==size)
                 {
                     return item;
                 }

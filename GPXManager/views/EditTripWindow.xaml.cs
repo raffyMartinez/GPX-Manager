@@ -73,6 +73,7 @@ namespace GPXManager.views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+             Closed += OnWindowClosed;
         }
 
         public GPS GPS { get; set; }
@@ -80,7 +81,7 @@ namespace GPXManager.views
         {
             ParentWindow.NotifyEditWindowClosing();
             this.SavePlacement();
-            _instance = null;
+            //_instance = null;
         }
         public void DefaultTripDates(DateTime start, DateTime end)
         {
@@ -274,8 +275,14 @@ namespace GPXManager.views
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "Notes", DisplayName = "Notes", DisplayOrder = 8, Description = "Notes" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "TripID", DisplayName = "Trip identifier", DisplayOrder = 9, Description = "Database identifier of trip" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "TrackSummary", DisplayName = "Track summary", DisplayOrder = 10, Description = "Summary of track" });
+
+           
         }
 
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
+        }
 
         public GPXFile GPXFile { get; set; }
         public bool IsNew { get; set; }

@@ -36,7 +36,7 @@ namespace GPXManager.entities.mapping.Views
         {
             //_sf = null;
             //this.SavePlacement();
-            //_instance = null;
+            _instance = null;
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -57,7 +57,7 @@ namespace GPXManager.entities.mapping.Views
         {
             _sf = null;
             this.SavePlacement();
-            _instance = null;
+            //_instance = null;
         }
 
         public void GetSelectedShapes()

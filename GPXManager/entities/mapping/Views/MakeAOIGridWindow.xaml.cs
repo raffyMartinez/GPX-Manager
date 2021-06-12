@@ -28,12 +28,18 @@ namespace GPXManager.entities.mapping.Views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += MakeAOIGridWindow_Closed;
 
+        }
+
+        private void MakeAOIGridWindow_Closed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _instance = null;
+            //_instance = null;
             Owner.Focus();
         }
 
@@ -42,11 +48,11 @@ namespace GPXManager.entities.mapping.Views
         {
             if (Global.Settings.GridSize != null)
             {
-                textBoxGridSize.Text = Global.Settings.GridSize.ToString();
+                cboGridSize.Text = Global.Settings.GridSize.ToString();
             }
             else
             {
-                textBoxGridSize.Text = "400";
+                cboGridSize.Text = "200";
             }
             labelTitle.Content = $"Generate grid for {AOI.Name}";
         }
@@ -63,7 +69,7 @@ namespace GPXManager.entities.mapping.Views
                 case "buttonOk":
                     SaveFileDialog sfd = null;
                     bool proceed = true;
-                    AOI.GridSizeMeters = int.Parse(textBoxGridSize.Text);
+                    AOI.GridSizeMeters = int.Parse(cboGridSize.Text);
                     if ((bool)checkSaveGrid.IsChecked)
                     {
                         proceed = false;
@@ -115,14 +121,14 @@ namespace GPXManager.entities.mapping.Views
                         }
 
                         AOI.GenerateMinorGrids();
-                        if (!AOI.GeneratedSubGrids(int.Parse(textBoxGridSize.Text)))
+                        if (!AOI.GeneratedSubGrids(int.Parse(cboGridSize.Text)))
                         {
                             MessageBox.Show("Subgrid size does not fit grid", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         else
                         {
 
-                            AOI.GridSizeMeters = int.Parse(textBoxGridSize.Text);
+                            AOI.GridSizeMeters = int.Parse(cboGridSize.Text);
 
                             int h = MapWindowManager.MapLayersHandler.AddLayer(AOI.SubGrids, $"{AOI.GridLayerName}");
                             if (h >= 0)

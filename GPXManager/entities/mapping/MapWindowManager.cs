@@ -68,7 +68,10 @@ namespace GPXManager.entities.mapping
                 SelectedTrackIndexes = (int[])selectedTracks;
                 for (int x = 0; x < SelectedTrackIndexes.Count(); x++)
                 {
-                    SelectedTracks.Add(ExtractedTracksShapefile.Shape[SelectedTrackIndexes[x]]);
+                    if (ExtractedTracksShapefile.ShapeVisible[SelectedTrackIndexes[x]])
+                    {
+                        SelectedTracks.Add(ExtractedTracksShapefile.Shape[SelectedTrackIndexes[x]]);
+                    }
                 }
             }
 
@@ -436,7 +439,9 @@ namespace GPXManager.entities.mapping
             {
                 var sf = ShapefileFactory.FishingTrackLines();
                 ExtractedTracksShapefile = sf;
-                sf.DefaultDrawingOptions.LineColor = new Utils().ColorByName(tkMapColor.Cornsilk);
+                sf.SelectionAppearance = tkSelectionAppearance.saDrawingOptions;
+                sf.DefaultDrawingOptions.LineColor = new Utils().ColorByName(tkMapColor.Salmon);
+                sf.SelectionDrawingOptions.LineWidth = 4f;
                 return MapLayersHandler.AddLayer(sf, "Fishing tracks", layerKey: sf.Key, uniqueLayer: true) >= 0;
 
             }
@@ -652,6 +657,7 @@ namespace GPXManager.entities.mapping
                 {
                     _selectedShapedIDs = value;
                     var sf = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+                    sf.SelectionDrawingOptions.LineWidth = 4f;
                     sf.SelectNone();
                     foreach (var h in _selectedShapedIDs)
                     {
@@ -784,7 +790,14 @@ namespace GPXManager.entities.mapping
         public static int MapExtractedFishingTracksShapefile(Shapefile extractedTracks)
         {
             RemoveGPSDataFromMap();
-            return MapLayersHandler.AddLayer(extractedTracks, "Extracted tracks", uniqueLayer: true, layerKey: extractedTracks.Key, rejectIfExisting: true);
+            var h=MapLayersHandler.AddLayer(extractedTracks, "Extracted tracks", uniqueLayer: true, layerKey: extractedTracks.Key, rejectIfExisting: true);
+
+            var sf = (Shapefile)MapLayersHandler[h].LayerObject;
+            sf.DefaultDrawingOptions.LineColor = new Utils().ColorByName(tkMapColor.Salmon);
+            sf.SelectionAppearance = tkSelectionAppearance.saDrawingOptions;
+            sf.SelectionDrawingOptions.LineWidth = 4f;
+            return h;
+
         }
 
         public static int MapGPX(GPXFile gpxFile, out int shpIndex, out List<int> handles, bool showInMap = true)

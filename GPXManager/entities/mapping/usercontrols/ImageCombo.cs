@@ -421,7 +421,7 @@ namespace GPXManager.entities.mapping.usercontrols
                             }
 
                             IntPtr ptr = g.GetHdc();
-                            sdo.DrawPoint(ptr, 0.0f, 0.0f, _imgWidth, _imgHeight, Colors.ColorToUInteger(this.BackColor));
+                            sdo.DrawPoint((int)ptr, 0.0f, 0.0f, _imgWidth, _imgHeight, Colors.ColorToUInteger(this.BackColor));
                             g.ReleaseHdc(ptr);
                             break;
                         }

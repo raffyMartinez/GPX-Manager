@@ -242,21 +242,21 @@ namespace GPXManager.entities.mapping
 
                                 if (isCategory)
                                 {
-                                    sdo.DrawPoint(ptr, (rect.Width / 5) * 2, rect.Height / 4, 0, 0);
+                                    sdo.DrawPoint((int)ptr, (rect.Width / 5) * 2, rect.Height / 4, 0, 0);
                                 }
                                 else
                                 {
-                                    sdo.DrawPoint(ptr, (rect.Width / 5) * 2, rect.Height / 2, 0, 0);
+                                    sdo.DrawPoint((int)ptr, (rect.Width / 5) * 2, rect.Height / 2, 0, 0);
                                 }
 
                                 break;
 
                             case ShpfileType.SHP_POLYGON:
-                                sdo.DrawRectangle(ptr, rect.Width / 3, rect.Height / 4, w, h, shp.DefaultDrawingOptions.LineVisible, rect.Width, rect.Height);
+                                sdo.DrawRectangle((int)ptr, rect.Width / 3, rect.Height / 4, w, h, shp.DefaultDrawingOptions.LineVisible, rect.Width, rect.Height);
                                 break;
 
                             case ShpfileType.SHP_POLYLINE:
-                                sdo.DrawLine(ptr, rect.Width / 3, rect.Height / 4, w, h, true, rect.Width, rect.Height);
+                                sdo.DrawLine((int)ptr, rect.Width / 3, rect.Height / 4, w, h, true, rect.Width, rect.Height);
                                 break;
                         }
 
@@ -367,6 +367,8 @@ namespace GPXManager.entities.mapping
 
         public void ClearAllSelections()
         {
+
+
             foreach (var item in MapLayerDictionary)
             {
                 if (item.Value.LayerType == "ShapefileClass")

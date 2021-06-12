@@ -116,7 +116,21 @@ namespace GPXManager.entities.mapping.Views
                         {
                             case "buttonShowGrid":
                                 Entities.AOIViewModel.SetGridFilenamesOfCommonSize();
-                                if (Entities.AOIViewModel.CommonGridSizes.Count == 1)
+                                if (Entities.AOIViewModel.CommonGridSizes.Count > 1)
+                                {
+                                    SelectGridFileWindow sgw = new SelectGridFileWindow();
+                                    sgw.CommonGridSizes = Entities.AOIViewModel.CommonGridSizes;
+                                    if ((bool)sgw.ShowDialog())
+                                    {
+                                        //Entities.AOIViewModel.CommonGridSizeSelectedSize = sgw.SelectedGridSize;
+                                        foreach (var aoi in Entities.AOIViewModel.GetSelectedAOIs())
+                                        {
+                                            var file = aoi.GetGridFileNameOfGridSize(((int)sgw.SelectedGridSize).ToString());
+                                            aoi.CreateGridFromFileName(file);
+                                        }
+                                    }
+                                }
+                                else if (Entities.AOIViewModel.CommonGridSizes.Count == 1)
                                 {
                                     foreach (var aoi in Entities.AOIViewModel.GetSelectedAOIs())
                                     {
@@ -138,8 +152,16 @@ namespace GPXManager.entities.mapping.Views
                                 }
                                 break;
                             case "buttonFormatMaps":
-                                FormatGridMapWindow fmw = new FormatGridMapWindow(_aoi);
-                                fmw.ShowDialog();
+                                FormatGridMapWindow fmw = FormatGridMapWindow.GetInstance(_aoi);
+                                if (fmw.Visibility == Visibility.Visible)
+                                {
+                                    fmw.BringIntoView();
+                                }
+                                else
+                                {
+                                    fmw.Owner = this;
+                                    fmw.Show();
+                                }
                                 break;
                         }
                     }
@@ -202,6 +224,8 @@ namespace GPXManager.entities.mapping.Views
         {
             switch (((MenuItem)sender).Name)
             {
+                case "menuAOIDelete":
+                    break;
                 case "menuFormatMap":
                     bool proceed = false;
                     foreach (var aoi in Entities.AOIViewModel.GetAllAOI())
@@ -221,8 +245,16 @@ namespace GPXManager.entities.mapping.Views
                     }
                     else
                     {
-                        FormatGridMapWindow fmw = new FormatGridMapWindow(_aoi);
-                        fmw.ShowDialog();
+                        FormatGridMapWindow fmw = FormatGridMapWindow.GetInstance(_aoi);
+                        if (fmw.Visibility == Visibility.Visible)
+                        {
+                            fmw.BringIntoView();
+                        }
+                        else
+                        {
+                            fmw.Owner = this;
+                            fmw.Show();
+                        }
                     }
 
                     break;

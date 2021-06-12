@@ -33,6 +33,8 @@ namespace GPXManager.views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
+
         }
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -89,7 +91,7 @@ namespace GPXManager.views
         }
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _instance = null;
+            //_instance = null;
             this.SavePlacement();
             Owner.Focus();
         }
@@ -112,6 +114,12 @@ namespace GPXManager.views
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "Version", DisplayName = "Version", DisplayOrder = 13, Description = "Version of the BSC Tracker App" });
             PropertyGrid.PropertyDefinitions.Add(new PropertyDefinition { Name = "Identifier", DisplayName = "Identifier", DisplayOrder = 14, Description = "Database identifier" });
             ShowDetails();
+           
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void OnButtonClicked(object sender, RoutedEventArgs e)

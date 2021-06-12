@@ -8,6 +8,8 @@ namespace GPXManager.entities.mapping
 {
     public class ShapefileFieldSummary
     {
+        public ShapefileFieldSummary() { }
+
         public ShapefileFieldSummary(object list, string type, string name)
         {
             Name = name;
@@ -52,6 +54,8 @@ namespace GPXManager.entities.mapping
                     break;
             }
         }
+
+        public Dictionary<string, int> FieldEntriesAndCount { get; set; } = new Dictionary<string, int>();
         public int Count { get; private set; }
         public string MaxAsString { get; private set; }
         public string MinAsString { get; private set; }

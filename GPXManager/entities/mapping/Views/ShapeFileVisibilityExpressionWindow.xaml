@@ -1,0 +1,63 @@
+﻿<Window x:Class="GPXManager.entities.mapping.Views.ShapeFileVisibilityExpressionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GPXManager.entities.mapping.Views"
+        mc:Ignorable="d"
+        Title="ShapeFileVisibilityExpressionWindow" Height="450" Width="612.8" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="200"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="115"/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.ColumnSpan="3" Content="Define visibility of shapefile" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        <TextBox Grid.ColumnSpan="2" Grid.Row="1" Margin="5" x:Name="textQuery" TextWrapping="Wrap"/>
+        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Button Content="&lt;" Margin="3" Width="25" Height="25" Click="OnButtonClick"/>
+            <Button Content="&lt;=" Margin="3" Width="25" Height="25"  Click="OnButtonClick"/>
+            <Button Content="&gt;=" Margin="3" Width="25" Height="25"  Click="OnButtonClick"/>
+            <Button Content="&gt;" Margin="3" Width="25" Height="25"  Click="OnButtonClick"/>
+            <Button Content="=" Margin="3" Width="25" Height="25"  Click="OnButtonClick"/>
+            <Button Content="&lt;&gt;" Margin="3" Width="25" Height="25"  Click="OnButtonClick"/>
+            <Button Content="AND" Margin="20 3 3 3" Width="28" Height="25"  Click="OnButtonClick"/>
+            <Button Content="OR" Margin="3" Width="28" Height="25"  Click="OnButtonClick"/>
+            <Button Content="NOT" Margin="3" Width="28" Height="25"  Click="OnButtonClick"/>
+            <Button Content="(" Margin="20 3 3 3" Width="28" Height="25" />
+            <Button Content=")" Margin="3" Width="28" Height="25"  Click="OnButtonClick"/>
+        </WrapPanel>
+        <StackPanel Grid.Row="3">
+            <Label Content="Fields"/>
+            <ListBox Margin="5 0 5 5" Height="160" x:Name="listBoxFields" MouseDoubleClick="OnlistBoxFields_DoubleClick" SelectionChanged="OnListBoxSelectionChange"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Grid.Column="1">
+            <Label Content="Values"/>
+            <DataGrid x:Name="dgvValues" Height="160" Margin="5 0 5 5" ItemsSource="{Binding}" AutoGenerateColumns="False" SelectionChanged="OnGridSelectionChanged" MouseDoubleClick="OnGridDoubleClick" IsReadOnly="True"/>
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="2" Grid.RowSpan="2">
+            <Button Content="Test" Width="60" Height="25" Margin="2" Click="OnButtonClick"/>
+            <Button Content="Clear" Width="60" Height="25" Margin="2 5 2 2" Click="OnButtonClick"/>
+            <Button Content="Apply" Width="60" Height="25" Margin="2 5 2 2" Click="OnButtonClick"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Grid.Column="3" Margin="3">
+            <Button Content="Get values" Width="65" Height="25" Margin="2 30 2  8"  Click="OnButtonClick"/>
+            <CheckBox Content="Show values" Margin="0 3"/>
+            <CheckBox Content="Update selection" Margin="0 3"/>
+        </StackPanel>
+        <Label x:Name="lblResult" Grid.ColumnSpan="2" VerticalAlignment="Center" Margin="3 0" Content="This is the result label" Grid.Row="4"/>
+        <WrapPanel Grid.Row="5"  Grid.ColumnSpan="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="50" Height="25" Margin="5 0" Click="OnButtonClick"/>
+            <Button Content="Reset" Width="50" Height="25" Margin="5 0 " Click="OnButtonClick"/>
+            <Button Content="Ok" Width="50" Height="25" Margin="5 0 20 0" Click="OnButtonClick"/>
+        </WrapPanel>
+    </Grid>
+</Window>

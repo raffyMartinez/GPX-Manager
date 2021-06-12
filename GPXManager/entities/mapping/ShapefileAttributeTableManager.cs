@@ -129,7 +129,7 @@ namespace GPXManager.entities.mapping
                         }
                     }
                 }
-                if(sf.EditingTable )
+                if (sf.EditingTable)
                 {
                     Callback = new Callback();
                     sf.StopEditingTable(saveChanges, Callback);
@@ -144,7 +144,7 @@ namespace GPXManager.entities.mapping
         /// </summary>
         /// <param name="sf"></param>
         /// <returns></returns>
-        public static DataTable SetupAttributeTable(Shapefile sf, bool selectedOnly=false)
+        public static DataTable SetupAttributeTable(Shapefile sf, bool selectedOnly = false)
         {
             DataTable dt = new DataTable();
             DataCaption = $"Name of layer: {MapInterActionHandler.MapLayersHandler.CurrentMapLayer.Name}";
@@ -175,7 +175,7 @@ namespace GPXManager.entities.mapping
                 {
                     dt.Columns.Add(new DataColumn { Caption = fieldCaption, DataType = t, ColumnName = fieldCaption });
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
 
                 }
@@ -187,7 +187,7 @@ namespace GPXManager.entities.mapping
             {
                 for (int x = 0; x < sf.NumShapes; x++)
                 {
-                    if (sf.ShapeSelected[x])
+                    if (sf.ShapeSelected[x] && !sf.ShapeIsHidden[x])
                     {
                         row = dt.NewRow();
                         for (int z = 0; z < sf.NumFields; z++)
@@ -212,20 +212,23 @@ namespace GPXManager.entities.mapping
                 {
                     for (int x = 0; x < sf.NumShapes; x++)
                     {
-                        row = dt.NewRow();
-                        for (int z = 0; z < sf.NumFields; z++)
+                        if (sf.ShapeVisible[x])
                         {
-                            if (sf.CellValue[z, x] == null)
+                            row = dt.NewRow();
+                            for (int z = 0; z < sf.NumFields; z++)
                             {
-                                row[z] = DBNull.Value;
-                            }
-                            else
-                            {
-                                row[z] = sf.CellValue[z, x];
-                            }
+                                if (sf.CellValue[z, x] == null)
+                                {
+                                    row[z] = DBNull.Value;
+                                }
+                                else
+                                {
+                                    row[z] = sf.CellValue[z, x];
+                                }
 
+                            }
+                            dt.Rows.Add(row);
                         }
-                        dt.Rows.Add(row);
                     }
                 }
                 else

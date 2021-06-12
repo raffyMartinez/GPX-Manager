@@ -1,4 +1,5 @@
 ﻿using AxMapWinGIS;
+
 using GPXManager.entities;
 using GPXManager.entities.mapping;
 using GPXManager.entities.mapping.Views;
@@ -47,6 +48,7 @@ namespace GPXManager.views
         {
             InitializeComponent();
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
         }
 
 
@@ -70,7 +72,7 @@ namespace GPXManager.views
             {
                 SaveMapState();
             }
-            _instance = null;
+            //_instance = null;
             this.SavePlacement();
 
             GPXMappingManager.RemoveAllFromMap();
@@ -92,7 +94,6 @@ namespace GPXManager.views
             MapControl = new AxMapWinGIS.AxMap();
             host.Child = MapControl;
             MapGrid.Children.Add(host);
-
             MapLayersHandler = new MapLayersHandler(MapControl);
             MapInterActionHandler = new MapInterActionHandler(MapControl, MapLayersHandler);
             MapControl.ZoomBehavior = tkZoomBehavior.zbDefault;
@@ -123,7 +124,12 @@ namespace GPXManager.views
             TripMappingManager.MapInteractionHandler = MapInterActionHandler;
 
             SetButtonEnabled();
+            
+        }
 
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void MapLayersHandler_OnLayerVisibilityChanged(MapLayersHandler s, LayerEventArg e)
@@ -149,41 +155,44 @@ namespace GPXManager.views
             if (CurrentLayer != null && CurrentLayer.LayerType == "ShapefileClass" && LayerSelector != null)
             {
                 SelectedShapeIndexes = e.SelectedIndexes.ToList();
-                var sf = (Shapefile)CurrentLayer.LayerObject;
-                int fileNameField = sf.FieldIndexByName["Filename"];
-                int gpsField = sf.FieldIndexByName["GPS"];
-
-                switch (LayerSelector.GetType().Name)
+                if (SelectedShapeIndexes.Count > 0)
                 {
-                    case "DataGrid":
-                        var dataGrid = (System.Windows.Controls.DataGrid)LayerSelector;
-                        string fileName = sf.CellValue[fileNameField, SelectedShapeIndexes[0]];
-                        string gps = sf.CellValue[gpsField, SelectedShapeIndexes[0]];
-                        string itemGPS = "";
-                        string itemFilename = "";
-                        foreach (var item in dataGrid.Items)
-                        {
-                            switch (dataGrid.Name)
+                    var sf = (Shapefile)CurrentLayer.LayerObject;
+                    int fileNameField = sf.FieldIndexByName["Filename"];
+                    int gpsField = sf.FieldIndexByName["GPS"];
+
+                    switch (LayerSelector.GetType().Name)
+                    {
+                        case "DataGrid":
+                            var dataGrid = (System.Windows.Controls.DataGrid)LayerSelector;
+                            string fileName = sf.CellValue[fileNameField, SelectedShapeIndexes[0]];
+                            string gps = sf.CellValue[gpsField, SelectedShapeIndexes[0]];
+                            string itemGPS = "";
+                            string itemFilename = "";
+                            foreach (var item in dataGrid.Items)
                             {
-                                case "dataGridTrips":
-                                    Trip trip = (Trip)item;
-                                    itemGPS = trip.GPS.DeviceName;
-                                    itemFilename = trip.Track.FileName;
+                                switch (dataGrid.Name)
+                                {
+                                    case "dataGridTrips":
+                                        Trip trip = (Trip)item;
+                                        itemGPS = trip.GPS.DeviceName;
+                                        itemFilename = trip.Track.FileName;
+                                        break;
+                                    case "dataGridGPXFiles":
+                                        GPXFile gpxFile = (GPXFile)item;
+                                        itemGPS = gpxFile.GPS.DeviceName;
+                                        itemFilename = gpxFile.FileName;
+                                        break;
+                                }
+                                if (itemGPS == gps && itemFilename == fileName)
+                                {
+                                    dataGrid.SelectedItem = item;
+                                    dataGrid.ScrollIntoView(item);
                                     break;
-                                case "dataGridGPXFiles":
-                                    GPXFile gpxFile = (GPXFile)item;
-                                    itemGPS = gpxFile.GPS.DeviceName;
-                                    itemFilename = gpxFile.FileName;
-                                    break;
+                                }
                             }
-                            if (itemGPS == gps && itemFilename == fileName)
-                            {
-                                dataGrid.SelectedItem = item;
-                                dataGrid.ScrollIntoView(item);
-                                break;
-                            }
-                        }
-                        break;
+                            break;
+                    }
                 }
             }
         }
@@ -413,23 +422,31 @@ namespace GPXManager.views
                     cursorMode = tkCursorMode.cmSelection;
                     cursor = tkCursor.crsrHand;
                     break;
+                case "buttonSelectPolygon":
+                    cursorMode = tkCursorMode.cmSelectByPolygon;
+                    cursor = tkCursor.crsrHand;
+                    MapLayersHandler.CurrentMapLayer.LayerIsSelectable = true;
+                    break;
                 case "buttonSelectNone":
                     MapLayersHandler.ClearAllSelections();
                     break;
                 case "buttonAttributes":
-                    ShapeFileAttributesWindow sfw = ShapeFileAttributesWindow.GetInstance(MapWindowManager.MapInterActionHandler);
-                    if (sfw.Visibility == Visibility.Visible)
+                    if (MapLayersHandler.CurrentMapLayer != null)
                     {
-                        sfw.BringIntoView();
+                        ShapeFileAttributesWindow sfw = ShapeFileAttributesWindow.GetInstance(MapWindowManager.MapInterActionHandler);
+                        if (sfw.Visibility == Visibility.Visible)
+                        {
+                            sfw.BringIntoView();
+                        }
+                        else
+                        {
+                            sfw.Owner = this;
+                            sfw.ShapeFile = MapLayersHandler.CurrentMapLayer.LayerObject as Shapefile;
+                            sfw.ShowShapeFileAttribute();
+                            sfw.Show();
+                        }
+                        MapWindowManager.ShapeFileAttributesWindow = sfw;
                     }
-                    else
-                    {
-                        sfw.Owner = this;
-                        sfw.ShapeFile = MapLayersHandler.CurrentMapLayer.LayerObject as Shapefile;
-                        sfw.ShowShapeFileAttribute();
-                        sfw.Show();
-                    }
-                    MapWindowManager.ShapeFileAttributesWindow = sfw;
                     break;
                 case "buttonGears":
                     ToBeImplemented("mapping options");

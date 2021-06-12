@@ -28,7 +28,9 @@ namespace GPXManager.entities.mapping.Views
         {
             InitializeComponent();
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
             Loaded += ShapeFileAttributesWindow_Loaded;
+
             _mapInterActionHandler = mapInterActionHandler;
             _mapInterActionHandler.ShapesSelected += _mapInterActionHandler_ShapesSelected;
             _mapInterActionHandler.SelectionCleared += _mapInterActionHandler_SelectionCleared;
@@ -38,6 +40,8 @@ namespace GPXManager.entities.mapping.Views
 
         }
 
+
+
         public bool ShowSummaryOfSelectedItems { get; set; }
 
 
@@ -45,11 +49,14 @@ namespace GPXManager.entities.mapping.Views
         private void _mapInterActionHandler_SelectionCleared(object sender, EventArgs e)
         {
             dataGridAttributes.SelectedItems.Clear();
+            ShowShapeFileAttribute();
+
         }
 
         private void MapLayersHandler_AllSelectionsCleared(object sender, EventArgs e)
         {
             dataGridAttributes.SelectedItems.Clear();
+            ShowShapeFileAttribute();
         }
 
         private void ShapeFileAttributesWindow_Loaded(object sender, RoutedEventArgs e)
@@ -67,10 +74,13 @@ namespace GPXManager.entities.mapping.Views
         {
             if (((Shapefile)MapWindowManager.MapLayersHandler[e.LayerHandle].LayerObject).FieldIndexByName["MWShapeID"] >= 0)
             {
+                _gridWaslClicked = false;
                 if (e.SelectedIndexes.Count() == 1)
                 {
+                    _gridWaslClicked = true;
                     if (dataGridAttributes.Items.Count == 1)
                     {
+                        
                         dataGridAttributes.DataContext = ShapefileAttributeTableManager.SetupAttributeTable(ShapeFile, true);
                         for (int x = 0; x < e.SelectedIndexes.Count(); x++)
                         {
@@ -102,7 +112,8 @@ namespace GPXManager.entities.mapping.Views
                 }
                 else
                 {
-                    dataGridAttributes.DataContext = ShapefileAttributeTableManager.SetupAttributeTable(ShapeFile,true);
+                    //dataGridAttributes.DataContext = ShapefileAttributeTableManager.SetupAttributeTable(ShapeFile,true);
+                    ShowShapeFileAttribute();
                     for (int x = 0; x < e.SelectedIndexes.Count(); x++)
                     {
                         foreach (DataRowView item in dataGridAttributes.Items)
@@ -123,7 +134,6 @@ namespace GPXManager.entities.mapping.Views
 
         private void CleanUp()
         {
-            _instance = null;
             _mapInterActionHandler.ShapesSelected -= _mapInterActionHandler_ShapesSelected;
             _mapInterActionHandler.SelectionCleared -= _mapInterActionHandler_SelectionCleared;
             _mapInterActionHandler.MapLayersHandler.CurrentLayer -= MapLayersHandler_CurrentLayer;
@@ -138,13 +148,24 @@ namespace GPXManager.entities.mapping.Views
             base.OnSourceInitialized(e);
             this.ApplyPlacement();
         }
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            //CleanUp();
+            //this.SavePlacement();
+            //MapWindowManager.ShapeFileAttributesWindow = null;
+            //if (MapWindowManager.MapWindowForm != null)
+            //{
+            //    MapWindowManager.MapWindowForm.Focus();
+            //}
+            _instance = null;
+        }
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             CleanUp();
             this.SavePlacement();
             MapWindowManager.ShapeFileAttributesWindow = null;
             MapWindowManager.MapWindowForm.Focus();
-            _instance = null;
+            //_instance = null;
         }
 
         public static ShapeFileAttributesWindow GetInstance(MapInterActionHandler mapInterActionHandler)
@@ -210,7 +231,12 @@ namespace GPXManager.entities.mapping.Views
                         {
                             selectedIDs.Add(row.Row.Field<int>(col));
                         }
-                        MapWindowManager.SelectedAttributeRows = selectedIDs;
+
+                        if (_gridWaslClicked)
+                        {
+                            MapWindowManager.SelectedAttributeRows = selectedIDs;
+                            _gridWaslClicked = false;
+                        }
 
                         if (dataGridAttributes.SelectedItems.Count == 1)
                         {
@@ -241,6 +267,23 @@ namespace GPXManager.entities.mapping.Views
                 {
                     Logger.Log(ex);
                 }
+            }
+        }
+
+        private bool _gridWaslClicked = false;
+        private void OnDataGridNouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                _gridWaslClicked = true;
+            }
+        }
+
+        private void OnDataGridPreivewNouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if(e.LeftButton ==MouseButtonState.Pressed)
+            {
+                _gridWaslClicked = true;
             }
         }
     }

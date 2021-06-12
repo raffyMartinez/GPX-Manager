@@ -213,8 +213,17 @@ namespace GPXManager.entities.mapping
                         SerializedTrack = item.ExtractedFishingTrack.SegmentSimplified.SerializeToString(),
                         DeviceName = deviceName,
                         FromDatabase = item.ExtractedFishingTrack.FromDatabase,
-                        SerializedTrackUTM = item.ExtractedFishingTrack.SerializedTrackUTM
+                        SerializedTrackUTM = item.ExtractedFishingTrack.SerializedTrackUTM,
+                        CombinedTrack = item.ExtractedFishingTrack.CombinedTrack
                     };
+
+                    if(extractedTrack.TrackSourceType==ExtractedTrackSourceType.TrackSourceTypeCTX)
+                    {
+                        var ctxFile = Entities.CTXFileViewModel.GetFile(extractedTrack.TrackSourceID);
+                        extractedTrack.Gear = ctxFile.Gear;
+                        extractedTrack.LandingSite = ctxFile.LandingSite;
+                    }
+
                     if (!save)
                     {
 
@@ -293,13 +302,16 @@ namespace GPXManager.entities.mapping
                     ExtractedFishingTracksSF.EditAddField("DateAdded", FieldType.DATE_FIELD, 1, 1);
                     ExtractedFishingTracksSF.EditAddField("SourceType", FieldType.STRING_FIELD, 1, 1);
                     ExtractedFishingTracksSF.EditAddField("SourceID", FieldType.INTEGER_FIELD, 1, 1);
+                    ExtractedFishingTracksSF.EditAddField("Gear", FieldType.STRING_FIELD, 1, 1);
+                    ExtractedFishingTracksSF.EditAddField("LandingSite", FieldType.STRING_FIELD, 1, 1);
                     ExtractedFishingTracksSF.EditAddField("Start", FieldType.DATE_FIELD, 1, 1);
                     ExtractedFishingTracksSF.EditAddField("End", FieldType.DATE_FIELD, 1, 1);
-                    ExtractedFishingTracksSF.EditAddField("LenOriginal", FieldType.DOUBLE_FIELD, 1, 1);
-                    ExtractedFishingTracksSF.EditAddField("LenSimplified", FieldType.DOUBLE_FIELD, 1, 1);
+                    ExtractedFishingTracksSF.EditAddField("LenOriginal", FieldType.DOUBLE_FIELD, 10, 12);
+                    ExtractedFishingTracksSF.EditAddField("LenSimplified", FieldType.DOUBLE_FIELD, 10, 12);
                     ExtractedFishingTracksSF.EditAddField("TrckPtsOriginal", FieldType.INTEGER_FIELD, 1, 1);
                     ExtractedFishingTracksSF.EditAddField("TrckPtsSimplified", FieldType.INTEGER_FIELD, 1, 1);
-                    ExtractedFishingTracksSF.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 1, 1);
+                    ExtractedFishingTracksSF.EditAddField("AvgSpeed", FieldType.DOUBLE_FIELD, 10, 12);
+                    ExtractedFishingTracksSF.EditAddField("Combined", FieldType.BOOLEAN_FIELD, 1, 1);
 
                     foreach (var item in list)
                     {
@@ -317,7 +329,8 @@ namespace GPXManager.entities.mapping
                                 ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["SourceType"], idx, "GPX");
                             }
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["SourceID"], idx, item.TrackSourceID);
-                            ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["DeviceName"], idx, item.DeviceName);
+                            ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["Gear"], idx, item.Gear);
+                            ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["LandingSite"], idx, item.LandingSite);
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["Start"], idx, item.Start);
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["End"], idx, item.End);
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["LenOriginal"], idx, item.LengthOriginal);
@@ -325,6 +338,7 @@ namespace GPXManager.entities.mapping
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["TrckPtsOriginal"], idx, item.TrackPointCountOriginal);
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["TrckPtsSimplified"], idx, item.TrackPointCountSimplified);
                             ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["AvgSpeed"], idx, item.AverageSpeed);
+                            ExtractedFishingTracksSF.EditCellValue(ExtractedFishingTracksSF.FieldIndexByName["Combined"], idx, item.CombinedTrack);
                         }
                     }
                 }
@@ -414,9 +428,32 @@ namespace GPXManager.entities.mapping
             }
         }
 
-        public List<ExtractedFishingTrack> GetAll()
+        public List<ExtractedFishingTrack> GetAll(bool removeDuplicate = false)
         {
-            return ExtractedFishingTrackCollection.OrderBy(t => t.ID).ToList();
+            if (removeDuplicate)
+            {
+                var list = new List<ExtractedFishingTrack>();
+                var count = 0;
+                foreach(var item in ExtractedFishingTrackCollection
+                    .OrderBy(t=>t.DeviceName)
+                    .ThenBy(t=>t.Start))
+                {
+                    if(count==0)
+                    {
+                        list.Add(item);
+                    }
+                    else
+                    {
+
+                    }
+                    count++;
+                }
+                return list;
+            }
+            else
+            {
+                return ExtractedFishingTrackCollection.OrderBy(t => t.ID).ToList();
+            }
         }
         public bool AddRecordToRepo(ExtractedFishingTrack eft)
         {

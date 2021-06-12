@@ -13,7 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Drawing.Drawing2D;
 using MapWinGIS;
-
+using System.Windows.Controls.Primitives;
+using System.Collections;
 
 namespace GPXManager.entities.mapping.Views
 {
@@ -28,16 +29,31 @@ namespace GPXManager.entities.mapping.Views
         private Dictionary<string, int> _sheetMapSummary = new Dictionary<string, int>();
         private ColorScheme _scheme = new ColorScheme();
         private List<AOI> _selectedAOIs = new List<AOI>();
+        private static FormatGridMapWindow _instance;
         public FormatGridMapWindow()
         {
             InitializeComponent();
             Loaded += OnFormLoaded;
+             Closed += OnWindowClosed;
+        }
+        public static FormatGridMapWindow GetInstance(AOI aoi = null)
+        {
+            if (_instance == null) _instance = new FormatGridMapWindow(aoi);
+            return _instance;
         }
         public FormatGridMapWindow(AOI aoi)
         {
             InitializeComponent();
             Loaded += OnFormLoaded;
+            Closing += OnWindowClosing;
             AOI = aoi;
+             Closed += OnWindowClosed;
+        }
+
+        private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            //_instance = null;
+            Owner.Focus();
         }
 
         public AOI AOI { get; set; }
@@ -82,11 +98,19 @@ namespace GPXManager.entities.mapping.Views
                 cboGridColumnNames.Items.Add(item);
             }
 
+           
+
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void OnButtonClick(object sender, RoutedEventArgs e)
         {
-            switch (((Button)sender).Content)
+            Button btn = (Button)sender;
+            switch (btn.Content.ToString())
             {
                 case "Categorize":
                     int result = 0;
@@ -94,15 +118,16 @@ namespace GPXManager.entities.mapping.Views
 
                     if (cboGridColumnNames.SelectedItem != null && isInt && result > 0)
                     {
-                        bool categorizationSuccess = DoJenksFisherCategorization(icbColorScheme.SelectedIndex, _selectedAOIs.Count> 1);
+                        bool categorizationSuccess = DoJenksFisherCategorization(icbColorScheme.SelectedIndex, _selectedAOIs.Count > 1);
                         if (categorizationSuccess)
                         {
+
                             dg.AutoGenerateColumns = false;
                             dg.CanUserAddRows = false;
                             dg.Columns.Clear();
-                            dg.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new Binding("Name") });
+                            dg.Columns.Add(new DataGridTextColumn { Header = cboGridColumnNames.SelectedItem.ToString(), Binding = new Binding("Name") });
                             dg.Columns.Add(new DataGridTextColumn { Header = "Size", Binding = new Binding("ClassSize") });
-                            dg.Columns.Add(new DataGridTextColumn { Header = "Legend", Binding = new Binding("Color") });
+                            dg.Columns.Add(new DataGridTextColumn { Header = "Legend", Binding = new Binding("Color"), Width = 50 });
                             dg.DataContext = _categoryItems;
 
                             int r = 0;
@@ -122,6 +147,7 @@ namespace GPXManager.entities.mapping.Views
                                 }
                                 r++;
                             }
+
                         }
                     }
                     else
@@ -129,6 +155,7 @@ namespace GPXManager.entities.mapping.Views
                         MessageBox.Show("Please select column name and provide number of classess", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     break;
+                case "Apply":
                 case "Ok":
                     foreach (var aoi in _selectedAOIs)
                     {
@@ -137,9 +164,22 @@ namespace GPXManager.entities.mapping.Views
                             ClassificationType classificationType = ClassificationType.JenksFisher;
                             MapWindowManager.MapLayersHandler[aoi.GridHandle].ClassificationType = classificationType;
                             MapWindowManager.MapControl.Redraw();
-                            Close();
+
+                            if (btn.Content.ToString() == "Ok")
+                            {
+                                Close();
+                            }
                         }
                     }
+
+                    
+                    ResizeDG(dg);
+                    dg.UpdateLayout();
+                    RenderToBitmap.CaptureScreen(dg, 96, 96);
+                    dg.Height = _dgHeight;
+                    dg.Width = _dgWidth;
+                    
+                    
                     break;
                 case "Cancel":
                     Close();
@@ -147,6 +187,45 @@ namespace GPXManager.entities.mapping.Views
             }
         }
 
+        private IEnumerable<DataGridRow> GetDataGridRows(System.Windows.Controls.DataGrid grid)
+        {
+            var itemsSource = grid.ItemsSource as IEnumerable;
+            if (null == itemsSource) yield return null;
+            foreach (var item in itemsSource)
+            {
+                var row = grid.ItemContainerGenerator.ContainerFromItem(item) as DataGridRow;
+                if (null != row) yield return row;
+            }
+        }
+
+        private double _dgWidth;
+        private double _dgHeight;
+        private void ResizeDG(DataGrid dg)
+        {
+            _dgWidth = dg.ActualWidth;
+            _dgHeight = dg.ActualHeight;
+            dg.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            dg.VerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            var rows = GetDataGridRows(dg);
+            var headersPresenter = RenderToBitmap.FindVisualChild<DataGridColumnHeadersPresenter>(dg);
+            var rowPresenter =   RenderToBitmap.FindVisualChild<DataGridRowsPresenter>(dg);
+            double width = 0;
+            double height = headersPresenter.ActualHeight;// + rowPresenter.ActualHeight;
+
+            foreach (var c in dg.Columns)
+            {
+                width += c.ActualWidth;
+            }
+
+            foreach (DataGridRow r in rows)
+            {
+                height += (double)r?.ActualHeight;
+            }
+
+            dg.Width = width;
+            dg.Height = height+3;
+
+        }
         private bool AssignClassificationToGrid(AOI aoi)
         {
             int counter = 0;
@@ -186,7 +265,7 @@ namespace GPXManager.entities.mapping.Views
         }
         public Color ToMediaColor(System.Drawing.Color color)
         {
-            return System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B);
+            return Color.FromArgb(color.A, color.R, color.G, color.B);
         }
 
 

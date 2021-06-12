@@ -20,6 +20,7 @@ namespace GPXManager.entities.mapping
         public int ID { get; set; }
         public DateTime DateAdded { get; set; }
 
+
         public CTXFile SourceCTXFile
         {
             get
@@ -34,7 +35,8 @@ namespace GPXManager.entities.mapping
                 }
             }
         }
-
+        public string Gear { get; set; }
+        public string LandingSite { get; set; }
         public DeviceGPX SourceGPXFile
         {
             get
@@ -75,7 +77,7 @@ namespace GPXManager.entities.mapping
         public double AverageSpeed { get; set; }
         public int TrackPointCountOriginal { get; set; }
         public int TrackPointCountSimplified { get; set; }
-
+        public bool CombinedTrack { get; set; }
         public string SerializedTrackUTM { get; set; }
 
         public bool FromDatabase { get; set; }

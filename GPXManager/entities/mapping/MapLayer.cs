@@ -55,6 +55,17 @@ namespace GPXManager.entities.mapping
         private bool _isPointDatabaseLayer;
         public bool IgnoreZeroWhenClassifying { get; set; }
         public Type ClassifiedValueDataType { get; set; }
+
+        private bool _layerIsSelectable;
+        public bool LayerIsSelectable
+        {
+            get { return _layerIsSelectable; }
+            set
+            {
+                _layerIsSelectable = value;
+                ((Shapefile)LayerObject).Selectable = _layerIsSelectable;
+            }
+        }
         public List<string> ClassificationItemCaptions { get; set; }
         private ClassificationType _classificationType;
         public bool IncludeInLegend { get; set; }

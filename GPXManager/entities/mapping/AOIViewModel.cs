@@ -69,7 +69,16 @@ namespace GPXManager.entities.mapping
             }
             return gridShapeFiles;
         }
-
+        public List<string> SelectFromCommonGridSizes(int selectedSize)
+        {
+            List<string> files = new List<string>();
+            foreach (var aoi in AOICollection.Where(t => t.Selected == true).ToList())
+            {
+                files.Add(aoi.GetGridFileNameOfGridSize(selectedSize.ToString()));
+            }
+            return files;
+        }
+        public int? CommonGridSizeSelectedSize { get; set; }
         public List<string> CommonGridSizes { get; set; } = new List<string>();
         public void SetGridFilenamesOfCommonSize()
         {

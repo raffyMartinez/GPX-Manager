@@ -26,7 +26,14 @@ namespace GPXManager.entities.mapping.Views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
         }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
+        }
+
         public static GridMappingWindow GetInstance()
         {
             if (_instance == null) _instance = new GridMappingWindow();
@@ -35,7 +42,7 @@ namespace GPXManager.entities.mapping.Views
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Owner.Focus();
-            _instance = null;
+            //_instance = null;
 
         }
 
@@ -43,6 +50,7 @@ namespace GPXManager.entities.mapping.Views
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
             labelTitle.Content = "Grid mapping of AOIs";
+
         }
 
         public AOI AOI { get; set; }

@@ -560,7 +560,7 @@
 
                         <StackPanel x:Name="cybertrackerPanelGridFilesAvailable" Visibility="Collapsed" Grid.Column="1" Margin="20 30 0 0">
                             <Label Content="Files in the server" />
-                            <DataGrid ItemsSource="{Binding}" x:Name="cybertrackerGridAvailableFiles" LoadingRow="OnGridRowLoading" RowHeaderWidth="NaN" MouseDoubleClick="OnGridDoubleClick" SelectionChanged="OnDataGridSelectionChanged"/>
+                            <DataGrid ItemsSource="{Binding}" x:Name="cybertrackerGridAvailableFiles" LoadingRow="OnGridRowLoading" RowHeaderWidth="NaN" MouseDoubleClick="OnGridDoubleClick" SelectionChanged="OnDataGridSelectionChanged" MouseWheel="OnGridMouseWheel"/>
                             <WrapPanel HorizontalAlignment="Center" VerticalAlignment="Center" Height="60" Margin="0 20 0 0">
                                 <Button Content="Check all" x:Name="buttonCheckAll" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>
                                 <Button Content="Download" x:Name="buttonDownloadSelected" Margin="10 10" Height="30" Width="80" Click="OnButtonClick"/>

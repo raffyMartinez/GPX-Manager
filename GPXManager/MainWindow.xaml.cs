@@ -4166,5 +4166,10 @@ namespace GPXManager
         {
             e.Row.Header = (e.Row.GetIndex() + 1).ToString();
         }
+
+        private void OnGridMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+
+        }
     }
 }

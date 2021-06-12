@@ -185,24 +185,63 @@ namespace GPXManager.entities.mapping
             _mapLayersHandler = layersHandler;
             _mapLayersHandler.CurrentLayer += OnCurrentMapLayer;
             _axMap = mapControl;
+            _axMap.SendMouseDown = true;
+            _axMap.SendMouseMove = true;
+            _axMap.SendSelectBoxFinal = true;
+            _axMap.SendMouseUp = true;
+            _axMap.DblClick += _axMap_DblClick;
+            
+
+            _axMap.ChooseLayer += _axMap_ChooseLayer;
             _axMap.MouseUpEvent += OnMapMouseUp;
             _axMap.MouseDownEvent += OnMapMouseDown;
             _axMap.SelectBoxFinal += OnMapSelectBoxFinal;
             _axMap.MouseMoveEvent += OnMapMouseMove;
             _axMap.DblClick += OnMapDoubleClick;
             _axMap.SelectionChanged += OnMapSelectionChanged;
-            _axMap.SendMouseDown = true;
-            _axMap.SendMouseMove = true;
-            _axMap.SendSelectBoxFinal = true;
-            _axMap.SendMouseUp = true;
+
             EnableMapInteraction = true;
 
             _axMap.MapCursor = tkCursor.crsrArrow;
             _axMap.CursorMode = tkCursorMode.cmSelection;
         }
 
+        private void _axMap_DblClick(object sender, EventArgs e)
+        {
+           
+        }
+
+        
+
+        private void _axMap_ChooseLayer(object sender, _DMapEvents_ChooseLayerEvent e)
+        {
+            var sf = (Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject;
+            var sel = sf.Selectable;
+            ((Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject).Selectable = true;
+            e.layerHandle = MapLayersHandler.CurrentMapLayer.Handle;
+        }
+
         private void OnMapSelectionChanged(object sender, _DMapEvents_SelectionChangedEvent e)
         {
+            if (ShapesSelected != null)
+            {
+                var sf = MapControl.get_GetObject(e.layerHandle) as Shapefile;
+                _selectedShapeIndexes = new int[sf.NumSelected];
+                int y = 0;
+                for (int x = 0; x < sf.NumShapes; x++)
+                {
+                    if(sf.ShapeSelected[x])
+                    {
+                        _selectedShapeIndexes[y] = x;
+                        y++;
+                    }
+                }
+                if (ShapesSelected != null)
+                {
+                    var lyArg = new LayerEventArg(_currentMapLayer.Handle, _selectedShapeIndexes);
+                    ShapesSelected(this, lyArg);
+                }
+            }
         }
 
         private void OnMapDoubleClick(object sender, EventArgs e)
@@ -250,7 +289,7 @@ namespace GPXManager.entities.mapping
                 selectionBoxExtent.SetBounds(extL, extB, 0, extR, extT, 0);
                 Select(selectionBoxExtent, selectionFromSelectBox: true);
                 SelectionExtent = selectionBoxExtent;
-                var lyArg = new LayerEventArg(selectionExtent:SelectionExtent);
+                var lyArg = new LayerEventArg(selectionExtent: SelectionExtent);
                 ExtentCreated?.Invoke(this, lyArg);
             }
         }

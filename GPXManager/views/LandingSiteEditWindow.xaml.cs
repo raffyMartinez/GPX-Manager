@@ -54,12 +54,18 @@ namespace GPXManager.views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
 
-            _instance = null;
+            //_instance = null;
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)

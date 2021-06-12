@@ -26,10 +26,17 @@ namespace GPXManager.views
             InitializeComponent();
             Loaded += OnWindowLoaded;
             Closing += OnWindowClosing;
+            Closed += TrackingIntervalDetailsWindow_Closed;
             dataGrid.AutoGenerateColumns = false;
             dataGrid.Columns.Add(new DataGridTextColumn { Header = "Duration", Binding = new Binding("Value")});
             dataGrid.Columns.Add(new DataGridTextColumn { Header = "Count", Binding = new Binding("Count")});
         }
+
+        private void TrackingIntervalDetailsWindow_Closed(object sender, EventArgs e)
+        {
+            _instance = null;
+        }
+
         public static TrackingIntervalDetailsWindow GetInstance()
         {
             if (_instance == null) _instance = new TrackingIntervalDetailsWindow();
@@ -37,7 +44,7 @@ namespace GPXManager.views
         }
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _instance = null;
+            //_instance = null;
         }
 
 

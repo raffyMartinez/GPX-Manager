@@ -52,7 +52,7 @@ namespace GPXManager.entities
         }
         private List<CTXFile> getFiles()
         {
-            Logger.Log($"about to start getting ctx from database");
+            //Logger.Log($"about to start getting ctx from database");
             var list = new List<CTXFile>();
             var dt = new DataTable();
             using (var conection = new OleDbConnection(Global.ConnectionString))

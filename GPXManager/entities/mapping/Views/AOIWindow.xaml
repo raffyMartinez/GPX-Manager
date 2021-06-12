@@ -29,7 +29,8 @@
                     <DataGrid.ContextMenu >
                         <ContextMenu>
                             <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
-                            <MenuItem Header="Edit extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
+                            <MenuItem Header="Edit AOI extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
+                            <MenuItem Header="Delete AOI" x:Name="menuAOIDelete" Click="OnMenuClick"/>
                             <MenuItem Header="Show grid" x:Name="menuShowGrid" Click="OnMenuClick" />
                             <MenuItem Header="Remove grid" x:Name="menuRemoveGrid" Click="OnMenuClick" IsEnabled="False"/>
                             <MenuItem Header="Edit grid" x:Name="menuEditGrid" Click="OnMenuClick" IsEnabled="False"/>

@@ -72,6 +72,11 @@
                 <Button x:Name="buttonSelect" Click="OnToolbarButtonClick" ToolTip="Select">
                     <Image Source="pack://application:,,,/Resources/select1.png" OpacityMask="White" />
                 </Button>
+                
+                <!--<Button x:Name="buttonSelectPolygon" Click="OnToolbarButtonClick" ToolTip="Select">
+                    <Image Source="../Resources/selectPolygon.png" OpacityMask="White" />
+                </Button>-->
+                
                 <Button x:Name="buttonSelectNone" Click="OnToolbarButtonClick" ToolTip="Clear selectiong">
                     <Image Source="pack://application:,,,/Resources/select_none1.png" OpacityMask="White" />
                 </Button>

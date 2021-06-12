@@ -36,6 +36,7 @@ namespace GPXManager.entities.mapping.Views
         {
             InitializeComponent();
             Closing += OnWindowClosing;
+            Closed += OnWindowClosed;
         }
         protected override void OnSourceInitialized(EventArgs e)
         {
@@ -72,10 +73,9 @@ namespace GPXManager.entities.mapping.Views
 
             MapLayersHandler.OnLayerVisibilityChanged -= MapLayersHandler_OnLayerVisibilityChanged;
 
-            _instance = null;
             MapWindowManager.MapLayersWindow = null;
             this.SavePlacement();
-            
+
 
         }
         private void OnWindowClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -104,8 +104,9 @@ namespace GPXManager.entities.mapping.Views
             dataGridLayers.LayoutUpdated += DataGridLayers_LayoutUpdated;
             ParentForm.Closing += ParentForm_Closing;
 
+
             MapLayersHandler.OnLayerVisibilityChanged += MapLayersHandler_OnLayerVisibilityChanged;
-            
+
             MapWindowManager.MapLayersWindow = this;
 
             ConfigureDataGrid();
@@ -113,6 +114,11 @@ namespace GPXManager.entities.mapping.Views
             RefreshLayerGrid();
             _gridIsClicked = false;
             //SelectCurrentLayerInGrid();
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            _instance = null;
         }
 
         private void DataGridLayers_MouseUp(object sender, MouseButtonEventArgs e)
@@ -159,7 +165,7 @@ namespace GPXManager.entities.mapping.Views
                 int rowIndex = FindRowIndex(row);
 
                 //we clicked on visibility checkbox if column is zero
-                if(columnIndex==0 && value!=null)
+                if (columnIndex == 0 && value != null)
                 {
                     MapLayersHandler.EditLayer(CurrentLayer.Handle, CurrentLayer.Name, !(bool)value);
 
@@ -307,21 +313,21 @@ namespace GPXManager.entities.mapping.Views
         public MapLayer CurrentLayer
         {
             get { return _currentLayer; }
-            private set 
-            { 
+            private set
+            {
                 _currentLayer = value;
             }
         }
 
-        public void DisableGrid(bool disabled=true)
+        public void DisableGrid(bool disabled = true)
         {
-            if(disabled)
+            if (disabled)
             {
                 dataGridLayers.Visibility = Visibility.Hidden;
             }
             else
             {
-                dataGridLayers.Visibility=Visibility.Visible;
+                dataGridLayers.Visibility = Visibility.Visible;
             }
         }
 
@@ -337,7 +343,7 @@ namespace GPXManager.entities.mapping.Views
 
                 foreach (var item in dataGridLayers.Items)
                 {
-                    if (CurrentLayer!=null && ((MapLayer)item).Handle == CurrentLayer.Handle)
+                    if (CurrentLayer != null && ((MapLayer)item).Handle == CurrentLayer.Handle)
                     {
                         if (!inMouseUp)
                         {
@@ -352,13 +358,13 @@ namespace GPXManager.entities.mapping.Views
                     }
                 }
             }
-            
+
         }
 
 
         private void SetRowsNormalFont()
         {
-            for (int n=0;n<dataGridLayers.Items.Count;n++)
+            for (int n = 0; n < dataGridLayers.Items.Count; n++)
             {
                 DataGridRow r = (DataGridRow)dataGridLayers.ItemContainerGenerator.ContainerFromIndex(n);
                 if (r != null)
@@ -369,7 +375,7 @@ namespace GPXManager.entities.mapping.Views
         }
         private void DataGridLayers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_gridIsClicked && dataGridLayers.SelectedItems.Count>0)
+            if (_gridIsClicked && dataGridLayers.SelectedItems.Count > 0)
             {
                 MapLayersHandler.set_MapLayer(((MapLayer)dataGridLayers.SelectedItem).Handle);
                 SetRowsNormalFont();
@@ -390,8 +396,8 @@ namespace GPXManager.entities.mapping.Views
             try
             {
                 dataGridLayers.Items.Refresh();
-            } 
-            catch(Exception)
+            }
+            catch (Exception)
             {
                 //ignore;
             }
@@ -408,13 +414,14 @@ namespace GPXManager.entities.mapping.Views
 
         private void OnToolbarButtonClick(object sender, RoutedEventArgs e)
         {
-            switch(((Button)sender).Name)
+            switch (((Button)sender).Name)
             {
                 case "buttonAttributes":
                     ShapeFileAttributesWindow sfw = ShapeFileAttributesWindow.GetInstance(MapWindowManager.MapInterActionHandler);
-                    if(sfw.Visibility==Visibility.Visible)
+                    if (sfw.Visibility == Visibility.Visible && sfw.Focusable)
                     {
                         sfw.BringIntoView();
+                        sfw.Focus();
                     }
                     else
                     {
@@ -437,8 +444,14 @@ namespace GPXManager.entities.mapping.Views
         private void OnMenuClick(object sender, RoutedEventArgs e)
         {
             var mnu = (MenuItem)sender;
-            switch(mnu.Header)
+            switch (mnu.Header)
             {
+                case "Set visibility...":
+                    ShapeFileVisibilityExpressionWindow vew = new ShapeFileVisibilityExpressionWindow();
+                    vew.ExpressionTarget = VisibilityExpressionTarget.ExpressionTargetShape;
+                    vew.Shapefile = (Shapefile)MapWindowManager.MapLayersHandler.CurrentMapLayer.LayerObject;
+                    vew.Show();
+                    break;
                 case "Export":
                     VistaFolderBrowserDialog vfbd = new VistaFolderBrowserDialog();
                     vfbd.Description = "Select folder to save exported shapefiles";
@@ -447,7 +460,7 @@ namespace GPXManager.entities.mapping.Views
                     if (vfbd.SelectedPath.Length > 0 && Directory.Exists(vfbd.SelectedPath))
                     {
                         string fileName = $@"{vfbd.SelectedPath}\{MapLayersHandler.CurrentMapLayer.Name}.shp";
-                       if( ((Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject).SaveAs(fileName))
+                        if (((Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject).SaveAs(fileName))
                         {
                             MessageBox.Show($"{System.IO.Path.GetFileName(fileName)} was successfully exported", "GPX Manager", MessageBoxButton.OK, MessageBoxImage.Information);
                         }

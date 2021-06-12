@@ -55,8 +55,9 @@
     <ApplicationIcon>Resources\gpx_icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AxInterop.MapWinGIS">
-      <HintPath>..\..\..\..\..\..\..\..\dev_4.9\MapWinGIS\AxInterop.MapWinGIS.dll</HintPath>
+    <Reference Include="AxInterop.MapWinGIS, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\AxInterop.MapWinGIS.dll</HintPath>
     </Reference>
     <Reference Include="Gavaghan.Geodesy, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -64,6 +65,11 @@
     </Reference>
     <Reference Include="GongSolutions.WPF.DragDrop, Version=2.0.0.0, Culture=neutral, PublicKeyToken=91f1945125b7a587, processorArchitecture=MSIL">
       <HintPath>..\packages\gong-wpf-dragdrop.2.3.2\lib\net47\GongSolutions.WPF.DragDrop.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.MapWinGIS, Version=5.2.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>bin\Debug\Interop.MapWinGIS.dll</HintPath>
     </Reference>
     <Reference Include="LiveCharts, Version=0.9.7.0, Culture=neutral, PublicKeyToken=0bc1f845d1ebb8df, processorArchitecture=MSIL">
       <HintPath>..\packages\LiveCharts.0.9.7\lib\net45\LiveCharts.dll</HintPath>
@@ -187,6 +193,7 @@
     <Compile Include="entities\mapping\gridding\Grid25.cs" />
     <Compile Include="entities\mapping\gridding\GridMapping.cs" />
     <Compile Include="entities\mapping\JenksFisher.cs" />
+    <Compile Include="entities\mapping\RenderToBitmap.cs" />
     <Compile Include="entities\mapping\usercontrols\ImageCombo.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -211,6 +218,9 @@
     <Compile Include="entities\mapping\Views\AOIWindow.xaml.cs">
       <DependentUpon>AOIWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="entities\mapping\Views\FilterExtractedTrackWindow.xaml.cs">
+      <DependentUpon>FilterExtractedTrackWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="entities\mapping\Views\FormatGridMapWindow.xaml.cs">
       <DependentUpon>FormatGridMapWindow.xaml</DependentUpon>
     </Compile>
@@ -234,6 +244,9 @@
     </Compile>
     <Compile Include="entities\mapping\Views\ShapeFileAttributesWindow.xaml.cs">
       <DependentUpon>ShapeFileAttributesWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="entities\mapping\Views\ShapeFileVisibilityExpressionWindow.xaml.cs">
+      <DependentUpon>ShapeFileVisibilityExpressionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="entities\NotepadHelper.cs" />
     <Compile Include="entities\PrettyXML.cs" />
@@ -325,6 +338,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="entities\mapping\Views\FilterExtractedTrackWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="entities\mapping\Views\FormatGridMapWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -354,6 +371,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="entities\mapping\Views\ShapeFileAttributesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="entities\mapping\Views\ShapeFileVisibilityExpressionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -506,6 +527,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\gpx_icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\selectPolygon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\upload_cloud.png">
