@@ -123,6 +123,7 @@ namespace GPXManager.entities
 
         public bool DownloadFile { get; set; }
 
+        public bool TrackExtracted { get; set; }
         public bool IsDownloadedFromServer { get; set; }
 
         public override string ToString()

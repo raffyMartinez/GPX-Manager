@@ -601,9 +601,14 @@
                             <Label Content="Backup cybertracker data downloaded from the server"/>
                             <Button Content="Backup" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonBackupCTXFiles" Click="OnButtonClick"/>
                         </WrapPanel>
+
+                        <WrapPanel Orientation="Horizontal" Margin=" 0 0 0 0" VerticalAlignment="Center">
+                            <Label Content="Review and repair XML" VerticalAlignment="Center" x:Name="labelReview" Width="210"/>
+                            <Button Content="Review" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonReviewXML" Click="OnButtonClick" VerticalAlignment="Center"/>
+                        </WrapPanel>
                         
                         <WrapPanel Orientation="Horizontal" Margin=" 0 0 0 0" VerticalAlignment="Center">
-                            <Label Content="Extract fishing tracks of gear retrieval" VerticalAlignment="Center"/>
+                            <Label Content="Extract fishing tracks of gear retrieval" VerticalAlignment="Center" x:Name="labelExtract" Width="210"/>
                             <Button Content="Extract" Width="60" Height="30" Margin="10" HorizontalAlignment="Left" x:Name="buttonExtractFishingTrack" Click="OnButtonClick" VerticalAlignment="Center"/>
                             <CheckBox Content="Tabulate results" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange" x:Name="chkShowExtractReults" VerticalAlignment="Center" Margin="20 0 0 0"/>
                             <CheckBox Content="Show extracted tracks in map" Checked="onCheckBoxCheckChange" Unchecked="onCheckBoxCheckChange" Name="chkShowInMapExtracted" VerticalAlignment="Center" Margin="20 0 0 0" IsEnabled="False"/>

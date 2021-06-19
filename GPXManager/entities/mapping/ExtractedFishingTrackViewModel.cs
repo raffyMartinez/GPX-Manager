@@ -22,9 +22,14 @@ namespace GPXManager.entities.mapping
         public ObservableCollection<ExtractedFishingTrack> ExtractedFishingTrackCollection { get; set; }
         private ExtractedFishingTrackRepository ExtractedFishingTracks { get; set; }
 
-        public async Task<List<ExtractedFishingTrack>> ExtractTracksFromSourcesAsync(bool save = false, bool makeShapefile = false)
+        public async Task<List<ExtractedFishingTrack>> ExtractTracksFromSourcesAsync(
+            bool save = false, bool makeShapefile = false,
+            bool excludeExtracted = false,
+            bool refreshReadTrack = false,
+            bool logTracksOutsidePh = false
+            )
         {
-            return await Task.Run(() => ExtractTracksFromSources(save, makeShapefile));
+            return await Task.Run(() => ExtractTracksFromSources(save, makeShapefile, excludeExtracted, refreshReadTrack,logTracksOutsidePh));
         }
         public int Count()
         {
@@ -92,6 +97,36 @@ namespace GPXManager.entities.mapping
         }
 
         public List<ExtractedFishingTrack> AllExtractedFishingTracks { get; private set; }
+
+        public void LogTracksOutsidePH(CTXFile ctx)
+        {
+            if (ctx.XML != null && ctx.XML.Length == 0)
+            {
+                ctx.XML = Entities.CTXFileViewModel.GetXMLOfCTX(ctx);
+                if (ctx.XML.Length == 0)
+                {
+                    return;
+                }
+            }
+
+
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(ctx.XML);
+            var tracknodes = doc.SelectNodes("//T");
+
+            bool logged = false;
+            foreach (XmlNode node in tracknodes)
+            {
+                var lat = double.Parse(node.SelectSingleNode(".//A[@N='Latitude']").Attributes["V"].Value);
+                var lon = double.Parse(node.SelectSingleNode(".//A[@N='Longitude']").Attributes["V"].Value);
+                if (!logged && (lon < 115 || lon > 127 || lat < 4 || lat > 20))
+                {
+                    logged = true;
+                    Logger.Log($"outside: {ctx.UserName} RowID:{ctx.RowID} Start:{ctx.TrackTimeStampStart}");
+                    break;
+                }
+            }
+        }
         private List<ExtractedFishingTrack> CreateFromSource(CTXFile ctx = null, DeviceGPX gpx = null, bool save = false)
         {
             FishingTripAndGearRetrievalTracks result = null;
@@ -115,37 +150,57 @@ namespace GPXManager.entities.mapping
                 deviceName = Entities.DeviceGPXViewModel.GetDeviceGPX(id).GPS.DeviceName;
             }
 
-            bool procced = false;
+            bool proccedSavetrack = false;
+            bool proceedExtractNewTracks = false;
+
             var extractedTracks = Entities.ExtractedFishingTrackViewModel.GetTracks(sourceType, id);
-            if (extractedTracks != null && extractedTracks.Count > 0)
+
+
+
+            if (extractedTracks != null)
             {
-                result = new FishingTripAndGearRetrievalTracks { TripShapefile = null };
-                foreach (var item in extractedTracks)
+                if (extractedTracks.Count > 0)
                 {
-                    item.FromDatabase = true;
-                    var shp = new Shape();
-                    if (shp.Create(ShpfileType.SHP_POLYLINE))
+                    result = new FishingTripAndGearRetrievalTracks { TripShapefile = null };
+                    foreach (var item in extractedTracks)
                     {
-                        shp.CreateFromString(item.SerializedTrack);
-                        item.SegmentSimplified = shp;
-                        item.TrackOriginal = null;
-                        DetectedTrack dt = new DetectedTrack { Shape = shp, ExtractedFishingTrack = item, Length = item.LengthOriginal, Accept = true };
-                        if (result.GearRetrievalTracks == null)
+                        item.FromDatabase = true;
+                        var shp = new Shape();
+                        if (shp.Create(ShpfileType.SHP_POLYLINE))
                         {
-                            result.GearRetrievalTracks = new List<DetectedTrack>();
+                            shp.CreateFromString(item.SerializedTrack);
+                            item.SegmentSimplified = shp;
+                            item.TrackOriginal = null;
+                            DetectedTrack dt = new DetectedTrack { Shape = shp, ExtractedFishingTrack = item, Length = item.LengthOriginal, Accept = true };
+                            if (result.GearRetrievalTracks == null)
+                            {
+                                result.GearRetrievalTracks = new List<DetectedTrack>();
+                            }
+                            //if (MapWindowManager.BSCBoundaryShapefile == null || !shp.Crosses(MapWindowManager.BSCBoundaryShapefile.Shape[0]))
+                            //{
+                            result.GearRetrievalTracks.Add(dt);
+                            //}
                         }
-                        //if (MapWindowManager.BSCBoundaryShapefile == null || !shp.Crosses(MapWindowManager.BSCBoundaryShapefile.Shape[0]))
-                        //{
-                        result.GearRetrievalTracks.Add(dt);
-                        //}
                     }
+                    proccedSavetrack = result.GearRetrievalTracks != null;
                 }
-                procced = result.GearRetrievalTracks != null;
+                else
+                {
+                    proceedExtractNewTracks = true;
+                }
+
+
             }
             else
             {
+                proceedExtractNewTracks = true;
+            }
 
-                if (ctx != null)
+
+            if (proceedExtractNewTracks)
+            {
+
+                if (ctx != null && !ctx.TrackExtracted)
                 {
                     if (ctx.XML != null && ctx.XML.Length == 0)
                     {
@@ -166,15 +221,15 @@ namespace GPXManager.entities.mapping
                     }
 
 
-
                     result = ShapefileFactory.GearRetrievalTrackShapeFromCTX(tracknodes, ctx.TrackingInterval);
+
 
 
                     //procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
 
 
                 }
-                else
+                else if (gpx != null)
                 {
                     var gpxFile = Entities.GPXFileViewModel.ConvertToGPXFile(gpx);
 
@@ -187,15 +242,16 @@ namespace GPXManager.entities.mapping
 
                 }
 
-                procced = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
+                proccedSavetrack = result != null && result.GearRetrievalTracks.Where(T => T.Accept).ToList().Count > 0;
+
             }
 
 
-
-            if (procced)
+            if (proccedSavetrack)
             {
                 foreach (var item in result.GearRetrievalTracks.Where(t => t.Accept))
                 {
+
                     ExtractedFishingTrack extractedTrack = new ExtractedFishingTrack
                     {
                         DateAdded = DateTime.Now,
@@ -217,7 +273,7 @@ namespace GPXManager.entities.mapping
                         CombinedTrack = item.ExtractedFishingTrack.CombinedTrack
                     };
 
-                    if(extractedTrack.TrackSourceType==ExtractedTrackSourceType.TrackSourceTypeCTX)
+                    if (extractedTrack.TrackSourceType == ExtractedTrackSourceType.TrackSourceTypeCTX)
                     {
                         var ctxFile = Entities.CTXFileViewModel.GetFile(extractedTrack.TrackSourceID);
                         extractedTrack.Gear = ctxFile.Gear;
@@ -230,23 +286,50 @@ namespace GPXManager.entities.mapping
                         extractedTrack.ID = ++_idCounter;
                     }
                     listOfExtractedTracks.Add(extractedTrack);
+
                 }
             }
-            //ExtractTrackResult etr = new ExtractTrackResult { Success = result != null, ExtractedTracks = listOfExtractedTracks, SourceType = sourceType, SourceID = id };
+
+            if (sourceType == ExtractedTrackSourceType.TrackSourceTypeCTX && !ctx.TrackExtracted)
+            {
+                ctx.TrackExtracted = true;
+                Entities.CTXFileViewModel.UpdateRecordInRepo(ctx);
+            }
+            else if (sourceType == ExtractedTrackSourceType.TrackSourceTypeGPX && !gpx.TrackIsExtracted)
+            {
+                gpx.TrackIsExtracted = true;
+                Entities.DeviceGPXViewModel.UpdateRecordInRepo(gpx, true);
+            }
             return listOfExtractedTracks;
         }
-
-        private async Task<List<ExtractedFishingTrack>> ExtractTracksFromSources(bool save = false, bool makeShapefile = false)
+        public bool TrackIsDuplicated(ExtractedFishingTrack eft)
         {
+            bool exist = ExtractedFishingTrackCollection.FirstOrDefault(t => t.DeviceName == eft.DeviceName && t.Start == eft.Start) != null;
+
+            return exist;
+        }
+        private async Task<List<ExtractedFishingTrack>> ExtractTracksFromSources(
+            bool save = false,
+            bool makeShapefile = false,
+            bool excludeExtracted = false,
+            bool refreashReadTrack = false,
+            bool logTracksOutsidePh = false
+            )
+        {
+
             _counter = 0;
             var list = new List<ExtractedFishingTrack>();
-            var allCTXFiles = await Entities.CTXFileViewModel.GetAllAsync(false);
+            var allCTXFiles = await Entities.CTXFileViewModel.GetAllAsync(false, excludeExtracted, refreashReadTrack);
             foreach (CTXFile cf in allCTXFiles)
             {
                 var list1 = CombineExtractedTracks(CreateFromSource(ctx: cf, save: save));
                 if (list1 != null && list1.Count > 0)
                 {
                     list.AddRange(list1);
+                }
+                if (logTracksOutsidePh)
+                {
+                    LogTracksOutsidePH(cf);
                 }
                 //list.AddRange(CombineExtractedTracks(CreateFromSource(ctx: cf, save: save)));
             }
@@ -255,10 +338,18 @@ namespace GPXManager.entities.mapping
             {
                 if (gpx.GPXType == "track")
                 {
-                    var list2 = CombineExtractedTracks(CreateFromSource(gpx: gpx, save: save));
-                    if (list2 != null && list2.Count > 0)
+                    bool proceed = true;
+                    if (excludeExtracted && gpx.TrackIsExtracted)
                     {
-                        list.AddRange(list2);
+                        proceed = false;
+                    }
+                    if (proceed)
+                    {
+                        var list2 = CombineExtractedTracks(CreateFromSource(gpx: gpx, save: save));
+                        if (list2 != null && list2.Count > 0)
+                        {
+                            list.AddRange(list2);
+                        }
                     }
 
                 }
@@ -381,6 +472,16 @@ namespace GPXManager.entities.mapping
             ExtractedFishingTrackCollection.CollectionChanged += ExtractedFishingTrackCollection_CollectionChanged;
         }
 
+
+        public bool LoadTrackDataFromDatabase()
+        {
+
+            ExtractedFishingTrackCollection.Clear();
+            int clearCount = ExtractedFishingTrackCollection.Count();
+            ExtractedFishingTrackCollection = new ObservableCollection<ExtractedFishingTrack>(ExtractedFishingTracks.ExtractedFishingTracks);
+            return clearCount == 0 && ExtractedFishingTrackCollection.Count > 0;
+        }
+
         public ExtractedFishingTrack CurrentEntity { get; private set; }
         private void ExtractedFishingTrackCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -434,11 +535,11 @@ namespace GPXManager.entities.mapping
             {
                 var list = new List<ExtractedFishingTrack>();
                 var count = 0;
-                foreach(var item in ExtractedFishingTrackCollection
-                    .OrderBy(t=>t.DeviceName)
-                    .ThenBy(t=>t.Start))
+                foreach (var item in ExtractedFishingTrackCollection
+                    .OrderBy(t => t.DeviceName)
+                    .ThenBy(t => t.Start))
                 {
-                    if(count==0)
+                    if (count == 0)
                     {
                         list.Add(item);
                     }

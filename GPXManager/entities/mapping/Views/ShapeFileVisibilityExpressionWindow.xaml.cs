@@ -27,7 +27,14 @@ namespace GPXManager.entities.mapping.Views
         {
             InitializeComponent();
             Loaded += OnWindowLoaded;
+            Closed += OnWindowClosed;
         }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            Owner.Focus();
+        }
+
         private void GetFields()
         {
             for (int n = 0; n < Shapefile.NumFields; n++)
@@ -57,20 +64,26 @@ namespace GPXManager.entities.mapping.Views
                     bool proceed = true;
                     if(textQuery.Text.Length==0)
                     {
-                        
-                        Shapefile.VisibilityExpression = "";
+
+                        //Shapefile.VisibilityExpression = "";
+                        //MapWindowManager.ShapeFileVisibilityExpression = "";
+                        proceed = true;
                     }
                     else if(TestExpression())
                     {
-                        Shapefile.VisibilityExpression = textQuery.Text;
+                        //Shapefile.VisibilityExpression = textQuery.Text;
+                        proceed = true;
+                        //MapWindowManager.ShapeFileVisibilityExpression = textQuery.Text;
                     }
-                    else
-                    {
-                        proceed = false;
-                    }
+                    //else
+                    //{
+                    //    proceed = false;
+                    //}
                     if (proceed)
                     {
-                        MapWindowManager.MapControl.Redraw();
+                        //MapWindowManager.ShapeFileVisibilityExpression = textQuery.Text;
+                        MapWindowManager.MapLayersHandler.VisibilityExpression(textQuery.Text);
+                        //MapWindowManager.MapControl.Redraw();
                     }
                     break;
                 case "Reset":
@@ -82,8 +95,9 @@ namespace GPXManager.entities.mapping.Views
                     if (TestExpression())
                     {
                         //MapWindowManager.MapLayersHandler.VisibilityExpression(textQuery.Text, ExpressionTarget);
-                        Shapefile.VisibilityExpression = textQuery.Text;
-                        MapWindowManager.MapControl.Redraw();
+                        //Shapefile.VisibilityExpression = textQuery.Text;
+                        //MapWindowManager.MapControl.Redraw();
+                        MapWindowManager.ShapeFileVisibilityExpression = textQuery.Text;
                         Close();
                     }
                     break;

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.views"
         mc:Ignorable="d"
-        Title="Extract tracks on gear retrieval" Height="250.965" Width="318.015" ResizeMode="NoResize">
+        Title="Extract tracks on gear retrieval" Height="245.365" Width="318.015" ResizeMode="NoResize">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -15,22 +15,32 @@
             <RowDefinition Height="65"/>
             <RowDefinition/>
             <RowDefinition/>
-            <RowDefinition Height="50"/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <Label Content="Extract fishing tracks of gear hauling" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.ColumnSpan="2" FontSize="14" FontWeight="Bold"/>
         <StackPanel Grid.Row="1" Grid.Column="1" Grid.RowSpan="3">
-            <Button Content="Ok" Width="60" Height="30" Margin="10" Click="OnButtonClicked" x:Name="buttonOk"/>
-            <Button Content="Cancel" Width="60" Height="30" Margin="10" Click="OnButtonClicked" x:Name="buttonCancel" IsCancel="True"/>
+            <Button Content="Ok" Width="60" Height="30" Margin="5" Click="OnButtonClicked" x:Name="buttonOk"/>
+            <Button Content="Cancel" Width="60" Height="30" Margin="5" Click="OnButtonClicked" x:Name="buttonCancel" IsCancel="True"/>
         </StackPanel>
-        <WrapPanel Grid.Row="1" VerticalAlignment="Center" Margin="10">
+        <WrapPanel Grid.Row="1" VerticalAlignment="Center" Margin="2">
             <Label Content="Save track data" Width="130"/>
             <CheckBox x:Name="chkSave" VerticalAlignment="Center"/>
         </WrapPanel>
-        <WrapPanel Grid.Row="2" VerticalAlignment="Center" Margin="10">
+        <WrapPanel Grid.Row="2" VerticalAlignment="Center" Margin="2">
             <Label Content="Show all tracks in map" Width="130"/>
             <CheckBox x:Name="chkShowInMap" VerticalAlignment="Center"/>
         </WrapPanel>
-        <StatusBar Grid.Row="3" Grid.ColumnSpan="2" Height="30"  VerticalAlignment="Bottom" VerticalContentAlignment="Center">
+        <WrapPanel Grid.Row="3" VerticalAlignment="Center" Margin="2">
+            <Label Content="Refresh all tracks" Width="130"/>
+            <CheckBox x:Name="chkRefresh" VerticalAlignment="Center"/>
+        </WrapPanel>
+        <WrapPanel Grid.Row="4" VerticalAlignment="Center" Margin="2">
+            <Label Content="Log tracks outside Ph" Width="130"/>
+            <CheckBox x:Name="chkLogTracks" VerticalAlignment="Center"/>
+        </WrapPanel>
+        <StatusBar Grid.Row="5" Grid.ColumnSpan="2" Height="30"  VerticalAlignment="Bottom" VerticalContentAlignment="Center">
             <ProgressBar Width="75" Height="15" x:Name="progressBar"/>
             <Label Content="this is a label which is quite long" Height="25" VerticalAlignment="Center" x:Name="labelProgress"/>
         </StatusBar>

@@ -70,10 +70,10 @@ namespace GPXManager.entities.mapping.Views
                         MapWindowManager.SelectTracksInAOI(aoi);
                         aoi.GridMapping.SelectedTrackIndexes = MapWindowManager.SelectedTrackIndexes;
 
-                        if (MapWindowManager.SelectedTrackIndexes.Count() > 0)
+                        if (MapWindowManager.SelectedTrackIndexes?.Count() > 0)
                         {
                             aoi.GridMapping.SelectedTracks = MapWindowManager.SelectedTracks;
-                            if ((bool)checkMapEffort.IsChecked)
+                            if ((bool)checkMapIntensity.IsChecked)
                             {
 
                                 var count = aoi.GridMapping.ComputeFishingFrequency();
@@ -81,7 +81,7 @@ namespace GPXManager.entities.mapping.Views
                                 {
                                     aoi.EffortGridColumn = "Hits";
                                 }
-                                textStatus.Text += $"{count} cells were computed for frequency (effort) for {aoi.Name}\r\n";
+                                textStatus.Text += $"{count} cells were computed for fishing inntensity for {aoi.Name}\r\n";
                             }
                         }
                         else

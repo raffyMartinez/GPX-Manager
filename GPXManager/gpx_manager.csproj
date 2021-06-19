@@ -318,6 +318,9 @@
     <Compile Include="views\PathWindow.xaml.cs">
       <DependentUpon>PathWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="views\ReviewXMLDialog.xaml.cs">
+      <DependentUpon>ReviewXMLDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="views\SelectGearWindow.xaml.cs">
       <DependentUpon>SelectGearWindow.xaml</DependentUpon>
     </Compile>
@@ -462,6 +465,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="views\PathWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="views\ReviewXMLDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

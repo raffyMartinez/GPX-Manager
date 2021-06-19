@@ -5,6 +5,7 @@ namespace GPXManager.entities.mapping
 {
     public class LayerEventArg : EventArgs
     {
+        public Shapefile Shapefile { get; set; }
         public int LayerHandle { get; }
         public string LayerName { get; set; }
         public bool ShowInLayerUI { get; }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GPXManager.entities.mapping.Views"
         mc:Ignorable="d"
-        Title="Grid mapping" Height="393.003" Width="317.909" ResizeMode="NoResize">
+        Title="Grid mapping" Height="418.047" Width="317.909" ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
@@ -13,8 +13,9 @@
             <RowDefinition/>
             <RowDefinition/>
             <RowDefinition/>
+            <RowDefinition/>
             <RowDefinition Height="40"/>
-            <RowDefinition Height="8*"/>
+            <RowDefinition Height="7*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280"/>
@@ -26,18 +27,20 @@
         <Label Content="Grid map showing locations of berried crabs" Grid.Row="2" VerticalAlignment="Center" FontSize="11"/>
         <Label Content="Grid map of fishing effort" Grid.Row="3" VerticalAlignment="Center" FontSize="11"/>
         <Label Content="Grid map of CPUE" Grid.Row="4" VerticalAlignment="Center" FontSize="11"/>
+        <Label Content="Grid map of Fishing intensity" Grid.Row="5" VerticalAlignment="Center" FontSize="11"/>
         <CheckBox x:Name="checkMapUndersized" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="left" />
         <CheckBox x:Name="checkMapBerried" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left"/>
         <CheckBox x:Name="checkMapEffort" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left"/>
         <CheckBox x:Name="checkMapCPUE" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left"/>
-        <ScrollViewer Grid.Row="6" Grid.ColumnSpan="2" Margin="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+        <CheckBox x:Name="checkMapIntensity" Grid.Column="1" Grid.Row="5" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+        <ScrollViewer Grid.Row="7" Grid.ColumnSpan="2" Margin="5" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
             <TextBox  FontSize="10" x:Name="textStatus" />
         </ScrollViewer>
         <!--<Button Content="Go" Width="50" Height="25"  x:Name="buttonMapUndersized" Click="OnButtonClick" Grid.Column="1" Grid.Row="1"/>
         <Button Content="Go" Width="50" Height="25"  x:Name="buttonMapBerried" Click="OnButtonClick" Grid.Column="2" Grid.Row="2"/>
         <Button Content="Go" Width="50" Height="25"  x:Name="buttonMapEffort" Click="OnButtonClick" Grid.Column="1" Grid.Row="3"/>
         <Button Content="Go" Width="50" Height="25"  x:Name="buttonMapCPUE" Click="OnButtonClick" Grid.Column="1" Grid.Row="4"/>-->
-        <WrapPanel Grid.Row="5"  Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <WrapPanel Grid.Row="6"  Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Button Content="Close" Width="50  " Height="23"  x:Name="buttonMapClose" Click="OnButtonClick" Margin="5 0" FontSize="11"/>
             <Button Content="Apply" Width="50   " Height="23    "  x:Name="buttonMapApply" Click="OnButtonClick" Margin="5 0" FontSize="11"/>
         </WrapPanel>

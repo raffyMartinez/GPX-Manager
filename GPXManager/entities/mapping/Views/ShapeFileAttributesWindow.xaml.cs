@@ -35,12 +35,21 @@ namespace GPXManager.entities.mapping.Views
             _mapInterActionHandler.ShapesSelected += _mapInterActionHandler_ShapesSelected;
             _mapInterActionHandler.SelectionCleared += _mapInterActionHandler_SelectionCleared;
             _mapInterActionHandler.MapLayersHandler.CurrentLayer += MapLayersHandler_CurrentLayer;
+            _mapInterActionHandler.MapLayersHandler.OnVisibilityExpressionSet += MapLayersHandler_OnVisibilityExpressionSet;
             _mapInterActionHandler.MapLayersHandler.AllSelectionsCleared += MapLayersHandler_AllSelectionsCleared;
             //dataGridAttributes.SelectionChanged += OnDataGridAttributes_SelectionChanged;
 
         }
 
-
+        private void MapLayersHandler_OnVisibilityExpressionSet(MapLayersHandler s, LayerEventArg e)
+        {
+            //ShowShapeFileAttribute();
+            dataGridAttributes.SelectedItems.Clear();
+            //dataGridAttributes.ItemsSource = null;
+            //ShapeFile = (Shapefile)MapWindowManager.MapLayersHandler[e.LayerHandle].LayerObject;
+            ShapeFile = e.Shapefile;
+            ShowShapeFileAttribute();
+        }
 
         public bool ShowSummaryOfSelectedItems { get; set; }
 

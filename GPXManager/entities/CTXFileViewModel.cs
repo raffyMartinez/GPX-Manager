@@ -20,6 +20,9 @@ namespace GPXManager.entities
         public delegate void XMLFileFromImportedCTX(CTXFileViewModel s, CTXFileImportEventArgs e);
         public event XMLFileFromImportedCTX XMLFileFromImportedCTXCreated;
 
+        public delegate void XMLReviewed(CTXFileViewModel s, CTXFileImportEventArgs e);
+        public event XMLReviewed XMLofCTXReviewed;
+
         public delegate void XMLFileFromCTX(CTXFileViewModel s, TransferEventArgs e);
         public event XMLFileFromCTX XMLFileFromCTXCreated;
 
@@ -30,6 +33,7 @@ namespace GPXManager.entities
         {
             ctxFileRepo = new CTXFileRepository();
             CTXFileCollection = new ObservableCollection<CTXFile>(ctxFileRepo.CTXFiles);
+            var c = CTXFileCollection[CTXFileCollection.Count - 1];
             CTXFileCollection.CollectionChanged += CTXFileCollection_CollectionChanged;
 
             _intervals.Add(30);
@@ -66,12 +70,21 @@ namespace GPXManager.entities
             return userHistory.ToList();
         }
 
-        public async Task<List<CTXFile>> GetAllAsync(bool checkXML = false) => await Task.Run(() => GetAll(checkXML));
-        private List<CTXFile> GetAll(bool checkXML = false)
+        public async Task<List<CTXFile>> GetAllAsync(
+            bool checkXML = false,
+            bool excludeExtracted = false,
+            bool refreshReadTrack = false
+            ) => await Task.Run(() => GetAll(checkXML, excludeExtracted, refreshReadTrack));
+        private List<CTXFile> GetAll(
+            bool checkXML = false,
+            bool excludeExtracted = false,
+            bool refreshReadTrack = false
+            )
         {
+            var list = new List<CTXFile>();
             if (checkXML)
             {
-                var list = CTXFileCollection.OrderBy(t => t.DateStart).ToList();
+                list = CTXFileCollection.OrderBy(t => t.DateStart).ToList();
                 foreach (var ctx in list)
                 {
                     if (ctx.XML == "")
@@ -79,17 +92,29 @@ namespace GPXManager.entities
                         ctx.XML = GetXMLOfCTX(ctx);
                     }
                 }
-                return list;
+                //return list;
             }
             else
             {
-                return CTXFileCollection.OrderBy(t => t.DateStart).ToList();
+                list = CTXFileCollection.OrderBy(t => t.DateStart).ToList();
+                //return CTXFileCollection.OrderBy(t => t.DateStart).ToList();
+            }
+
+            if (refreshReadTrack) excludeExtracted = false;
+
+            if (excludeExtracted)
+            {
+                return list.Where(t => t.TrackExtracted = false).ToList();
+            }
+            else
+            {
+                return list;
             }
         }
         public CTXFile GetFile(int id, bool getXML = true)
         {
             var ctx = CTXFileCollection.FirstOrDefault(t => t.RowID == id);
-            if (getXML &&  ctx.XML == "")
+            if (ctx != null && getXML && ctx.XML == "")
             {
                 ctx.XML = GetXMLOfCTX(ctx);
             }
@@ -244,6 +269,73 @@ namespace GPXManager.entities
         public string GetXMLOfCTX(CTXFile ctx)
         {
             return GetXML(ctx.RowID);
+        }
+
+        public async Task<int> ReviewXMLAsync()
+        {
+            return await Task.Run(() => ReviewXML());
+        }
+        public int CountCTXFileWithNoXML()
+        {
+            return CTXFileCollection.Count(t => t.XML.Length == 0);
+        }
+        public int ReviewXML()
+        {
+            List<CTXFile> reviewedFiles = new List<CTXFile>();
+            foreach (var item in CTXFileCollection)
+            {
+                if (item.XML.Length == 0)
+                {
+                    var binaryCTX = $@"{Global.Settings.CTXDownloadFolder}\{item.CTXFileName}";
+                    if (!File.Exists(binaryCTX))
+                    {
+                        binaryCTX = $@"{Global.Settings.CTXBackupFolder}\{item.CTXFileName}";
+                    }
+
+                    if (File.Exists(binaryCTX))
+                    {
+                        if (CTXFileRepository.ExtractXMLFromCTX(binaryCTX))
+                        {
+                            if (File.Exists($@"{binaryCTX}.xml"))
+                            {
+                                item.XML = File.ReadAllText($@"{binaryCTX}.xml");
+                                if (item.XML.Length > 0)
+                                {
+                                    reviewedFiles.Add(item);
+                                    if (XMLofCTXReviewed != null)
+                                    {
+                                        XMLofCTXReviewed(this, new CTXFileImportEventArgs { XMLReviewedCount = reviewedFiles.Count, Context = "reviewing" });
+                                    }
+                                }
+
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+
+            int counter = 0;
+            foreach (var c in reviewedFiles)
+            {
+                if (Entities.CTXFileViewModel.UpdateRecordInRepo(c))
+                {
+                    counter++;
+                    if (XMLofCTXReviewed != null)
+                    {
+                        XMLofCTXReviewed(this, new CTXFileImportEventArgs { XMLReviewdSaveCount = counter, Context = "saving" });
+                    }
+                }
+            }
+
+            if (XMLofCTXReviewed != null)
+            {
+                XMLofCTXReviewed(this, new CTXFileImportEventArgs { Context = "done" });
+            }
+
+            return counter;
         }
         public string GetXML(int RowID)
         {

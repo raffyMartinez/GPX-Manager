@@ -31,7 +31,7 @@ namespace GPXManager.entities
         public string getXML(int RowID)
         {
             string xml = "";
-            
+
             using (var conection = new OleDbConnection(Global.ConnectionString))
             {
                 try
@@ -65,7 +65,7 @@ namespace GPXManager.entities
                                      LandingSite, DateAdded, CTXFileTimeStamp, AppVersion,
                                      ErrorConvertingToXML, IsDownloadedFromServer, DateStart, DateEnd,
                                      TrackPts, SetGearPts, RetrieveGearPts, TrackTimeStampStart, TrackTimeStampEnd,
-                                     TrackingInterval from ctxFiles";
+                                     TrackingInterval, TrackExtracted from ctxFiles";
 
                     var adapter = new OleDbDataAdapter(query, conection);
                     adapter.Fill(dt);
@@ -89,6 +89,7 @@ namespace GPXManager.entities
                             ctxfile.AppVersion = dr["AppVersion"].ToString();
                             ctxfile.ErrorConvertingToXML = (bool)dr["ErrorConvertingToXML"];
                             ctxfile.IsDownloadedFromServer = (bool)dr["IsDownloadedFromServer"];
+                            ctxfile.TrackExtracted = (bool)dr["TrackExtracted"];
 
                             if (dr["DateStart"].ToString().Length > 0)
                             {
@@ -181,7 +182,8 @@ namespace GPXManager.entities
                                 CTXFileTimeStamp DateTime,
                                 IsDownloadedFromServer Bit,
                                 DateAdded DateTime,
-                                TrackingInterval Int
+                                TrackingInterval Int,
+                                TrackExtracted Bit
                                 )";
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;
@@ -229,8 +231,8 @@ namespace GPXManager.entities
                             DateStart, DateEnd, NumberOfTrips, TrackPts, TrackTimeStampStart, 
                             TrackTimeStampEnd, SetGearPts, RetrieveGearPts, FileName, XML, 
                             CTXFileName, AppVersion, ErrorConvertingToXML, CTXFileTimeStamp, IsDownloadedFromServer, 
-                            DateAdded, TrackingInterval)
-                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            TrackExtracted, DateAdded, TrackingInterval)
+                           Values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
@@ -386,6 +388,7 @@ namespace GPXManager.entities
                     update.Parameters.Add("@convert_xml_error", OleDbType.Boolean).Value = f.ErrorConvertingToXML;
                     update.Parameters.Add("@fileTimeStamp", OleDbType.Date).Value = f.CTXFileTimeStamp;
                     update.Parameters.Add("@isDownloadedFromServer", OleDbType.Boolean).Value = f.IsDownloadedFromServer;
+                    update.Parameters.Add("@isTrackExtracted", OleDbType.Boolean).Value = f.TrackExtracted;
                     update.Parameters.Add("@dateAdded", OleDbType.Date).Value = f.DateAdded;
                     if (f.TrackingInterval == null)
                     {
@@ -432,6 +435,11 @@ namespace GPXManager.entities
                 {
                     if (file.Extension.ToLower() == ".ctx")
                     {
+                        string ctxFile = $@"{Global.Settings.CTXBackupFolder}\{Path.GetFileName(file.FullName)}";
+                        if (!File.Exists(ctxFile))
+                        {
+                            var fi = file.CopyTo(ctxFile);
+                        }
                         _ctxFileList.Add(new CTXFile { FileInfo = file, IsDownloaded = Entities.CTXFileViewModel.Exists(file.Name) });
                     }
                 }
@@ -606,6 +614,7 @@ namespace GPXManager.entities
                     update.Parameters.Add("@convert_xml_error", OleDbType.Boolean).Value = f.ErrorConvertingToXML;
                     update.Parameters.Add("@fileTimeStamp", OleDbType.Date).Value = f.CTXFileTimeStamp;
                     update.Parameters.Add("@isDownloadedFromServer", OleDbType.Boolean).Value = f.IsDownloadedFromServer;
+                    update.Parameters.Add("@isTrackExtracted", OleDbType.Boolean).Value = f.TrackExtracted;
                     update.Parameters.Add("@dateAdded", OleDbType.Date).Value = f.DateAdded;
                     if (f.TrackingInterval == null)
                     {
@@ -637,6 +646,7 @@ namespace GPXManager.entities
                             ErrorConvertingToXML = @convert_xml_error, 
                             CTXFileTimeStamp = @fileTimeStamp, 
                             IsDownloadedFromServer = @isDownloadedFromServer, 
+                            TrackExtracted = isTrackExtracted,
                             DateAdded = @dateAdded,
                             TrackingInterval = @trackingInterval
                             Where RowID = @rowID";
@@ -724,6 +734,7 @@ namespace GPXManager.entities
 
         public bool ErrorConvertingToXML { get; private set; }
         public string LastError { get; private set; }
+
 
         public static bool ExtractXMLFromCTX(string inCTX)//, string downloadLocation)
         {

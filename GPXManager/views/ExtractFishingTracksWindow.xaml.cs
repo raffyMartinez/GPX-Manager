@@ -59,13 +59,18 @@ namespace GPXManager.views
                     labelProgress.Content = "Getting xml data of tracks";
                     var list = await Entities.ExtractedFishingTrackViewModel.ExtractTracksFromSourcesAsync(
                         (bool)chkSave.IsChecked,
-                        (bool)chkShowInMap.IsChecked
+                        (bool)chkShowInMap.IsChecked,
+                        true,
+                        (bool)chkRefresh.IsChecked,
+                        (bool)chkLogTracks.IsChecked
                         );
 
                     Entities.ExtractedFishingTrackViewModel.TrackExtractedFromSourceCreated -= ExtractedFishingTrackViewModel_TrackExtractedFromSourceCreated;
+                    
                     if ((bool)chkShowInMap.IsChecked)
                     {
-                        entities.mapping.MapWindowManager.MapExtractedFishingTracksShapefile(Entities.ExtractedFishingTrackViewModel.ExtractedFishingTracksSF);
+                        //entities.mapping.MapWindowManager.MapExtractedFishingTracksShapefile(Entities.ExtractedFishingTrackViewModel.ExtractedFishingTracksSF);
+                        entities.mapping.MapWindowManager.AddExtractedTracksLayer(true);
                     }
                     _timer.Stop();
                     progressBar.Visibility = Visibility.Collapsed;

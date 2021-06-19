@@ -12,44 +12,45 @@
             <RowDefinition Height="25"/>
             <RowDefinition Height="60" x:Name="rowAOIName"/>
             <RowDefinition x:Name="rowAOIList"/>
-            <RowDefinition Height="60"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
         <Label Content="Area of intereset (AOI)" x:Name="labelTitle" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/>
         <WrapPanel x:Name="panelAOIName" Margin="0 10" Grid.Row="1">
             <Label Content="Name" Margin="20 0"/>
             <TextBox x:Name="textBoxAOIName" Width="275" Height="30"/>
         </WrapPanel>
-        <StackPanel Grid.Row="2" x:Name="panelListAOI">
-            <StackPanel>
-                <Label Content="List of AOIs" Margin="20 0"/>
-                <DataGrid x:Name="dataGridAOIs" Height="182" Margin="20,0,19.6,0"  
+        <StackPanel Grid.Row="2" x:Name="panelListAOI" Height="285" Margin="0,0.2,-0.4,0" VerticalAlignment="Top">
+
+            <Label Content="List of AOIs" Margin="20 0"/>
+            <DataGrid x:Name="dataGridAOIs" Height="182" Margin="20,0,19.6,0"  
                           AutoGenerateColumns="False" ItemsSource="{Binding}"
                           SelectionUnit="Cell" CanUserAddRows="False" ContextMenuOpening="OnContextMenuOpening"
                           SelectedCellsChanged="OnGridSelectedCellChanged">
-                    <DataGrid.ContextMenu >
-                        <ContextMenu>
-                            <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
-                            <MenuItem Header="Edit AOI extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
-                            <MenuItem Header="Delete AOI" x:Name="menuAOIDelete" Click="OnMenuClick"/>
-                            <MenuItem Header="Show grid" x:Name="menuShowGrid" Click="OnMenuClick" />
-                            <MenuItem Header="Remove grid" x:Name="menuRemoveGrid" Click="OnMenuClick" IsEnabled="False"/>
-                            <MenuItem Header="Edit grid" x:Name="menuEditGrid" Click="OnMenuClick" IsEnabled="False"/>
-                            <MenuItem Header="Grid mapping" x:Name="menuGridMapping" Click="OnMenuClick" IsEnabled="false"/>
-                            <MenuItem Header="Format grid map" x:Name="menuFormatMap" Click="OnMenuClick" IsEnabled="False"/>
+                <DataGrid.ContextMenu >
+                    <ContextMenu>
+                        <MenuItem Header="Zoom to AOI" x:Name="menuAOIZoom" Click="OnMenuClick"/>
+                        <MenuItem Header="Edit AOI extent" x:Name="menuAOIEditExtent" Click="OnMenuClick"/>
+                        <MenuItem Header="Delete AOI" x:Name="menuAOIDelete" Click="OnMenuClick"/>
+                        <MenuItem Header="Show grid" x:Name="menuShowGrid" Click="OnMenuClick" />
+                        <MenuItem Header="Remove grid" x:Name="menuRemoveGrid" Click="OnMenuClick" IsEnabled="False"/>
+                        <MenuItem Header="Edit grid" x:Name="menuEditGrid" Click="OnMenuClick" IsEnabled="False"/>
+                        <MenuItem Header="Grid mapping" x:Name="menuGridMapping" Click="OnMenuClick" IsEnabled="false"/>
+                        <MenuItem Header="Format grid map" x:Name="menuFormatMap" Click="OnMenuClick" IsEnabled="False"/>
 
-                        </ContextMenu>
-                    </DataGrid.ContextMenu>
-                </DataGrid>
-                <WrapPanel VerticalAlignment="Center" Height="30" Margin="0 10" HorizontalAlignment="Center">
-                    <Button Content="Show grid" Width="80" Height="30" Margin="10 0" x:Name="buttonShowGrid"  Click="OnButtonClick"/>
-                    <Button Content="Process grid" Width="80" Height="30" Margin="10 0" x:Name="buttonProcessGrid"  Click="OnButtonClick"/>
-                    <Button Content="Format grid"  Width="80" Height="30" Margin="10 0" x:Name="buttonFormatMaps" Click="OnButtonClick" />
-                </WrapPanel>
-            </StackPanel>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+            </DataGrid>
+            <WrapPanel VerticalAlignment="Center" Height="30" Margin="0 10" HorizontalAlignment="Center">
+                <Button Content="Show grid" Width="80" Height="30" Margin="10 0" x:Name="buttonShowGrid"  Click="OnButtonClick"/>
+                <Button Content="Process grid" Width="80" Height="30" Margin="10 0" x:Name="buttonProcessGrid"  Click="OnButtonClick"/>
+                <Button Content="Format grid"  Width="80" Height="30" Margin="10 0" x:Name="buttonFormatMaps" Click="OnButtonClick" />
+            </WrapPanel>
+            <CheckBox Content="AOIs visible" HorizontalAlignment="Center" Margin="0 2" x:Name="checkAOIsVisible" Checked="CheckChange" Unchecked="CheckChange"/>
+
         </StackPanel>
-        <WrapPanel Grid.Row="32" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Height="30" Width="70" Margin="10"/>
-            <Button Content="Ok" x:Name="buttonOk" Click="OnButtonClick" Height="30" Width="70" Margin="10"/>
+        <WrapPanel Grid.Row="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Content="Cancel" x:Name="buttonCancel" Click="OnButtonClick" Height="30" Width="70" Margin="5"/>
+            <Button Content="Ok" x:Name="buttonOk" Click="OnButtonClick" Height="30" Width="70" Margin="5"/>
         </WrapPanel>
     </Grid>
 </Window>

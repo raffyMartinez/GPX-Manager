@@ -327,23 +327,45 @@ namespace GPXManager.entities.mapping
                 return false;
             }
         }
+
+        public void VisibilityExpression(string expression)
+        {
+            _currentMapLayer.ShapesVisibilityExpression = expression;
+            var sf = (Shapefile)_currentMapLayer.LayerObject;
+            sf.VisibilityExpression = expression;
+            MapControl.Redraw();
+            if (OnVisibilityExpressionSet != null)
+            {
+                //fill up the event argument class with the layer item
+                LayerEventArg lp = new LayerEventArg(_currentMapLayer.Handle, VisibilityExpressionTarget.ExpressionTargetShape, expression);
+                lp.Shapefile = sf;
+                OnVisibilityExpressionSet(this, lp);
+            }
+
+        }
+
         public void VisibilityExpression(string expression, VisibilityExpressionTarget expressiontarget)
         {
+            var sf = (Shapefile)_currentMapLayer.LayerObject;
             if (expressiontarget == VisibilityExpressionTarget.ExpressionTargetLabel)
             {
                 _currentMapLayer.LabelsVisibilityExpression = expression;
+                sf.Labels.VisibilityExpression = expression;
             }
             else
             {
                 _currentMapLayer.ShapesVisibilityExpression = expression;
+                sf.VisibilityExpression = expression;
             }
-
+            MapControl.Redraw();
             if (OnVisibilityExpressionSet != null)
             {
                 //fill up the event argument class with the layer item
                 LayerEventArg lp = new LayerEventArg(_currentMapLayer.Handle, expressiontarget, expression);
+                lp.Shapefile = sf;
                 OnVisibilityExpressionSet(this, lp);
             }
+
         }
 
         public bool Exists(string name)
@@ -741,9 +763,9 @@ namespace GPXManager.entities.mapping
         }
         public bool IsLayerLoadedInMap(string layerKey)
         {
-            foreach(var item in LayerDictionary)
+            foreach (var item in LayerDictionary)
             {
-                if(item.Value.LayerKey==layerKey)
+                if (item.Value.LayerKey == layerKey)
                 {
                     return true;
                 }

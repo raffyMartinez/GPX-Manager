@@ -82,6 +82,7 @@ namespace GPXManager.entities.mapping.Views
             }
 
             buttonOk.IsEnabled = false;
+            checkAOIsVisible.IsChecked = true;
         }
 
         private void SetDataGridContext()
@@ -385,6 +386,16 @@ namespace GPXManager.entities.mapping.Views
                     _aoi.GridMapping.IsUndersizedMapped;
 
             }
+
+        }
+
+        private void CheckChange(object sender, RoutedEventArgs e)
+        {
+            foreach (var aoi in Entities.AOIViewModel.AOICollection)
+            {
+                ((Shapefile)MapWindowManager.MapLayersHandler[aoi.AOIHandle].LayerObject).DefaultDrawingOptions.LineVisible = (bool)checkAOIsVisible.IsChecked;
+            }
+            MapWindowManager.MapControl.Redraw();
 
         }
     }

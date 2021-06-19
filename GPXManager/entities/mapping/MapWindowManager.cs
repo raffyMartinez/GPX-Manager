@@ -23,8 +23,19 @@ namespace GPXManager.entities.mapping
     {
         private static Shapefile _coastline;
         private static List<int> _selectedShapedIDs;
+        private static string _shapeFileVisibilityExpression;
 
-
+        public static string ShapeFileVisibilityExpression
+        {
+            get { return _shapeFileVisibilityExpression; }
+            set
+            {
+                _shapeFileVisibilityExpression = value;
+                MapLayersHandler.VisibilityExpression(_shapeFileVisibilityExpression, VisibilityExpressionTarget.ExpressionTargetShape);
+                //((Shapefile)MapLayersHandler.CurrentMapLayer.LayerObject).VisibilityExpression = _shapeFileVisibilityExpressiont;
+                //MapControl.Redraw();
+            }
+        }
         public static ShapeFileAttributesWindow ShapeFileAttributesWindow { get; set; }
 
         public static MapLayersWindow MapLayersWindow { get; set; }
@@ -372,11 +383,13 @@ namespace GPXManager.entities.mapping
                         {
                             File.Copy(item, $@"{dirInfo.FullName}\{Path.GetFileName(item)}");
                         }
-                        files = Directory.GetFiles(dirInfo.FullName, "*.shp");
-                        var result = MapLayersHandler.FileOpenHandler(files[0], $"{fi.Name}", layerkey: $"{fi.Name}");
-                        feedBack = result.errMsg;
-                        return result.success;
                     }
+                    files = Directory.GetFiles(dirInfo.FullName, "*.shp");
+                    var result = MapLayersHandler.FileOpenHandler(files[0], $"{fi.Name}", layerkey: $"{fi.Name}");
+                    feedBack = result.errMsg;
+                    return result.success;
+
+
                 }
             }
 
@@ -433,9 +446,14 @@ namespace GPXManager.entities.mapping
         }
 
         public static Shapefile Grid25MajorGrid { get; set; }
-        public static bool AddExtractedTracksLayer()
+        public static bool AddExtractedTracksLayer(bool readFromDatabase = false)
         {
-            if (Entities.ExtractedFishingTrackViewModel.Count() > 0)
+            bool proceed = true;
+            if(readFromDatabase)
+            {
+                proceed = Entities.ExtractedFishingTrackViewModel.LoadTrackDataFromDatabase();
+            }
+            if (proceed && Entities.ExtractedFishingTrackViewModel.Count() > 0)
             {
                 var sf = ShapefileFactory.FishingTrackLines();
                 ExtractedTracksShapefile = sf;
@@ -447,6 +465,8 @@ namespace GPXManager.entities.mapping
             }
             return false;
         }
+
+        public static System.Drawing.Bitmap ClassificationLegendBitmap { get; set; }
 
         public static bool SetBoundaryShapefile()
         {
@@ -670,7 +690,8 @@ namespace GPXManager.entities.mapping
 
         public static void RemoveLayerByKey(string key)
         {
-            MapLayersHandler.RemoveLayerByKey(key);
+
+            MapLayersHandler?.RemoveLayerByKey(key);
         }
 
 
@@ -718,13 +739,22 @@ namespace GPXManager.entities.mapping
         public static int MapWaypointsCTX(CTXFileSummaryView ctx, out List<int> handles)
         {
             handles = new List<int>();
+            Shapefile sf = null;
             if (ctx.WaypointsForSet != null && ctx.WaypointsForSet > 0 ||
                 ctx.WaypointsForHaul != null && ctx.WaypointsForHaul > 0)
             {
-                var sf = ShapefileFactory.WaypointsFromCTX(ctx, out handles);
-                MapLayersHandler.AddLayer(sf, "CTX waypoints", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                sf = ShapefileFactory.WaypointsFromCTX(ctx, out handles);
             }
-            return MapLayersHandler.CurrentMapLayer.Handle;
+
+            if (sf != null)
+            {
+                return MapLayersHandler.AddLayer(sf, "CTX waypoints", uniqueLayer: true, layerKey: sf.Key, rejectIfExisting: true);
+                //return MapLayersHandler.CurrentMapLayer.Handle;
+            }
+            else
+            {
+                return -1;
+            }
         }
 
 
@@ -790,7 +820,7 @@ namespace GPXManager.entities.mapping
         public static int MapExtractedFishingTracksShapefile(Shapefile extractedTracks)
         {
             RemoveGPSDataFromMap();
-            var h=MapLayersHandler.AddLayer(extractedTracks, "Extracted tracks", uniqueLayer: true, layerKey: extractedTracks.Key, rejectIfExisting: true);
+            var h = MapLayersHandler.AddLayer(extractedTracks, "Extracted tracks", uniqueLayer: true, layerKey: extractedTracks.Key, rejectIfExisting: true);
 
             var sf = (Shapefile)MapLayersHandler[h].LayerObject;
             sf.DefaultDrawingOptions.LineColor = new Utils().ColorByName(tkMapColor.Salmon);

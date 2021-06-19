@@ -448,6 +448,7 @@ namespace GPXManager.entities.mapping.Views
             {
                 case "Set visibility...":
                     ShapeFileVisibilityExpressionWindow vew = new ShapeFileVisibilityExpressionWindow();
+                    vew.Owner = this;
                     vew.ExpressionTarget = VisibilityExpressionTarget.ExpressionTargetShape;
                     vew.Shapefile = (Shapefile)MapWindowManager.MapLayersHandler.CurrentMapLayer.LayerObject;
                     vew.Show();

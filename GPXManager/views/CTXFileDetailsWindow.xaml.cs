@@ -77,6 +77,8 @@ namespace GPXManager.views
                 DataGridTracks.Columns.Add(new DataGridTextColumn { Header = "Lon", Binding = new Binding("Waypoint.Longitude") });
                 DataGridTracks.Columns.Add(new DataGridTextColumn { Header = "Lat", Binding = new Binding("Waypoint.Latitude") });
                 DataGridTracks.DataContext = Entities.CTXFileViewModel.TrackWaypointsFromTrip(CTXFileSummary.Identifier);
+
+                buttonScanXML.IsEnabled = txtXML.Text.Length == 0;
             }
         }
 
@@ -124,7 +126,16 @@ namespace GPXManager.views
 
         private void OnButtonClicked(object sender, RoutedEventArgs e)
         {
-            Close();
+            switch(((Button)sender).Content)
+            {
+                case "Ok":
+                    Close();
+                    break;
+                case "Scan XML":
+                    var file = Entities.CTXFileViewModel.GetFile(CTXFileSummary.CTXFileName);
+                    break;
+            }
+            
         }
 
         private void OnPropetyChanged(object sender, RoutedPropertyChangedEventArgs<PropertyItemBase> e)

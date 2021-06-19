@@ -23,5 +23,7 @@ namespace GPXManager.entities
         public DateTime TimeRangeEnd { get; set; }
 
         public int? TimerInterval { get; set; }
+
+        public bool TrackIsExtracted { get; set; }
     }
 }

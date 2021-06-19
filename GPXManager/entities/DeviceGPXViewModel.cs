@@ -17,6 +17,8 @@ namespace GPXManager.entities
     {
 
         private bool _editSuccess;
+
+        private bool _updateExtractedStatus = false;
         public ObservableCollection<DeviceGPX> DeviceGPXCollection { get; set; }
         private DeviceGPXRepository DeviceWaypointGPXes { get; set; }
 
@@ -451,7 +453,16 @@ namespace GPXManager.entities
                 case NotifyCollectionChangedAction.Replace:
                     {
                         List<DeviceGPX> tempList = e.NewItems.OfType<DeviceGPX>().ToList();
-                        _editSuccess = DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        if (_updateExtractedStatus)
+                        {
+                            _editSuccess = DeviceWaypointGPXes.Update(tempList[0].RowID, tempList[0].TrackIsExtracted);
+                            _updateExtractedStatus = false;
+                        }
+                        else
+                        {
+                            _editSuccess = DeviceWaypointGPXes.Update(tempList[0]);      // As the IDs are unique, only one row will be effected hence first index only
+                        }
+                        
                     }
                     break;
             }
@@ -483,14 +494,16 @@ namespace GPXManager.entities
 
                     Entities.GPXFileViewModel.Add(gpxFile);
                 }
-
                 AddToDictionary(gpx.GPS, gpxFile);
             }
             return DeviceGPXCollection.Count > oldCount;
         }
 
-        public bool UpdateRecordInRepo(DeviceGPX gpx)
+
+
+        public bool UpdateRecordInRepo(DeviceGPX gpx, bool updateExtractedStatus=false)
         {
+            _updateExtractedStatus = updateExtractedStatus;
             if (gpx.RowID == 0)
                 throw new Exception("Error: ID cannot be null");
 

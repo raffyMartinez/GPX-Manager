@@ -76,6 +76,7 @@ namespace GPXManager.entities
                             {
                                 gpx.TimerInterval = (int)dr["TimerInterval"];
                             }
+                            gpx.TrackIsExtracted = (bool)dr["TrackIsExtracted"];
                             thisList.Add(gpx);
                         }
                     }
@@ -113,7 +114,10 @@ namespace GPXManager.entities
             {
                 case "TimerInterval":
                     return AddColumn(name, "Int");
+                case "TrackIsExtracted":
+                    return AddColumn(name, "bool");
             }
+
             return false;
         }
 
@@ -124,7 +128,7 @@ namespace GPXManager.entities
             {
                 sql = $"ALTER TABLE device_gpx ADD COLUMN {colName} BIT DEFAULT 0";
             }
-            else if(type=="VarChar")
+            else if (type == "VarChar")
             {
                 sql = $"ALTER TABLE device_gpx ADD COLUMN {colName} {type}({length})";
             }
@@ -162,7 +166,7 @@ namespace GPXManager.entities
             {
 
                 conn.Open();
-                var sql = $@"Insert into device_gpx (DeviceID,FileName,gpx_xml,RowID,d5,DateAdded,DateModified,gpx_type,time_range_start,time_range_end,TimerInterval)
+                var sql = $@"Insert into device_gpx (DeviceID,FileName,gpx_xml,RowID,md5,DateAdded,DateModified,gpx_type,time_range_start,time_range_end,TimerInterval)
                            Values (
                                     '{gpx.GPS.DeviceID}',
                                     '{gpx.Filename}', 
@@ -211,7 +215,90 @@ namespace GPXManager.entities
             }
             return success;
         }
+
+        public bool Update(int id, bool isExtracted)
+        {
+            bool success = false;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+
+
+                using (OleDbCommand update = conn.CreateCommand())
+                {
+                    update.Parameters.Add("@extracted", OleDbType.Boolean).Value = isExtracted;
+                    update.Parameters.Add("@rowID", OleDbType.Integer).Value = id;
+
+                    update.CommandText = @"Update device_gpx set TrackIsExtracted = @extracted WHERE RowID = @rowID";
+
+                    try
+                    {
+                        success = update.ExecuteNonQuery() > 0;
+                    }
+                    catch (OleDbException dbex)
+                    {
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
+                }
+            }
+            return success;
+        }
         public bool Update(DeviceGPX gpx)
+        {
+            bool success = false;
+            using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
+            {
+                conn.Open();
+
+
+                using (OleDbCommand update = conn.CreateCommand())
+                {
+                    update.Parameters.Add("@deviceID", OleDbType.VarChar).Value = gpx.GPS.DeviceID;
+                    update.Parameters.Add("@xml", OleDbType.LongVarWChar).Value = gpx.GPX;
+                    update.Parameters.Add("@fileName", OleDbType.VarChar).Value = gpx.Filename;
+                    update.Parameters.Add("@md5", OleDbType.VarChar).Value = gpx.MD5;
+                    update.Parameters.Add("@dateModified", OleDbType.Date).Value = DateTime.Now;
+                    update.Parameters.Add("@gpxType", OleDbType.VarChar).Value = gpx.GPXType;
+                    update.Parameters.Add("@timeStart", OleDbType.Date).Value = gpx.TimeRangeStart;
+                    update.Parameters.Add("@timeEnd", OleDbType.Date).Value = gpx.TimeRangeEnd;
+                    update.Parameters.Add("@timeInterval", OleDbType.Integer).Value = gpx.TimerInterval;
+                    update.Parameters.Add("@extracted", OleDbType.Boolean).Value = gpx.TrackIsExtracted;
+                    update.Parameters.Add("@rowID", OleDbType.Integer).Value = gpx.RowID;
+
+                    update.CommandText = @"Update device_gpx set
+                                DeviceID= @deviveID,
+                                gpx_xml = @xml,
+                                FileName = @fileName,
+                                md5 = @md5,
+                                DateModified = @dateModified,
+                                gpx_type = @gpxType,
+                                time_range_start = @timeStart,
+                                time_range_end = @timeEnd,
+                                TimerInterval = @timeInterval,
+                                TrackIsExtracted = @extracted    
+                            WHERE RowID = @rowID";
+
+                    try
+                    {
+                        success = update.ExecuteNonQuery() > 0;
+                    }
+                    catch (OleDbException dbex)
+                    {
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
+                }
+            }
+            return success;
+        }
+        public bool Update1(DeviceGPX gpx)
         {
             bool success = false;
             using (OleDbConnection conn = new OleDbConnection(Global.ConnectionString))
@@ -230,7 +317,18 @@ namespace GPXManager.entities
                             WHERE RowID = {gpx.RowID}";
                 using (OleDbCommand update = new OleDbCommand(sql, conn))
                 {
-                    success = update.ExecuteNonQuery() > 0;
+                    try
+                    {
+                        success = update.ExecuteNonQuery() > 0;
+                    }
+                    catch (OleDbException dbex)
+                    {
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
                 }
             }
             return success;

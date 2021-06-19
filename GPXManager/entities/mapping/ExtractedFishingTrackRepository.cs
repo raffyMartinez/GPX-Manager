@@ -210,7 +210,8 @@ namespace GPXManager.entities.mapping
                                 AverageSpeed Double,
                                 PointCountOriginal Int, 
                                 PointCountSimplified Int,
-                                CombinedTrack Bit
+                                CombinedTrack Bit,
+                                CONSTRAINT device_dateStart UNIQUE (DeviceName, DateStart)                               
                              )";
                 OleDbCommand cmd = new OleDbCommand();
                 cmd.Connection = conn;

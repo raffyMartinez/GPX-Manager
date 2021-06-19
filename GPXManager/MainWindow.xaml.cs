@@ -1018,6 +1018,10 @@ namespace GPXManager
             var btn = (Button)sender;
             switch (btn.Name)
             {
+                case "buttonReviewXML":
+                    ReviewXMLDialog rxd = new ReviewXMLDialog();
+                    rxd.ShowDialog();
+                    break;
                 case "buttonExtractFishingTrack":
                     ExtractFishingTracksWindow eftw = new ExtractFishingTracksWindow();
                     eftw.Owner = this;
@@ -1395,6 +1399,7 @@ namespace GPXManager
             }
             btn.IsEnabled = true;
         }
+
 
         private void CTXFileViewModel_XMLFileFromImportedCTXCreated(CTXFileViewModel s, CTXFileImportEventArgs e)
         {
@@ -2965,7 +2970,7 @@ namespace GPXManager
                 case "cybertrackerDataGrid":
                     _ctxFileSummary = (CTXFileSummaryView)((DataGrid)sender).SelectedItem;
 
-                    if (_ctxFileSummary != null)
+                    if (_ctxFileSummary != null)// && _ctxFileSummary.CTXFile.XML.Length>0)
                     {
                         CheckXMLOfSummaryFile(_ctxFileSummary);
                         if (MapWindowForm.Instance != null)
@@ -2990,6 +2995,10 @@ namespace GPXManager
                         {
                             ShowSelectedCTXFile();
                         }
+                    }
+                    else
+                    {
+                        MapWindowManager.RemoveGPSDataFromMap();
                     }
 
 

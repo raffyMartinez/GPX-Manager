@@ -175,7 +175,7 @@ namespace GPXManager.entities.mapping.Views
                     
                     ResizeDG(dg);
                     dg.UpdateLayout();
-                    RenderToBitmap.CaptureScreen(dg, 96, 96);
+                    //MapWindowManager.ClassificationLegendBitmap =  (System.Drawing.Bitmap)RenderToBitmap.CaptureScreen(dg, 96, 96);
                     dg.Height = _dgHeight;
                     dg.Width = _dgWidth;
                     

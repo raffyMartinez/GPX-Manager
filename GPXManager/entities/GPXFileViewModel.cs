@@ -26,12 +26,16 @@ namespace GPXManager.entities
 
         public GPXFile ConvertToGPXFile(DeviceGPX deviceGPX )
         {
-            GPXFile gpxFile = new GPXFile(deviceGPX.Filename);
-            gpxFile.RowID = deviceGPX.RowID;
-            gpxFile.GPS = deviceGPX.GPS;
-            gpxFile.ComputeStats(deviceGPX);
-            gpxFile.XML = deviceGPX.GPX;
-            return gpxFile;
+            if (deviceGPX != null)
+            {
+                GPXFile gpxFile = new GPXFile(deviceGPX.Filename);
+                gpxFile.RowID = deviceGPX.RowID;
+                gpxFile.GPS = deviceGPX.GPS;
+                gpxFile.ComputeStats(deviceGPX);
+                gpxFile.XML = deviceGPX.GPX;
+                return gpxFile;
+            }
+            return null;
         }
         public Dictionary<DateTime,List<GPXFile>>FilesByMonth(GPS gps)
         {

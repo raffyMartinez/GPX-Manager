@@ -20,6 +20,7 @@
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="1" Grid.Row="1">
             <Button  Width="60" Height="30" Content="Ok" Margin="10" Name="buttonOk" Click="OnButtonClicked" IsCancel="True"/>
+            <Button  Width="60" Height="30" Content="Scan XML" Margin="10 0" Name="buttonScanXML" Click="OnButtonClicked" IsCancel="False" IsEnabled="False"/>
         </StackPanel>
         <Label Grid.ColumnSpan="2" Content="Properties of CTX file" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14" FontWeight="Bold"/>
         <xctk:PropertyGrid x:Name="PropertyGrid" Grid.Row="1" Grid.Column="0" Margin="10"

@@ -187,7 +187,7 @@ namespace GPXManager.entities.mapping
             {
                 for (int x = 0; x < sf.NumShapes; x++)
                 {
-                    if (sf.ShapeSelected[x] && !sf.ShapeIsHidden[x])
+                    if (sf.ShapeSelected[x] && sf.ShapeVisible[x])
                     {
                         row = dt.NewRow();
                         for (int z = 0; z < sf.NumFields; z++)
@@ -212,6 +212,7 @@ namespace GPXManager.entities.mapping
                 {
                     for (int x = 0; x < sf.NumShapes; x++)
                     {
+                        var vis = sf.ShapeVisible[x];
                         if (sf.ShapeVisible[x])
                         {
                             row = dt.NewRow();
@@ -235,7 +236,7 @@ namespace GPXManager.entities.mapping
                 {
                     for (int x = 0; x < sf.NumShapes; x++)
                     {
-                        if (sf.ShapeSelected[x])
+                        if (sf.ShapeSelected[x] && sf.ShapeVisible[x])
                         {
                             row = dt.NewRow();
                             for (int z = 0; z < sf.NumFields; z++)
